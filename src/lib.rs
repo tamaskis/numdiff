@@ -10,7 +10,8 @@
 #![warn(missing_docs)]
 
 // Linking project modules.
-pub(crate) mod module;
+pub(crate) mod constants;
+pub mod forward_difference;
+pub(crate) mod test_utils;
 
 // Re-exports.
-pub use crate::module::example_function;

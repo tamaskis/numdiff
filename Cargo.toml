@@ -1,11 +1,11 @@
 [package]
-name = "todo-crate-name"
+name = "numdiff"
 version = "0.1.0"
 authors = ["Tamas Kis"]
 edition = "2021"
-description = "Template for simple Rust projects hosted on GitHub. TODO: update"
-documentation = "https://docs.rs/TODO_CRATE_NAME"
-repository = "https://github.com/TODO_USERNAME/TODO_REPO"
+description = "Numerical differentiation using finite difference methods."
+documentation = "https://docs.rs/numdiff"
+repository = "https://github.com/tamaskis/numdiff"
 license = "MIT OR Apache-2.0"
 
 exclude = ["Cargo.lock", ".github/", ".vscode/", ".gitignore"]

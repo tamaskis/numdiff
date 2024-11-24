@@ -3,15 +3,23 @@ name = "numdiff"
 version = "0.1.0"
 authors = ["Tamas Kis"]
 edition = "2021"
-description = "Numerical differentiation using finite difference methods."
+description = "Numerical differentiation."
 documentation = "https://docs.rs/numdiff"
 repository = "https://github.com/tamaskis/numdiff"
 license = "MIT OR Apache-2.0"
 
 exclude = ["Cargo.lock", ".github/", ".vscode/", ".gitignore"]
 
-[package.metadata.docs.rs]
-rustdoc-args = [ "--html-in-header", "src/docs-header.html" ]
+[dependencies]
+linalg-traits = "0.6.0"
+once_cell = "1.19.0"
+trig = "0.1.3"
 
 [dev-dependencies]
-numtest = "0.1.6"
+linalg-traits = { version = "0.6.0", features = ["nalgebra", "ndarray"] }
+nalgebra = "0.33.0"
+ndarray = "0.16.0"
+numtest = "0.2.0"
+
+[package.metadata.docs.rs]
+rustdoc-args = [ "--html-in-header", "src/docs-header.html" ]

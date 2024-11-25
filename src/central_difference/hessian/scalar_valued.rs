@@ -1,7 +1,7 @@
 use crate::constants::CBRT_EPS;
 use linalg_traits::Vector;
 
-/// Hessian of a multivariate, scalar-valued function using the forward difference approximation.
+/// Hessian of a multivariate, scalar-valued function using the central difference approximation.
 ///
 /// # Arguments
 ///
@@ -17,7 +17,7 @@ use linalg_traits::Vector;
 ///
 /// # Note
 ///
-/// This function performs $\frac{n(n+1)}{2}+1$ evaluations of $f(x)$.
+/// This function performs $2n(n+1)$ evaluations of $f(x)$.
 ///
 /// # Example
 ///
@@ -54,7 +54,7 @@ use linalg_traits::Vector;
 /// use linalg_traits::{Mat, Matrix};
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::shessian;
+/// use numdiff::central_difference::shessian;
 ///
 /// // Define the function, f(x).
 /// let f = |x: &Vec<f64>| x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3);
@@ -78,7 +78,7 @@ use linalg_traits::Vector;
 /// );
 ///
 /// // Check the accuracy of the Hessian approximation.
-/// assert_arrays_equal_to_decimal!(hess, hess_true, 0);
+/// assert_arrays_equal_to_decimal!(hess, hess_true, 3);
 /// ```
 ///
 /// #### Using other vector types
@@ -93,7 +93,7 @@ use linalg_traits::Vector;
 /// use ndarray::{array, Array1, Array2};
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::shessian;
+/// use numdiff::central_difference::shessian;
 ///
 /// let hess_true: Mat<f64> = Mat::from_row_slice(
 ///     2,
@@ -110,19 +110,19 @@ use linalg_traits::Vector;
 /// let f_dvector = |x: &DVector<f64>| x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3);
 /// let x0_dvector: DVector<f64> = dvector![5.0, 8.0];
 /// let hess_dvector: DMatrix<f64> = shessian(&f_dvector, &x0_dvector, None);
-/// assert_arrays_equal_to_decimal!(hess_dvector, hess_true, 0);
+/// assert_arrays_equal_to_decimal!(hess_dvector, hess_true, 3);
 ///
 /// // nalgebra::SVector
 /// let f_svector = |x: &SVector<f64,2>| x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3);
 /// let x0_svector: SVector<f64, 2> = SVector::from_row_slice(&[5.0, 8.0]);
 /// let hess_svector: SMatrix<f64, 2, 2> = shessian(&f_svector, &x0_svector, None);
-/// assert_arrays_equal_to_decimal!(hess_svector, hess_true, 0);
+/// assert_arrays_equal_to_decimal!(hess_svector, hess_true, 3);
 ///
 /// // ndarray::Array1
 /// let f_array1 = |x: &Array1<f64>| x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3);
 /// let x0_array1: Array1<f64> = array![5.0, 8.0];
 /// let hess_array1: Array2<f64> = shessian(&f_array1, &x0_array1, None);
-/// assert_arrays_equal_to_decimal!(hess_array1, hess_true, 0);
+/// assert_arrays_equal_to_decimal!(hess_array1, hess_true, 3);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -134,7 +134,7 @@ use linalg_traits::Vector;
 /// use linalg_traits::{Mat, Matrix};
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::shessian;
+/// use numdiff::central_difference::shessian;
 ///
 /// let f = |x: &Vec<f64>| x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3);
 /// let x0 = vec![5.0, 8.0];
@@ -151,7 +151,7 @@ use linalg_traits::Vector;
 ///     ]
 /// );
 ///
-/// assert_arrays_equal_to_decimal!(hess, hess_true, -2);
+/// assert_arrays_equal_to_decimal!(hess, hess_true, 1);
 /// ```
 pub fn shessian<V>(f: &impl Fn(&V) -> f64, x0: &V, h: Option<f64>) -> V::MatrixNxN
 where
@@ -169,12 +169,6 @@ where
     // Initialize a matrix of zeros to store the Hessian.
     let mut hess = x0.new_matrix_n_by_n();
 
-    // Evaluate and store the value of f(x₀).
-    let f0 = f(&x0);
-
-    // Variable to store the absolute step size in the kth direction.
-    let mut dxk: f64;
-
     // Variables to store the original values of the evaluation points in the jth and kth
     // directions.
     let mut x0j: f64;
@@ -183,30 +177,19 @@ where
     // Variable to store the (j,k)th and (k,j)th elements of the Hessian.
     let mut hess_jk: f64;
 
-    // Vectors to store absolute step sizes (a) and function evaluations (b).
+    // Vector to store absolute step sizes.
     let mut a = vec![0.0; n];
-    let mut b = vec![0.0; n];
 
-    // Populate "a" and "b".
+    // Populate vector of absolute step sizes.
     for k in 0..n {
-        // Original value of the evaluation point in the kth direction.
-        x0k = x0[k];
-
-        // Absolute step size in the kth direction.
-        dxk = h * (1.0 + x0[k].abs());
-
-        // Step forward in the kth direction.
-        x0[k] += dxk;
-
-        // Function evaluation.
-        b[k] = f(&x0);
-
-        // Reset the evaluation point.
-        x0[k] = x0k;
-
-        // Store Δxₖ in a.
-        a[k] = dxk;
+        a[k] = h * (1.0 + x0[k].abs());
     }
+
+    // Variables to store evaluations of f(x) at various perturbed points.
+    let mut b: f64;
+    let mut c: f64;
+    let mut d: f64;
+    let mut e: f64;
 
     // Evaluate the Hessian, iterating over the upper triangular elements.
     for k in 0..n {
@@ -218,13 +201,33 @@ where
             // Step forward in the jth and kth directions.
             x0[j] += a[j];
             x0[k] += a[k];
-
-            // Evaluate the (j,k)th and (k,j)th elements of the Hessian.
-            hess_jk = (f(&x0) - b[j] - b[k] + f0) / (a[j] * a[k]);
-
-            // Reset the evaluation point.
+            b = f(&x0);
             x0[j] = x0j;
             x0[k] = x0k;
+
+            // Step forward in the jth direction and backward in the kth direction.
+            x0[j] += a[j];
+            x0[k] -= a[k];
+            c = f(&x0);
+            x0[j] = x0j;
+            x0[k] = x0k;
+
+            // Step backward in the jth direction and forward in the kth direction.
+            x0[j] -= a[j];
+            x0[k] += a[k];
+            d = f(&x0);
+            x0[j] = x0j;
+            x0[k] = x0k;
+
+            // Step backward in the jth and kth directions.
+            x0[j] -= a[j];
+            x0[k] -= a[k];
+            e = f(&x0);
+            x0[j] = x0j;
+            x0[k] = x0k;
+
+            // Evaluate the (j,k)th and (k,j)th elements of the Hessian.
+            hess_jk = (b - c - d + e) / (4.0 * a[j] * a[k]);
 
             // Store the (j,k)th and (k,j)th elements of the Hessian.
             hess[(j, k)] = hess_jk;
@@ -249,7 +252,7 @@ mod tests {
         let f = |x: &Vec<f64>| x[0].powi(3);
         let x0 = vec![2.0];
         let hess = |x: &Vec<f64>| Mat::from_row_slice(1, 1, &[6.0 * x[0]]);
-        assert_arrays_equal_to_decimal!(shessian(&f, &x0, None), hess(&x0), 4);
+        assert_arrays_equal_to_decimal!(shessian(&f, &x0, None), hess(&x0), 7);
     }
 
     #[test]
@@ -259,7 +262,7 @@ mod tests {
         let hess = |x: &SVector<f64, 2>| {
             SMatrix::<f64, 2, 2>::from_row_slice(&[2.0, 0.0, 0.0, 6.0 * x[1]])
         };
-        assert_arrays_equal_to_decimal!(shessian(&f, &x0, None), hess(&x0), 4);
+        assert_arrays_equal_to_decimal!(shessian(&f, &x0, None), hess(&x0), 5);
     }
 
     #[test]
@@ -278,6 +281,6 @@ mod tests {
                 ],
             )
         };
-        assert_arrays_equal_to_decimal!(shessian(&f, &x0, None), hess(&x0), 3);
+        assert_arrays_equal_to_decimal!(shessian(&f, &x0, None), hess(&x0), 5);
     }
 }

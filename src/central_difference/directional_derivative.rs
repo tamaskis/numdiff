@@ -1,7 +1,7 @@
-use crate::constants::SQRT_EPS;
+use crate::constants::CBRT_EPS;
 use linalg_traits::Vector;
 
-/// Directional derivative of a multivariate, scalar-valued function using the forward difference
+/// Directional derivative of a multivariate, scalar-valued function using the central difference
 /// approximation.
 ///
 /// # Arguments
@@ -9,7 +9,7 @@ use linalg_traits::Vector;
 /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
 /// * `x0` - Evaluation point, $\mathbf{x}_{0}\in\mathbb{R}^{n}$.
 /// * `v` - Vector defining the direction of differentiation, $\mathbf{v}\in\mathbb{R}^{n}$.
-/// * `h` - Relative step size, $h\in\mathbb{R}$. Defaults to [`SQRT_EPS`].
+/// * `h` - Relative step size, $h\in\mathbb{R}$. Defaults to [`CBRT_EPS`].
 ///
 /// # Returns
 ///
@@ -39,7 +39,7 @@ use linalg_traits::Vector;
 /// ```
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::directional_derivative;
+/// use numdiff::central_difference::directional_derivative;
 ///
 /// // Define the function, f(x).
 /// let f = |x: &Vec<f64>| x[0].powi(5) + x[1].sin().powi(3);
@@ -59,7 +59,7 @@ use linalg_traits::Vector;
 /// let df_v_true: f64 = 31250.0 + 60.0 * 8.0_f64.sin().powi(2) * 8.0_f64.cos();
 ///
 /// // Check the accuracy of the directional derivative approximation.
-/// assert_equal_to_decimal!(df_v, df_v_true, 2);
+/// assert_equal_to_decimal!(df_v, df_v_true, 5);
 /// ```
 ///
 /// #### Using other vector types
@@ -73,7 +73,7 @@ use linalg_traits::Vector;
 /// use ndarray::{array, Array1};
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::directional_derivative;
+/// use numdiff::central_difference::directional_derivative;
 ///
 /// let df_v_true: f64 = 31250.0 + 60.0 * 8.0_f64.sin().powi(2) * 8.0_f64.cos();
 ///
@@ -82,21 +82,21 @@ use linalg_traits::Vector;
 /// let x0_dvector: DVector<f64> = dvector![5.0, 8.0];
 /// let v_dvector = dvector![10.0, 20.0];
 /// let df_v_dvector: f64 = directional_derivative(&f_dvector, &x0_dvector, &v_dvector, None);
-/// assert_equal_to_decimal!(df_v_dvector, df_v_true, 2);
+/// assert_equal_to_decimal!(df_v_dvector, df_v_true, 5);
 ///
 /// // nalgebra::SVector
 /// let f_svector = |x: &SVector<f64,2>| x[0].powi(5) + x[1].sin().powi(3);
 /// let x0_svector: SVector<f64, 2> = SVector::from_row_slice(&[5.0, 8.0]);
 /// let v_svector: SVector<f64, 2> = SVector::from_row_slice(&[10.0, 20.0]);
 /// let df_v_svector: f64 = directional_derivative(&f_svector, &x0_svector, &v_svector, None);
-/// assert_equal_to_decimal!(df_v_svector, df_v_true, 2);
+/// assert_equal_to_decimal!(df_v_svector, df_v_true, 5);
 ///
 /// // ndarray::Array1
 /// let f_array1 = |x: &Array1<f64>| x[0].powi(5) + x[1].sin().powi(3);
 /// let x0_array1: Array1<f64> = array![5.0, 8.0];
 /// let v_array1: Array1<f64> = array![10.0, 20.0];
 /// let df_v_array1: f64 = directional_derivative(&f_array1, &x0_array1, &v_array1, None);
-/// assert_equal_to_decimal!(df_v_array1, df_v_true, 2);
+/// assert_equal_to_decimal!(df_v_array1, df_v_true, 5);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -107,7 +107,7 @@ use linalg_traits::Vector;
 /// ```
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::directional_derivative;
+/// use numdiff::central_difference::directional_derivative;
 ///
 /// let f = |x: &Vec<f64>| x[0].powi(5) + x[1].sin().powi(3);
 /// let x0 = vec![5.0, 8.0];
@@ -116,17 +116,17 @@ use linalg_traits::Vector;
 /// let df_v: f64 = directional_derivative(&f, &x0, &v, Some(0.001));
 /// let df_v_true: f64 = 31250.0 + 60.0 * 8.0_f64.sin().powi(2) * 8.0_f64.cos();
 ///
-/// assert_equal_to_decimal!(df_v, df_v_true, -2);
+/// assert_equal_to_decimal!(df_v, df_v_true, 0);
 /// ```
 pub fn directional_derivative<V>(f: &impl Fn(&V) -> f64, x0: &V, v: &V, h: Option<f64>) -> f64
 where
     V: Vector<f64>,
 {
-    // Default the relative step size to h = √(ε) if not specified.
-    let h = h.unwrap_or(*SQRT_EPS);
+    // Default the relative step size to h = ε¹ᐟ³ if not specified.
+    let h = h.unwrap_or(*CBRT_EPS);
 
     // Evaluate the directional derivative.
-    (f(&x0.add(&v.mul(h))) - f(x0)) / h
+    (f(&x0.add(&v.mul(h))) - f(&x0.sub(&v.mul(h)))) / (2.0 * h)
 }
 
 #[cfg(test)]
@@ -142,7 +142,7 @@ mod tests {
         let x0 = vec![2.0];
         let v = vec![0.6];
         let df = |x: &Vec<f64>, v: &Vec<f64>| 2.0 * x[0] * v[0];
-        assert_equal_to_decimal!(directional_derivative(&f, &x0, &v, None), df(&x0, &v), 7);
+        assert_equal_to_decimal!(directional_derivative(&f, &x0, &v, None), df(&x0, &v), 10);
     }
 
     #[test]
@@ -153,7 +153,7 @@ mod tests {
         let df = |x: &SVector<f64, 2>, v: &SVector<f64, 2>| {
             SVector::<f64, 2>::from_slice(&[2.0 * x[0], 3.0 * x[1].powi(2)]).dot(v)
         };
-        assert_equal_to_decimal!(directional_derivative(&f, &x0, &v, None), df(&x0, &v), 5);
+        assert_equal_to_decimal!(directional_derivative(&f, &x0, &v, None), df(&x0, &v), 8);
     }
 
     #[test]
@@ -164,6 +164,6 @@ mod tests {
         let df = |x: &Array1<f64>, v: &Array1<f64>| {
             array![5.0 * x[0].powi(4), 3.0 * x[1].sin().powi(2) * x[1].cos()].dot(v)
         };
-        assert_equal_to_decimal!(directional_derivative(&f, &x0, &v, None), df(&x0, &v), 2);
+        assert_equal_to_decimal!(directional_derivative(&f, &x0, &v, None), df(&x0, &v), 5);
     }
 }

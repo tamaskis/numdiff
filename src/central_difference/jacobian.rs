@@ -1,13 +1,13 @@
-use crate::constants::SQRT_EPS;
+use crate::constants::CBRT_EPS;
 use linalg_traits::Vector;
 
-/// Jacobian of a multivariate, vector-valued function using the forward difference approximation.
+/// Jacobian of a multivariate, vector-valued function using the central difference approximation.
 ///
 /// # Arguments
 ///
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `x0` - Evaluation point, $\mathbf{x}_{0}\in\mathbb{R}^{n}$.
-/// * `h` - Relative step size, $h\in\mathbb{R}$. Defaults to [`SQRT_EPS`].
+/// * `h` - Relative step size, $h\in\mathbb{R}$. Defaults to [`CBRT_EPS`].
 ///
 /// # Returns
 ///
@@ -17,7 +17,7 @@ use linalg_traits::Vector;
 ///
 /// # Note
 ///
-/// This function performs $n+1$ evaluations of $f(x)$.
+/// This function performs $2n$ evaluations of $f(x)$.
 ///
 /// # Warning
 ///
@@ -58,7 +58,7 @@ use linalg_traits::Vector;
 /// use numtest::*;
 ///
 /// use linalg_traits::{Mat, Matrix};
-/// use numdiff::forward_difference::jacobian;
+/// use numdiff::central_difference::jacobian;
 ///
 /// // Define the function, f(x).
 /// let f = |x: &Vec<f64>| {
@@ -97,7 +97,7 @@ use linalg_traits::Vector;
 /// );
 ///
 /// // Check the accuracy of the Jacobian approximation.
-/// assert_arrays_equal_to_decimal!(jac, jac_true, 6);
+/// assert_arrays_equal_to_decimal!(jac, jac_true, 9);
 /// ```
 ///
 /// #### Using other vector types
@@ -112,7 +112,7 @@ use linalg_traits::Vector;
 /// use ndarray::{array, Array1, Array2};
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::jacobian;
+/// use numdiff::central_difference::jacobian;
 ///
 /// let jac_true_row_major: Mat<f64> = Mat::from_row_slice(
 ///     4,
@@ -162,7 +162,7 @@ use linalg_traits::Vector;
 /// };
 /// let x0_dvector: DVector<f64> = dvector![5.0, 6.0, 7.0];
 /// let jac_dvector: DMatrix<f64> = jacobian(&f_dvector, &x0_dvector, None);
-/// assert_arrays_equal_to_decimal!(jac_dvector, jac_true_col_major, 6);
+/// assert_arrays_equal_to_decimal!(jac_dvector, jac_true_col_major, 9);
 ///
 /// // nalgebra::SVector
 /// let f_svector = |x: &SVector<f64, 3>| {
@@ -175,7 +175,7 @@ use linalg_traits::Vector;
 /// };
 /// let x0_svector: SVector<f64, 3> = SVector::from_row_slice(&[5.0, 6.0, 7.0]);
 /// let jac_svector: DMatrix<f64> = jacobian(&f_svector, &x0_svector, None);
-/// assert_arrays_equal_to_decimal!(jac_svector, jac_true_col_major, 6);
+/// assert_arrays_equal_to_decimal!(jac_svector, jac_true_col_major, 9);
 ///
 /// // ndarray::Array1
 /// let f_array1 = |x: &Array1<f64>| {
@@ -188,7 +188,7 @@ use linalg_traits::Vector;
 /// };
 /// let x0_array1: Array1<f64> = array![5.0, 6.0, 7.0];
 /// let jac_array1: Array2<f64> = jacobian(&f_array1, &x0_array1, None);
-/// assert_arrays_equal_to_decimal!(jac_array1, jac_true_row_major, 6);
+/// assert_arrays_equal_to_decimal!(jac_array1, jac_true_row_major, 9);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -200,7 +200,7 @@ use linalg_traits::Vector;
 /// use linalg_traits::{Mat, Matrix};
 /// use numtest::*;
 ///
-/// use numdiff::forward_difference::jacobian;
+/// use numdiff::central_difference::jacobian;
 ///
 /// let f = |x: &Vec<f64>| {
 ///     vec![
@@ -232,7 +232,7 @@ use linalg_traits::Vector;
 ///     ],
 /// );
 ///
-/// assert_arrays_equal_to_decimal!(jac, jac_true, 1);
+/// assert_arrays_equal_to_decimal!(jac, jac_true, 5);
 /// ```
 pub fn jacobian<V, U>(f: &impl Fn(&V) -> U, x0: &V, h: Option<f64>) -> V::DMatrixMxN
 where
@@ -242,18 +242,8 @@ where
     // Copy the evaluation point so that we may modify it.
     let mut x0 = x0.clone();
 
-    // Default the relative step size to h = √(ε) if not specified.
-    let h = h.unwrap_or(*SQRT_EPS);
-
-    // Evaluate and store the value of f(x₀).
-    let f0 = f(&x0);
-
-    // Determine the size of the Jacobian.
-    let m = f0.len();
-    let n = x0.len();
-
-    // Initialize a matrix of zeros to store the Jacobian.
-    let mut jac = x0.new_dmatrix_m_by_n(m);
+    // Default the relative step size to h = ε¹ᐟ³ if not specified.
+    let h = h.unwrap_or(*CBRT_EPS);
 
     // Variable to store the absolute step size in the kth direction.
     let mut dxk: f64;
@@ -264,8 +254,46 @@ where
     // Variable to store the partial derivative of f with respect to xₖ.
     let mut dfk;
 
-    // Evaluate the Jacobian.
-    for k in 0..n {
+    // Variable to store the function evaluation from a forward step in the kth direction.
+    let mut f1;
+
+    // Variable to store the function evaluation from a backward step in the kth direction.
+    let mut f2;
+
+    // Original value of the evaluation point in the 0th direction.
+    x0k = x0[0];
+
+    // Absolute step size in the 0th direction.
+    dxk = h * (1.0 + x0[0].abs());
+
+    // Step forward in the 0th direction.
+    x0[0] += dxk;
+    f1 = f(&x0);
+
+    // Step backward in the 0th direction.
+    x0[0] = x0k - dxk;
+    f2 = f(&x0);
+
+    // Reset the evaluation point.
+    x0[0] = x0k;
+
+    // Partial derivative of f with respect to x₀ (0th column of the Jacobian).
+    dfk = f1.sub(&f2).div(2.0 * dxk);
+
+    // Determine the size of the Jacobian.
+    let m = dfk.len();
+    let n = x0.len();
+
+    // Initialize a matrix of zeros to store the Jacobian.
+    let mut jac = x0.new_dmatrix_m_by_n(m);
+
+    // Store the partial derivative of f with respect to x₀ in the 0th column of the Jacobian.
+    for i in 0..m {
+        jac[(i, 0)] = dfk[i];
+    }
+
+    // Evaluate the remaining columns of the Jacobian.
+    for k in 1..n {
         // Original value of the evaluation point in the kth direction.
         x0k = x0[k];
 
@@ -274,12 +302,17 @@ where
 
         // Step forward in the kth direction.
         x0[k] += dxk;
+        f1 = f(&x0);
 
-        // Partial derivative of f with respect to xₖ.
-        dfk = f(&x0).sub(&f0).div(dxk);
+        // Step backward in the kth direction.
+        x0[k] = x0k - dxk;
+        f2 = f(&x0);
 
         // Reset the evaluation point.
         x0[k] = x0k;
+
+        // Partial derivative of f with respect to xₖ.
+        dfk = f1.sub(&f2).div(2.0 * dxk);
 
         // Store the partial derivative of f with respect to xₖ in the kth column of the Jacobian.
         for i in 0..m {
@@ -303,7 +336,7 @@ mod tests {
         let f = |x: &Vec<f64>| vec![x[0].powi(2)];
         let x0 = vec![2.0];
         let jac = |x: &Vec<f64>| Mat::from_row_slice(1, 1, &[2.0 * x[0]]);
-        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 7);
+        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 11);
     }
 
     #[test]
@@ -313,7 +346,7 @@ mod tests {
         let jac = |x: &Array1<f64>| {
             Array2::<f64>::from_row_slice(2, 1, &[2.0 * x[0], 3.0 * x[0].powi(2)])
         };
-        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 6);
+        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 9);
     }
 
     #[test]
@@ -323,7 +356,7 @@ mod tests {
         let jac = |x: &DVector<f64>| {
             <DMatrix<f64> as Matrix<f64>>::from_row_slice(1, 2, &[2.0 * x[0], 3.0 * x[1].powi(2)])
         };
-        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 6);
+        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 9);
     }
 
     #[test]
@@ -334,7 +367,7 @@ mod tests {
         let jac = |x: &SVector<f64, 2>| {
             DMatrix::<f64>::from_row_slice(2, 2, &[2.0 * x[0], 0.0, 0.0, 3.0 * x[1].powi(2)])
         };
-        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 6);
+        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 9);
     }
 
     #[test]
@@ -364,6 +397,6 @@ mod tests {
                 x[0].sin(),
             ])
         };
-        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 6);
+        assert_arrays_equal_to_decimal!(jacobian(&f, &x0, None), jac(&x0), 9);
     }
 }

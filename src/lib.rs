@@ -61,6 +61,20 @@
 //! assert_arrays_equal!(grad_f1, grad_f3);
 //! ```
 //!
+//! # Central Difference Approximations
+//!
+//! | Derivative Type | Function Type | Function to Approximate Derivative |
+//! | --------------- | ------------- | ---------------------------------- |
+//! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`central difference::sderivative()`] |
+//! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`central difference::vderivative()`] |
+//! | partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::spartial_derivative()`] |
+//! | partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central difference::vpartial_derivative()`] |
+//! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::gradient()`] |
+//! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::directional_derivative()`] |
+//! | Jacobian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central difference::jacobian()`] |
+//! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::shessian()`] |
+//! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central difference::vhessian()`] |
+//!
 //! # Forward Difference Approximations
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
@@ -79,6 +93,7 @@
 #![warn(missing_docs)]
 
 // Module declarations.
+pub mod central_difference;
 pub mod constants;
 pub mod forward_difference;
 

@@ -1,4 +1,4 @@
-//! Forward difference approximations.
+//! Central difference approximations.
 
 // Module declarations.
 pub(crate) mod derivative;

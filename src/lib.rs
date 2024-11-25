@@ -65,15 +65,15 @@
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
 //! | --------------- | ------------- | ---------------------------------- |
-//! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`central difference::sderivative()`] |
-//! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`central difference::vderivative()`] |
-//! | partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::spartial_derivative()`] |
-//! | partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central difference::vpartial_derivative()`] |
-//! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::gradient()`] |
-//! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::directional_derivative()`] |
-//! | Jacobian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central difference::jacobian()`] |
-//! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central difference::shessian()`] |
-//! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central difference::vhessian()`] |
+//! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`central_difference::sderivative()`] |
+//! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`central_difference::vderivative()`] |
+//! | partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::spartial_derivative()`] |
+//! | partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::vpartial_derivative()`] |
+//! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::gradient()`] |
+//! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::directional_derivative()`] |
+//! | Jacobian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::jacobian()`] |
+//! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::shessian()`] |
+//! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::vhessian()`] |
 //!
 //! # Forward Difference Approximations
 //!

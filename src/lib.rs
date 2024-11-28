@@ -61,6 +61,17 @@
 //! assert_arrays_equal!(grad_f1, grad_f3);
 //! ```
 //!
+//! # Forward-Mode Automatic Differentiation
+//!
+//! ## Writing compatible functions
+//!
+//! * TODO: discuss that you can only use functions, and not closures
+//!     --> this also means we can't "pass extra parameters"
+//! * TODO: discuss trait bounds on Scalar, Vector
+//! * TODO: discuss using S::new() for Scalar constants (can't have float on LHS and generic S on
+//!         RHS)
+//!     --> also need to use in argument for powf
+//!
 //! # Central Difference Approximations
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
@@ -93,6 +104,7 @@
 #![warn(missing_docs)]
 
 // Module declarations.
+pub mod automatic_differentiation;
 pub mod central_difference;
 pub mod constants;
 pub mod forward_difference;
@@ -100,3 +112,7 @@ pub mod forward_difference;
 // Module declarations for utils used for testing only.
 #[cfg(test)]
 pub(crate) mod test_utils;
+
+// Re-exports.
+pub use automatic_differentiation::dual::Dual;
+pub use automatic_differentiation::dual_vector::DualVector;

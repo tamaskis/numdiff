@@ -17,8 +17,8 @@ pub(crate) fn sqrt_deriv(x: f64) -> f64 {
 }
 
 #[cfg(test)]
-pub(crate) fn power_deriv(b: i32, x: f64) -> f64 {
-    (b as f64).powf(x) * (b as f64).ln()
+pub(crate) fn power_deriv(b: f64, x: f64) -> f64 {
+    b.powf(x) * b.ln()
 }
 
 #[cfg(test)]

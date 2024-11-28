@@ -16,7 +16,7 @@ use crate::constants::SQRT_EPS;
 ///
 /// # Note
 ///
-/// This function peforms 2 evaluations of $f(x)$.
+/// This function performs 2 evaluations of $f(x)$.
 ///
 /// # Example
 ///
@@ -171,8 +171,8 @@ mod tests {
 
     #[test]
     fn test_sderivative_power() {
-        let b = 5;
-        let f = |x: f64| (b as f64).powf(x);
+        let b: f64 = 5.0;
+        let f = |x: f64| b.powf(x);
         assert_equal_to_decimal!(
             sderivative(&f, -1.0, None),
             test_utils::power_deriv(b, -1.0),

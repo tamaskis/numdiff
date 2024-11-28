@@ -16,7 +16,7 @@ use crate::constants::CBRT_EPS;
 ///
 /// # Note
 ///
-/// This function peforms 2 evaluations of $f(x)$.
+/// This function performs 2 evaluations of $f(x)$.
 ///
 /// # Example
 ///
@@ -70,7 +70,101 @@ mod tests {
     use crate::test_utils;
     use numtest::*;
     use std::f64::consts::PI;
+
+    #[cfg(feature = "trig")]
     use trig::Trig;
+
+    #[test]
+    fn test_product_rule() {
+        // f(x) and f'(x).
+        let f = |x: f64| x.powi(3);
+        let df = |x: f64| 3.0 * x.powi(2);
+
+        // g(x) and g'(x).
+        let g = |x: f64| x.sin();
+        let dg = |x: f64| x.cos();
+
+        // h(x) = f(x)g(x) and h'(x) = f'(x)g(x) + f(x)g'(x).
+        let h = |x: f64| f(x) * g(x);
+        let dh = |x: f64| df(x) * g(x) + f(x) * dg(x);
+
+        // Approximation of h'(x).
+        let dh_approx = |x: f64| sderivative(&h, x, None);
+
+        // Test approximation of h'(x) against true h'(x).
+        assert_equal_to_decimal!(dh_approx(-1.5), dh(-1.5), 9);
+        assert_equal_to_decimal!(dh_approx(1.5), dh(1.5), 9);
+    }
+
+    #[test]
+    fn test_quotient_rule() {
+        // f(x) and f'(x).
+        let f = |x: f64| x.powi(3);
+        let df = |x: f64| 3.0 * x.powi(2);
+
+        // g(x) and g'(x).
+        let g = |x: f64| x.sin();
+        let dg = |x: f64| x.cos();
+
+        // h(x) = f(x) / g(x) and h'(x) = (g(x)f'(x) - f(x)g'(x)) / (g(x))².
+        let h = |x: f64| f(x) / g(x);
+        let dh = |x: f64| (g(x) * df(x) - f(x) * dg(x)) / g(x).powi(2);
+
+        // Approximation of h'(x).
+        let dh_approx = |x: f64| sderivative(&h, x, None);
+
+        // Test approximation of h'(x) against true h'(x).
+        assert_equal_to_decimal!(dh_approx(-1.5), dh(-1.5), 9);
+        assert_equal_to_decimal!(dh_approx(1.5), dh(1.5), 9);
+    }
+
+    #[test]
+    fn test_chain_rule_one_composition() {
+        // f(x) and f'(x).
+        let f = |x: f64| x.powi(3);
+        let df = |x: f64| 3.0 * x.powi(2);
+
+        // g(x) and g'(x).
+        let g = |x: f64| x.sin();
+        let dg = |x: f64| x.cos();
+
+        // h(x) = g(f(x)) and h'(x) = [g'(f(x))][f'(x)].
+        let h = |x: f64| g(f(x));
+        let dh = |x: f64| dg(f(x)) * df(x);
+
+        // Approximation of h'(x).
+        let dh_approx = |x: f64| sderivative(&h, x, None);
+
+        // Test approximation of h'(x) against true h'(x).
+        assert_equal_to_decimal!(dh_approx(-1.5), dh(-1.5), 8);
+        assert_equal_to_decimal!(dh_approx(1.5), dh(1.5), 8);
+    }
+
+    #[test]
+    fn test_chain_rule_two_compositions() {
+        // f(x) and f'(x).
+        let f = |x: f64| x.powi(3);
+        let df = |x: f64| 3.0 * x.powi(2);
+
+        // g(x) and g'(x).
+        let g = |x: f64| x.sin();
+        let dg = |x: f64| x.cos();
+
+        // h(x) and h'(x).
+        let h = |x: f64| 5.0 / x.powi(2);
+        let dh = |x: f64| -10.0 / x.powi(3);
+
+        // j(x) = h(g(f(x))) and j'(x) = [h'(g(f(x)))][g'(f(x))][f'(x)].
+        let j = |x: f64| h(g(f(x)));
+        let dj = |x: f64| dh(g(f(x))) * dg(f(x)) * df(x);
+
+        // Approximation of j'(x).
+        let dj_approx = |x: f64| sderivative(&j, x, None);
+
+        // Test approximation of j'(x) against true j'(x).
+        assert_equal_to_decimal!(dj_approx(-1.5), dj(-1.5), 2);
+        assert_equal_to_decimal!(dj_approx(1.5), dj(1.5), 2);
+    }
 
     #[test]
     fn test_sderivative_polynomial() {
@@ -171,8 +265,8 @@ mod tests {
 
     #[test]
     fn test_sderivative_power() {
-        let b = 5;
-        let f = |x: f64| (b as f64).powf(x);
+        let b: f64 = 5.0;
+        let f = |x: f64| b.powf(x);
         assert_equal_to_decimal!(
             sderivative(&f, -1.0, None),
             test_utils::power_deriv(b, -1.0),
@@ -291,6 +385,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_tangent() {
         let f = |x: f64| x.tan();
         assert_equal_to_decimal!(sderivative(&f, 0.0, None), test_utils::tan_deriv(0.0), 11);
@@ -323,6 +418,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_cosecant() {
         let f = |x: f64| x.csc();
         assert_equal_to_decimal!(
@@ -348,6 +444,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_secant() {
         let f = |x: f64| x.sec();
         assert_equal_to_decimal!(sderivative(&f, 0.0, None), test_utils::sec_deriv(0.0), 16);
@@ -380,6 +477,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_cotangent() {
         let f = |x: f64| x.cot();
         assert_equal_to_decimal!(
@@ -463,6 +561,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_cosecant() {
         let f = |x: f64| x.acsc();
         assert_equal_to_decimal!(
@@ -474,6 +573,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_secant() {
         let f = |x: f64| x.asec();
         assert_equal_to_decimal!(
@@ -487,6 +587,7 @@ mod tests {
     // Note: we do not test the derivative of arccot at 0 because the central difference
     // approximation is numerical unstable about x = 0 for this specific function.
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_cotangent() {
         let f = |x: f64| x.acot();
         assert_equal_to_decimal!(
@@ -534,6 +635,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_tangent() {
         let f = |x: f64| x.tanh();
         assert_equal_to_decimal!(
@@ -546,6 +648,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_cosecant() {
         let f = |x: f64| x.csch();
         assert_equal_to_decimal!(
@@ -557,6 +660,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_secant() {
         let f = |x: f64| x.sech();
         assert_equal_to_decimal!(
@@ -569,6 +673,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_cotangent() {
         let f = |x: f64| x.coth();
         assert_equal_to_decimal!(sderivative(&f, -1.0, None), test_utils::coth_deriv(-1.0), 9);
@@ -618,6 +723,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_cosecant() {
         let f = |x: f64| x.acsch();
         assert_equal_to_decimal!(
@@ -641,12 +747,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_secant() {
         let f = |x: f64| x.asech();
         assert_equal_to_decimal!(sderivative(&f, 0.5, None), test_utils::asech_deriv(0.5), 9);
     }
 
     #[test]
+    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_cotangent() {
         let f = |x: f64| x.acoth();
         assert_equal_to_decimal!(

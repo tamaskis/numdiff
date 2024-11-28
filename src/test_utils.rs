@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[cfg(feature = "trig")]
 use trig::Trig;
 
 #[cfg(test)]
@@ -17,8 +18,8 @@ pub(crate) fn sqrt_deriv(x: f64) -> f64 {
 }
 
 #[cfg(test)]
-pub(crate) fn power_deriv(b: i32, x: f64) -> f64 {
-    (b as f64).powf(x) * (b as f64).ln()
+pub(crate) fn power_deriv(b: f64, x: f64) -> f64 {
+    b.powf(x) * b.ln()
 }
 
 #[cfg(test)]
@@ -47,21 +48,25 @@ pub(crate) fn cos_deriv(x: f64) -> f64 {
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn tan_deriv(x: f64) -> f64 {
     x.sec().powi(2)
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn csc_deriv(x: f64) -> f64 {
     -x.csc() * x.tan()
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn sec_deriv(x: f64) -> f64 {
     x.sec() * x.tan()
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn cot_deriv(x: f64) -> f64 {
     -x.csc().powi(2)
 }
@@ -107,21 +112,25 @@ pub(crate) fn cosh_deriv(x: f64) -> f64 {
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn tanh_deriv(x: f64) -> f64 {
     x.sech().powi(2)
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn csch_deriv(x: f64) -> f64 {
     -x.csch() * x.coth()
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn sech_deriv(x: f64) -> f64 {
     -x.sech() * x.tanh()
 }
 
 #[cfg(test)]
+#[cfg(feature = "trig")]
 pub(crate) fn coth_deriv(x: f64) -> f64 {
     -x.csch().powi(2)
 }

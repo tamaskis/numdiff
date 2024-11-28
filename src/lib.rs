@@ -61,6 +61,69 @@
 //! assert_arrays_equal!(grad_f1, grad_f3);
 //! ```
 //!
+//! # Automatic Differentiation (Forward-Mode)
+//!
+//! | Derivative Type | Function Type | Macro to Generate Derivative Function |
+//! | --------------- | ------------- | ---------------------------------- |
+//! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`get_sderivative!`] |
+//! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`get_vderivative!`] |
+//! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_gradient!`] |
+//!
+//! ## Limitations
+//!
+//! * These macros only work on functions, and _not_ on closures.
+//!     - Currently, this also means we can't "pass extra parameters" to a function.
+//! * Constants (e.g. `5.0_f64`) need to be defined using [`linalg_traits::Scalar::new`] (e.g. if a
+//!   function has the generic parameter `S: Scalar`, then instead of defining a constant number
+//!   such as `5.0_f64`, we need to do `S::new(5.0)`).
+//!     - This is also the case for some functions that can take constants are arguments, such as
+//!       [`num_traits::Float::powf`].
+//! * When defining functions that operate on generic scalars (to make them compatible with
+//!   automatic differentiatino), we cannot do an assignment operation such as `1.0 += x` if
+//!   `x: S` where `S: Scalar`.
+//!
+//! ## Alternatives
+//!
+//! There are already some alternative crates in the Rust ecosystem that already implement dual
+//! numbers. Originally, I intended to implement the autodifferentiation functions in this crate
+//! using one of those other dual number implementations in the backend. However, each crate had
+//! certain shortcomings that ultimately led to me providing a custom implementation of dual numbers
+//! in this crate. The alternative crates implementing dual numbers are described below.
+//!
+//! ##### [`num-dual`](https://docs.rs/num-dual/latest/num_dual/)
+//!
+//! * This crate _can_ be used to differentiate functions of generic types that implement the
+//!   [`DualNum`](https://docs.rs/num-dual/latest/num_dual/trait.DualNum.html) trait. Since this
+//!   trait is implemented for [`f32`] and [`f64`], it would allow us to write generic functions
+//!   that can be simply evaluated using [`f64`]s, but can also be automatically differentiated if
+//!   needed.
+//! * However, there are some notable shortcomings that are described below.
+//! * The [`Dual`](https://github.com/itt-ustutt/num-dual/blob/master/src/dual.rs) struct panics in
+//!   its implementations of the following standard functions which are quite common in engineering:
+//!     - [`num_traits::Float::floor`]
+//!     - [`num_traits::Float::ceil`]
+//!     - [`num_traits::Float::round`]
+//!     - [`num_traits::Float::trunc`]
+//!     - [`num_traits::Float::fract`]
+//! * `num-dual` has a required dependency on
+//!   [`nalgebra`](https://docs.rs/nalgebra/latest/nalgebra/), which is quite a heavy dependency for
+//!   those who do not need it.
+//!
+//! ##### [`autodj`](https://docs.rs/autodj/latest/autodj/)
+//!
+//! * Can only differentiate functions written using custom types, such as
+//!   [`DualF64`](https://docs.rs/autodj/latest/autodj/solid/single/type.DualF64.html).
+//! * Multivariate functions, especially those with a dynamic number of variables, can be extremely
+//!   clunky (see
+//!   [this example](https://docs.rs/autodj/latest/autodj/index.html#dynamic-number-of-variables)).
+//!
+//! ##### [`autodiff`](https://docs.rs/autodiff/latest/autodiff/)
+//!
+//! * Can only differentiate functions written using the custom type
+//!   [`FT<T>`](https://docs.rs/autodiff/latest/autodiff/forward_autodiff/type.FT.html).
+//! * Incorrect implementation of certain functions, such as [`num_traits::Float::floor`] (see the
+//!   [source code](https://github.com/elrnv/autodiff/blob/master/src/forward_autodiff.rs)).
+//!
 //! # Central Difference Approximations
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
@@ -93,6 +156,7 @@
 #![warn(missing_docs)]
 
 // Module declarations.
+pub(crate) mod automatic_differentiation;
 pub mod central_difference;
 pub mod constants;
 pub mod forward_difference;
@@ -100,3 +164,7 @@ pub mod forward_difference;
 // Module declarations for utils used for testing only.
 #[cfg(test)]
 pub(crate) mod test_utils;
+
+// Re-exports.
+pub use automatic_differentiation::dual::Dual;
+pub use automatic_differentiation::dual_vector::DualVector;

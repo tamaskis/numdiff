@@ -93,6 +93,7 @@
 #![warn(missing_docs)]
 
 // Module declarations.
+pub mod automatic_differentiation;
 pub mod central_difference;
 pub mod constants;
 pub mod forward_difference;

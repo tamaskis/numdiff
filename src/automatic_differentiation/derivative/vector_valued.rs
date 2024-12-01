@@ -17,7 +17,7 @@ macro_rules! get_vderivative {
         /// $$\frac{df}{dx}\bigg\rvert_{x=x_{0}}\in\mathbb{R}$$
         ///
         /// // TODO more docs
-        fn $func_name<S: Scalar, V: Vector<S, Vectorf64 = Vec<f64>>>(value: S) -> Vec<f64> {
+        fn $func_name<S: Scalar>(value: S) -> DVector<f64> {
             // Cast the value to a different concrete type (T -> ConcreteTypeB)
             let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
 
@@ -38,16 +38,17 @@ mod tests {
     use super::*;
     use crate::automatic_differentiation::dual::Dual;
     use linalg_traits::{Scalar, Vector};
+    use nalgebra::{dvector, DVector};
     use numtest::*;
 
     #[test]
     fn test_vderivative() {
-        fn f<S: Scalar>(x: S) -> Vec<S> {
-            vec![x.sin(), x.cos()]
+        fn f<S: Scalar>(x: S) -> DVector<S> {
+            dvector![x.sin(), x.cos()]
         }
         let x0 = 2.0;
         get_vderivative!(df, f);
         let df_actual = |x: f64| vec![x.cos(), -x.sin()];
-        assert_arrays_equal_to_decimal!(df::<f64, Vec<f64>>(x0), df_actual(x0), 7);
+        assert_arrays_equal!(df(x0), df_actual(x0));
     }
 }

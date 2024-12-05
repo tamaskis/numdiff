@@ -18,14 +18,9 @@ macro_rules! get_sderivative {
         ///
         /// // TODO more docs
         fn $func_name<S: Scalar>(value: S) -> f64 {
-            // Cast the value to a different concrete type (T -> ConcreteTypeB)
             let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
-
-            // Call the passed-in generic function with a reference to the new concrete type
-            let result = $generic_func(temp_value); // Now using ConcreteTypeB
-
-            // Since temp_value is ConcreteTypeB, we need to cast it back to ConcreteTypeA first
-            result.get_dual() // Convert back to ConcreteTypeA
+            let result = $generic_func(temp_value);
+            result.get_dual()
         }
     };
 }

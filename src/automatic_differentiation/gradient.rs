@@ -1,24 +1,30 @@
 /// TODO.
 #[macro_export]
-macro_rules! get_vderivative {
+macro_rules! get_gradient {
     ($func_name:ident, $generic_func:ident) => {
-        /// Derivative of a univariate, scalar-valued function using forward-mode automatic
-        /// differentiation.
+        /// Gradient of a multivariate, scalar-valued function using the forward difference approximation.
         ///
         /// # Arguments
         ///
-        /// * `f` - Univariate, scalar-valued function, $f:\mathbb{R}\to\mathbb{R}$.
-        /// * `x0` - Evaluation point, $x_{0}\in\mathbb{R}$.
+        /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
+        /// * `x0` - Evaluation point, $\mathbf{x}_{0}\in\mathbb{R}^{n}$.
         ///
         /// # Returns
         ///
-        /// Derivative of $f$ with respect to $x$, evaluated at $x=x_{0}$.
+        /// Gradient of $f$ with respect to $\mathbf{x}$, evaluated at $\mathbf{x}=\mathbf{x}_{0}$.
         ///
-        /// $$\frac{df}{dx}\bigg\rvert_{x=x_{0}}\in\mathbb{R}$$
+        /// $$\nabla f(\mathbf{x}_{0})\in\mathbb{R}^{n}$$
         ///
         /// // TODO more docs
-        fn $func_name<S: Scalar>(value: S) -> DVector<f64> {
+        fn $func_name<S, V>(value: S) -> DMatrix<f64>
+        where
+            S: Scalar,
+            V: Vector<S>,
+        {
             let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
+
+            // TODO: need a method to create a vector of dual numbers
+            // TODO: need a method to take the dual portion of a vector of dual numbers
 
             let result = $generic_func(temp_value);
 

@@ -11,13 +11,13 @@ license = "MIT OR Apache-2.0"
 exclude = ["Cargo.lock", ".github/", ".vscode/", ".gitignore"]
 
 [dependencies]
-linalg-traits = "0.7.3"
+linalg-traits = "0.7.4"
 num-traits = "0.2.19"
 once_cell = "1.19.0"
 trig = "0.1.3"
 
 [dev-dependencies]
-linalg-traits = { version = "0.7.3", features = ["nalgebra", "ndarray"] }
+linalg-traits = { version = "0.7.4", features = ["nalgebra", "ndarray"] }
 nalgebra = "0.33.0"
 ndarray = "0.16.0"
 numtest = "0.2.0"

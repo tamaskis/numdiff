@@ -25,7 +25,7 @@ macro_rules! get_gradient {
             // TODO: need a method to take the dual portion of a vector of dual numbers
 
             let result: DVector<f64> = DVector::new_with_length(value.len());
-            let mut x0_dual: V::DualVector;
+            let mut x0_dual = V::GenericVector::<Dual>::new_with_length; // TODO: need to implement DualVector for everything that implements Vector
 
             for i in 0..result_f64.len() {
                 let result = $generic_func(temp_value);

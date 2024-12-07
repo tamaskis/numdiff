@@ -25,9 +25,9 @@ checksum = "8334215b81e418a0a7bdb8ef0849474f40bb10c8b71f1c4ed315cff49f32494d"
 
 [[package]]
 name = "linalg-traits"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af469f78a95eff6cf3234d0304a221657b5ed71028e9bb7e520cdbdf406bc2a9"
+checksum = "83f8b7cfa4db23fcb08964051eefdac3ac96b7b92c4c7c7caf1f59b0220ca07e"
 dependencies = [
  "nalgebra",
  "ndarray",

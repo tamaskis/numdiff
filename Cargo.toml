@@ -14,7 +14,7 @@ exclude = ["Cargo.lock", ".github/", ".vscode/", ".gitignore"]
 linalg-traits = "0.7.5"
 num-traits = "0.2.19"
 once_cell = "1.19.0"
-trig = "0.1.3"
+trig = { version = "0.1.3", optional = true }
 
 [dev-dependencies]
 linalg-traits = { version = "0.7.5", features = ["nalgebra", "ndarray"] }
@@ -24,3 +24,4 @@ numtest = "0.2.0"
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "src/docs-header.html" ]
+features = ["trig"]

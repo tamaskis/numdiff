@@ -5,6 +5,9 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
+#[cfg(feature = "trig")]
+use trig::Trig;
+
 /// TODO: notes on other crates
 ///     --> num-dual: panics on a lot of methods implemented for num_traits::Float; this is NOT good
 ///     --> num-dual: depends on nalgebra
@@ -647,7 +650,7 @@ impl RemAssign<f64> for Dual {
 }
 
 // ---------------------------
-// Interoperability with f64s.
+// Interoperability with f64s. TODO should this be in another section?
 // ---------------------------
 
 impl Add<Dual> for f64 {
@@ -675,6 +678,134 @@ impl Div<Dual> for f64 {
     type Output = Dual;
     fn div(self, dual: Dual) -> Dual {
         Dual::new(self / dual.real, -self * dual.dual / dual.real.powi(2))
+    }
+}
+
+// ------------------------
+// Implementing trig::Trig.
+// ------------------------
+
+#[cfg(feature = "trig")]
+impl Trig for Dual {
+    fn sin(&self) -> Dual {
+        <Dual as Float>::sin(*self)
+    }
+    fn cos(&self) -> Dual {
+        <Dual as Float>::cos(*self)
+    }
+    fn tan(&self) -> Dual {
+        <Dual as Float>::tan(*self)
+    }
+    fn csc(&self) -> Dual {
+        1.0 / self.sin()
+    }
+    fn sec(&self) -> Dual {
+        1.0 / self.cos()
+    }
+    fn cot(&self) -> Dual {
+        1.0 / self.tan()
+    }
+    fn asin(&self) -> Dual {
+        <Dual as Float>::asin(*self)
+    }
+    fn acos(&self) -> Dual {
+        <Dual as Float>::acos(*self)
+    }
+    fn atan(&self) -> Dual {
+        <Dual as Float>::atan(*self)
+    }
+    fn atan2(&self, other: &Dual) -> Dual {
+        <Dual as Float>::atan2(*self, *other)
+    }
+    fn acsc(&self) -> Dual {
+        (Dual::new(1.0, 0.0) / *self).asin()
+    }
+    fn asec(&self) -> Dual {
+        (Dual::new(1.0, 0.0) / *self).acos()
+    }
+    fn acot(&self) -> Dual {
+        (Dual::new(1.0, 0.0) / *self).atan()
+    }
+    fn deg2rad(&self) -> Dual {
+        *self * Dual::new(std::f64::consts::PI / 180.0, 0.0)
+    }
+    fn rad2deg(&self) -> Dual {
+        *self * Dual::new(180.0 / std::f64::consts::PI, 0.0)
+    }
+    fn sind(&self) -> Dual {
+        self.deg2rad().sin()
+    }
+    fn cosd(&self) -> Dual {
+        self.deg2rad().cos()
+    }
+    fn tand(&self) -> Dual {
+        self.deg2rad().tan()
+    }
+    fn cscd(&self) -> Dual {
+        self.deg2rad().csc()
+    }
+    fn secd(&self) -> Dual {
+        self.deg2rad().sec()
+    }
+    fn cotd(&self) -> Dual {
+        self.deg2rad().cot()
+    }
+    fn asind(&self) -> Dual {
+        self.asin().rad2deg()
+    }
+    fn acosd(&self) -> Dual {
+        self.acos().rad2deg()
+    }
+    fn atand(&self) -> Dual {
+        self.atan().rad2deg()
+    }
+    fn atan2d(&self, other: &Dual) -> Dual {
+        self.atan2(other).rad2deg()
+    }
+    fn acscd(&self) -> Dual {
+        self.acsc().rad2deg()
+    }
+    fn asecd(&self) -> Dual {
+        self.asec().rad2deg()
+    }
+    fn acotd(&self) -> Dual {
+        self.acot().rad2deg()
+    }
+    fn sinh(&self) -> Dual {
+        <Dual as Float>::sinh(*self)
+    }
+    fn cosh(&self) -> Dual {
+        <Dual as Float>::cosh(*self)
+    }
+    fn tanh(&self) -> Dual {
+        <Dual as Float>::tanh(*self)
+    }
+    fn csch(&self) -> Dual {
+        1.0 / self.sinh()
+    }
+    fn sech(&self) -> Dual {
+        1.0 / self.cosh()
+    }
+    fn coth(&self) -> Dual {
+        1.0 / self.tanh()
+    }
+    fn asinh(&self) -> Dual {
+        <Dual as Float>::asinh(*self)
+    }
+    fn acosh(&self) -> Dual {
+        <Dual as Float>::acosh(*self)
+    }
+    fn atanh(&self) -> Dual {
+        <Dual as Float>::atanh(*self)
+    }
+    fn acsch(&self) -> Dual {
+        (Dual::new(1.0, 0.0) / *self).asinh()
+    }
+    fn asech(&self) -> Dual {
+        (Dual::new(1.0, 0.0) / *self).acosh()
+    }
+    fn acoth(&self) -> Dual {
+        (Dual::new(1.0, 0.0) / *self).atanh()
     }
 }
 

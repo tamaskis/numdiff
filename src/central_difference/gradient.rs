@@ -17,7 +17,7 @@ use linalg_traits::Vector;
 ///
 /// # Note
 ///
-/// This function performs $2n$ evaluations of $f(x)$.
+/// This function performs $2n$ evaluations of $f(\mathbf{x})$.
 ///
 /// # Example
 ///

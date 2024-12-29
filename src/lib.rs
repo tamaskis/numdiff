@@ -67,6 +67,8 @@
 //! | --------------- | ------------- | ---------------------------------- |
 //! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`get_sderivative!`] |
 //! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`get_vderivative!`] |
+//! | partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_spartial_derivative!`] |
+//! | partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_vpartial_derivative!`] |
 //! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_gradient!`] |
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_directional_derivative!`] |
 //!

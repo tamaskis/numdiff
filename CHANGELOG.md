@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+1. Implemented the following forward-mode automatic differentiation macros:
+
+    - `numdiff::get_spartial_derivative!`
+    - `numdiff::get_vpartial_derivative!`
+
 ## 0.1.3
 
 1. Implemented the following forward-mode automatic differentiation macros:

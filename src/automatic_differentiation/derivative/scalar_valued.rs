@@ -70,7 +70,7 @@ macro_rules! get_sderivative {
             // Evaluate the function at the dual number.
             let f_x0 = $f(x0);
 
-            // Get the derivative by extracting the dual part of the function evaluation.
+            // Derivative of f with respect to x evaluated at x = x₀.
             f_x0.get_dual()
         }
     };

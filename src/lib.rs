@@ -68,18 +68,21 @@
 //! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`get_sderivative!`] |
 //! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`get_vderivative!`] |
 //! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_gradient!`] |
+//! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_directional_derivative!`] |
 //!
 //! ## Limitations
 //!
-//! * These macros only work on functions, and _not_ on closures.
+//! * These macros only work on functions that are generic both over the type of scalar and the type
+//!   of vector.
+//! * Consequently, these macros do _not_ work on closures.
 //!     - Currently, this also means we can't "pass extra parameters" to a function.
-//! * Constants (e.g. `5.0_f64`) need to be defined using [`linalg_traits::Scalar::new`] (e.g. if a
+//! * Constants (e.g. `5.0_f64`) need to be defined using `linalg_traits::Scalar::new` (e.g. if a
 //!   function has the generic parameter `S: Scalar`, then instead of defining a constant number
 //!   such as `5.0_f64`, we need to do `S::new(5.0)`).
 //!     - This is also the case for some functions that can take constants are arguments, such as
 //!       [`num_traits::Float::powf`].
 //! * When defining functions that operate on generic scalars (to make them compatible with
-//!   automatic differentiatino), we cannot do an assignment operation such as `1.0 += x` if
+//!   automatic differentiation), we cannot do an assignment operation such as `1.0 += x` if
 //!   `x: S` where `S: Scalar`.
 //!
 //! ## Alternatives

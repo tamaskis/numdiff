@@ -17,7 +17,7 @@ use linalg_traits::Vector;
 ///
 /// # Note
 ///
-/// This function performs $n+1$ evaluations of $f(x)$.
+/// This function performs $n+1$ evaluations of $f(\mathbf{x})$.
 ///
 /// # Example
 ///

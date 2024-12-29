@@ -20,7 +20,7 @@ use linalg_traits::Vector;
 ///
 /// # Note
 ///
-/// * This function performs 2 evaluations of $f(x)$.
+/// * This function performs 2 evaluations of $f(\mathbf{x})$.
 /// * This implementation does _not_ assume that $\mathbf{v}$ is a unit vector.
 ///
 /// # Example

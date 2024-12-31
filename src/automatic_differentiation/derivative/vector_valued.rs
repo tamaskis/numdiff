@@ -112,7 +112,7 @@ macro_rules! get_vderivative {
         fn $func_name<S: Scalar, V: Vector<S>>(value: S) -> V::Vectorf64 {
             let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
 
-            let f_x0: V::GenericVector<Dual> = $f(temp_value);
+            let f_x0: V::VectorT<Dual> = $f(temp_value);
 
             let mut df = V::Vectorf64::new_with_length(f_x0.len());
             for i in 0..df.len() {

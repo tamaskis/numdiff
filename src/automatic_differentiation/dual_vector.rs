@@ -12,7 +12,7 @@ where
     /// # Returns
     ///
     /// A copy of this vector with each element converted to a dual number (with dual part `0.0`).
-    fn to_dual_vector(self) -> V::GenericVector<Dual>;
+    fn to_dual_vector(self) -> V::VectorT<Dual>;
 }
 
 impl<S, V> DualVector<S, V> for V
@@ -20,8 +20,8 @@ where
     S: Scalar,
     V: Vector<S>,
 {
-    fn to_dual_vector(self) -> V::GenericVector<Dual> {
-        let mut vec_dual = V::GenericVector::new_with_length(self.len());
+    fn to_dual_vector(self) -> V::VectorT<Dual> {
+        let mut vec_dual = V::VectorT::new_with_length(self.len());
         for i in 0..self.len() {
             vec_dual[i] = Dual::new(self[i].to_f64().unwrap(), 0.0);
         }

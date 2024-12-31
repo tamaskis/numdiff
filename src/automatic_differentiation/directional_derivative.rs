@@ -60,7 +60,7 @@
 /// ].dot(v);
 ///
 /// // Verify that the directional derivative function obtained using get_directional_derivative!
-/// // is correct.
+/// // computes the directional derivative correctly.
 /// assert_eq!(df_v(&x0, &v), df_v_true(&x0, &v));
 /// ```
 ///

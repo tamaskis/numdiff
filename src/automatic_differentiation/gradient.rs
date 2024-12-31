@@ -56,7 +56,8 @@
 /// // Function defining the true gradient of f(x).
 /// let g_true = |x: &Vec<f64>| vec![5.0 * x[0].powi(4), 3.0 * x[1].sin().powi(2) * x[1].cos()];
 ///
-/// // Verify that the gradient function obtained using get_directional_derivative! is correct.
+/// // Verify that the gradient function obtained using get_gradient! computes the gradient
+/// // correctly.
 /// assert_arrays_equal_to_decimal!(g(&x0), g_true(&x0), 16);
 /// ```
 ///
@@ -69,7 +70,6 @@
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
-/// use numtest::*;
 ///
 /// use numdiff::{get_gradient, Dual, DualVector};
 ///
@@ -119,7 +119,7 @@ macro_rules! get_gradient {
             // Preallocate the vector to store the gradient.
             let mut g: V::Vectorf64 = x0.new_vector_f64();
 
-            // Dual version of the evaluation point.
+            // Promote the evaluation point to a vector of dual numbers.
             let mut x0_dual = x0.clone().to_dual_vector();
 
             // Variable to store the original value of the evaluation point in the kth direction.
@@ -127,10 +127,10 @@ macro_rules! get_gradient {
 
             // Evaluate the gradient.
             for k in 0..x0_dual.len() {
-                // Original value of the evaluation point in the kth direction.
+                // Original value of the evaluation point in the kth dual direction.
                 x0k = x0_dual[k];
 
-                // Step forward in the dual kth direction.
+                // Take a unit step forward in the kth dual direction.
                 x0_dual[k] = Dual::new(x0k.get_real(), 1.0);
 
                 // Partial derivative of f with respect to xₖ.
@@ -157,40 +157,73 @@ mod tests {
 
     #[test]
     fn test_gradient_1() {
+        // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
             x[0].powi(2)
         }
+
+        // Evaluation point.
         let x0 = vec![2.0];
+
+        // True gradient function.
         let g = |x: &Vec<f64>| vec![2.0 * x[0]];
+
+        // Gradient function obtained via forward-mode automatic differentiation.
         get_gradient!(f, g_autodiff);
-        let grad_autodiff: Vec<f64> = g_autodiff(&x0);
-        let grad_exact: Vec<f64> = g(&x0);
-        assert_arrays_equal_to_decimal!(grad_autodiff, grad_exact, 16);
+
+        // Evaluate the gradient using both functions.
+        let g_eval_autodiff: Vec<f64> = g_autodiff(&x0);
+        let g_eval: Vec<f64> = g(&x0);
+
+        // Test autodiff gradient against true gradient.
+        assert_arrays_equal_to_decimal!(g_eval_autodiff, g_eval, 16);
     }
 
     #[test]
     fn test_gradient_2() {
+        // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
             x[0].powi(2) + x[1].powi(3)
         }
+
+        // Evaluation point.
         let x0: DVector<f64> = DVector::from_slice(&[1.0, 2.0]);
+
+        // True gradient function.
         let g = |x: &DVector<f64>| DVector::<f64>::from_slice(&[2.0 * x[0], 3.0 * x[1].powi(2)]);
+
+        // Gradient function obtained via forward-mode automatic differentiation.
         get_gradient!(f, g_autodiff);
-        let grad_autodiff: DVector<f64> = g_autodiff(&x0);
-        let grad_exact: DVector<f64> = g(&x0);
-        assert_arrays_equal_to_decimal!(grad_autodiff, grad_exact, 16);
+
+        // Evaluate the gradient using both functions.
+        let g_eval_autodiff: DVector<f64> = g_autodiff(&x0);
+        let g_eval: DVector<f64> = g(&x0);
+
+        // Test autodiff gradient against true gradient.
+        assert_arrays_equal_to_decimal!(g_eval_autodiff, g_eval, 16);
     }
 
     #[test]
     fn test_gradient_3() {
+        // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
             x[0].powi(5) + x[1].sin().powi(3)
         }
+
+        // Evaluation point.
         let x0 = array![5.0, 8.0];
+
+        // True gradient function.
         let g = |x: &Array1<f64>| array![5.0 * x[0].powi(4), 3.0 * x[1].sin().powi(2) * x[1].cos()];
+
+        // Gradient function obtained via forward-mode automatic differentiation.
         get_gradient!(f, g_autodiff);
-        let grad_autodiff: Array1<f64> = g_autodiff(&x0);
-        let grad_exact: Array1<f64> = g(&x0);
-        assert_arrays_equal_to_decimal!(grad_autodiff, grad_exact, 16);
+
+        // Evaluate the gradient using both functions.
+        let g_eval_autodiff: Array1<f64> = g_autodiff(&x0);
+        let g_eval: Array1<f64> = g(&x0);
+
+        // Test autodiff gradient against true gradient.
+        assert_arrays_equal_to_decimal!(g_eval_autodiff, g_eval, 16);
     }
 }

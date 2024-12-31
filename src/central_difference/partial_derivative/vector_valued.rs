@@ -21,7 +21,7 @@ use linalg_traits::Vector;
 ///
 /// # Note
 ///
-/// This function performs 2 evaluations of $f(x)$.
+/// This function performs 2 evaluations of $\mathbf{f}(\mathbf{x})$.
 ///
 /// # Example
 ///

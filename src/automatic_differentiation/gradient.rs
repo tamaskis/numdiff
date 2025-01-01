@@ -122,7 +122,8 @@ macro_rules! get_gradient {
             // Promote the evaluation point to a vector of dual numbers.
             let mut x0_dual = x0.clone().to_dual_vector();
 
-            // Variable to store the original value of the evaluation point in the kth direction.
+            // Variable to store the original value of the evaluation point in the kth dual
+            // direction.
             let mut x0k: Dual;
 
             // Evaluate the gradient.

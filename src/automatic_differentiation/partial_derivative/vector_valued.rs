@@ -39,7 +39,7 @@
 ///
 /// # Example
 ///
-/// Approximate the partial derivative of
+/// Compute the partial derivative of
 ///
 /// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}\sin{x_{0}}\sin{x_{1}}\\\\\cos{x_{0}}\cos{x_{1}}\end{bmatrix}$$
 ///
@@ -73,8 +73,8 @@
 /// // to.
 /// let k = 0;
 ///
-/// // Autogenerate the function "dfk" that can be used to compute the derivative of f(x) with
-/// // respect to xₖ at any point x.
+/// // Autogenerate the function "dfk" that can be used to compute the partial derivative of f(x)
+/// // with respect to xₖ at any point x.
 /// get_vpartial_derivative!(f, dfk);
 ///
 /// // Verify that the partial derivative function obtained using get_vpartial_derivative! computes
@@ -106,8 +106,8 @@
 /// // to.
 /// let k = 0;
 ///
-/// // Autogenerate the function "dfk" that can be used to compute the derivative of f(x) with
-/// // respect to xₖ at any point x.
+/// // Autogenerate the function "dfk" that can be used to compute the partial derivative of f(x)
+/// // with respect to xₖ at any point x.
 /// get_vpartial_derivative!(f, dfk);
 ///
 /// // nalgebra::DVector

@@ -19,7 +19,7 @@
 ///
 /// # Example
 ///
-/// Approximate the derivative of
+/// Compute the derivative of
 ///
 /// $$f(t)=\begin{bmatrix}\sin{t}\\\\\cos{t}\end{bmatrix}$$
 ///

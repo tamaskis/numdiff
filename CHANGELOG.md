@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+1. Implemented the following forward-mode automatic differentiation macros:
+
+    - `numdiff::get_jacobian!`
+
 ## 0.1.4
 
 1. Implemented the following forward-mode automatic differentiation macros:

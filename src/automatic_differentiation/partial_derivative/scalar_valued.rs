@@ -20,7 +20,7 @@
 ///
 /// # Example
 ///
-/// Approximate the partial derivative of
+/// Compute the partial derivative of
 ///
 /// $$f(x)=x^{3}\sin{y}$$
 ///
@@ -58,8 +58,8 @@
 /// // to.
 /// let k = 1;
 ///
-/// // Autogenerate the function "dfk" that can be used to compute the derivative of f(x) with
-/// // respect to xₖ at any point x.
+/// // Autogenerate the function "dfk" that can be used to compute the partial derivative of f(x)
+/// // with respect to xₖ at any point x.
 /// get_spartial_derivative!(f, dfk);
 ///
 /// // Verify that the partial derivative function obtained using get_spartial_derivative! computes
@@ -88,8 +88,8 @@
 /// // to.
 /// let k = 1;
 ///
-/// // Autogenerate the function "dfk" that can be used to compute the derivative of f(x) with
-/// // respect to xₖ at any point x.
+/// // Autogenerate the function "dfk" that can be used to compute the partial derivative of f(x)
+/// // with respect to xₖ at any point x.
 /// get_spartial_derivative!(f, dfk);
 ///
 /// // nalgebra::DVector

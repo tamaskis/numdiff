@@ -19,7 +19,7 @@
 ///
 /// # Example
 ///
-/// Approximate the derivative of
+/// Compute the derivative of
 ///
 /// $$f(x)=x^{3}$$
 ///

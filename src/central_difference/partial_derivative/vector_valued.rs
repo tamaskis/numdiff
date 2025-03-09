@@ -70,10 +70,12 @@ use linalg_traits::Vector;
 /// #### Using other vector types
 ///
 /// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, or any other type of vector that implements the `linalg_traits::Vector`
-/// trait.
+/// `ndarray::Array1`, `faer::Mat`, or any other type of vector that implements the
+/// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
+/// use linalg_traits::Vector;  // to provide from_slice method for faer::Mat
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 /// use numtest::*;
@@ -103,6 +105,17 @@ use linalg_traits::Vector;
 /// let x0_array1: Array1<f64> = array![1.0, 2.0];
 /// let pf_array1: Array1<f64> = vpartial_derivative(&f_array1, &x0_array1, k, None);
 /// assert_arrays_equal_to_decimal!(pf_array1, pf_true, 11);
+///
+/// // faer::Mat
+/// let f_mat = |x: &Mat<f64>| {
+///     Mat::from_slice(&[
+///         x[(0, 0)].sin() * x[(1, 0)].sin(),
+///         x[(0, 0)].cos() * x[(1, 0)].cos(),
+///     ])
+/// };
+/// let x0_mat: Mat<f64> = Mat::from_slice(&[1.0, 2.0]);
+/// let pf_mat: Mat<f64> = vpartial_derivative(&f_mat, &x0_mat, k, None);
+/// assert_arrays_equal_to_decimal!(pf_mat.as_slice(), pf_true, 11);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -135,18 +148,18 @@ where
     // Default the relative step size to h = ε¹ᐟ³ if not specified.
     let h = h.unwrap_or(*CBRT_EPS);
 
-    // Store the original value of the evaluation point in the kth direction.
-    let x0k = x0[k];
+    // Original value of the evaluation point in the kth direction.
+    let x0k = x0.vget(k);
 
     // Absolute step size in the kth direction.
-    let dxk = h * (1.0 + x0[k].abs());
+    let dxk = h * (1.0 + x0k.abs());
 
     // Step forward in the kth direction.
-    x0[k] += dxk;
+    x0.vset(k, x0k + dxk);
     let f1 = f(&x0);
 
     // Step backward in the kth direction.
-    x0[k] = x0k - dxk;
+    x0.vset(k, x0k - dxk);
     let f2 = f(&x0);
 
     // Evaluate the partial derivative of f with respect to xₖ.

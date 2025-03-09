@@ -43,7 +43,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-///     x[0].powi(5) + x[1].sin().powi(3)
+///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
 /// }
 ///
 /// // Define the evaluation point.
@@ -67,6 +67,7 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -75,7 +76,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-///     x[0].powi(5) + x[1].sin().powi(3)
+///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
 /// }
 ///
 /// // Autogenerate the function "g" that can be used to compute the gradient of f(x) at any point
@@ -84,15 +85,19 @@
 ///
 /// // nalgebra::DVector
 /// let x0: DVector<f64> = dvector![5.0, 8.0];
-/// let _ = g(&x0);
+/// let g_eval: DVector<f64> = g(&x0);
 ///
 /// // nalgebra::SVector
 /// let x0: SVector<f64, 2> = SVector::from_slice(&[5.0, 8.0]);
-/// let _ = g(&x0);
+/// let g_eval: SVector<f64, 2> = g(&x0);
 ///
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 8.0];
-/// let _ = g(&x0);
+/// let g_eval: Array1<f64> = g(&x0);
+///
+/// // faer::Mat
+/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
+/// let g_eval: Mat<f64> = g(&x0);
 /// ```
 #[macro_export]
 macro_rules! get_gradient {
@@ -129,16 +134,16 @@ macro_rules! get_gradient {
             // Evaluate the gradient.
             for k in 0..x0_dual.len() {
                 // Original value of the evaluation point in the kth dual direction.
-                x0k = x0_dual[k];
+                x0k = x0_dual.vget(k);
 
                 // Take a unit step forward in the kth dual direction.
-                x0_dual[k] = Dual::new(x0k.get_real(), 1.0);
+                x0_dual.vset(k, Dual::new(x0k.get_real(), 1.0));
 
                 // Partial derivative of f with respect to xₖ.
-                g[k] = $f(&x0_dual).get_dual();
+                g.vset(k, $f(&x0_dual).get_dual());
 
                 // Reset the evaluation point.
-                x0_dual[k] = x0k;
+                x0_dual.vset(k, x0k);
             }
 
             // Return the result.
@@ -160,7 +165,7 @@ mod tests {
     fn test_gradient_1() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(2)
+            x.vget(0).powi(2)
         }
 
         // Evaluation point.
@@ -184,7 +189,7 @@ mod tests {
     fn test_gradient_2() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(2) + x[1].powi(3)
+            x.vget(0).powi(2) + x.vget(1).powi(3)
         }
 
         // Evaluation point.
@@ -208,7 +213,7 @@ mod tests {
     fn test_gradient_3() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(5) + x[1].sin().powi(3)
+            x.vget(0).powi(5) + x.vget(1).sin().powi(3)
         }
 
         // Evaluation point.

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.6
+
+1. Updated `linalg-traits` dependency from `0.9.1` to `0.11.1`.
+    * This also adds support for using `faer::Mat` with any of the differentation functions/macros provided by this crate, including automatic differentiation.
+1. Updated `once_cell` dependency from `1.1.19` to `1.20.3`.
+1. Updated `trig` optional dependency from `0.1.3` to `0.1.4`.
+1. Updated `nalgebra` dev dependency from `0.33.0` to `0.33.2`.
+1. Updated `ndarray` dev dependency from `0.16.0` to `0.16.1`.
+1. Updated `numtest` dev dependency from `0.2.0` to `0.2.2`.
+
 ## 0.1.5
 
 1. Implemented the following forward-mode automatic differentiation macros:

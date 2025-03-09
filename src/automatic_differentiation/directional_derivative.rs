@@ -40,7 +40,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-///     x[0].powi(5) + x[1].sin().powi(3)
+///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
 /// }
 ///
 /// // Define the evaluation point.
@@ -70,6 +70,7 @@
 /// as long as they implement the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -79,7 +80,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-///     x[0].powi(5) + x[1].sin().powi(3)
+///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
 /// }
 ///
 /// // Autogenerate the function "df_v" that can be used to compute the directional derivative of
@@ -89,17 +90,22 @@
 /// // nalgebra::DVector
 /// let x0: DVector<f64> = dvector![5.0, 8.0];
 /// let v: DVector<f64> = dvector![10.0, 20.0];
-/// let _ = df_v(&x0, &v);
+/// let df_v_eval: f64 = df_v(&x0, &v);
 ///
 /// // nalgebra::SVector
 /// let x0: SVector<f64, 2> = SVector::from_slice(&[5.0, 8.0]);
 /// let v: SVector<f64, 2> = SVector::from_slice(&[10.0, 20.0]);
-/// let _ = df_v(&x0, &v);
+/// let df_v_eval: f64 = df_v(&x0, &v);
 ///
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 8.0];
 /// let v: Array1<f64> = array![10.0, 20.0];
-/// let _ = df_v(&x0, &v);
+/// let df_v_eval: f64 = df_v(&x0, &v);
+///
+/// // faer::Mat
+/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
+/// let v: Mat<f64> = Mat::from_slice(&[10.0, 20.0]);
+/// let df_v_eval: f64 = df_v(&x0, &v);
 /// ```
 #[macro_export]
 macro_rules! get_directional_derivative {
@@ -149,7 +155,7 @@ mod tests {
     fn test_directional_derivative_1() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(2)
+            x.vget(0).powi(2)
         }
 
         // Evaluation point.
@@ -176,7 +182,7 @@ mod tests {
     fn test_directional_derivative_2() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(2) + x[1].powi(3)
+            x.vget(0).powi(2) + x.vget(1).powi(3)
         }
 
         // Evaluation point.
@@ -205,7 +211,7 @@ mod tests {
     fn test_directional_derivative_3() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(5) + x[1].sin().powi(3)
+            x.vget(0).powi(5) + x.vget(1).sin().powi(3)
         }
 
         // Evaluation point.

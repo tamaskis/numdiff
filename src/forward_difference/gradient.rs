@@ -61,10 +61,12 @@ use linalg_traits::Vector;
 /// #### Using other vector types
 ///
 /// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, or any other type of vector that implements the `linalg_traits::Vector`
-/// trait.
+/// `ndarray::Array1`, `faer::Mat`, or any other type of vector that implements the
+/// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
+/// use linalg_traits::Vector;  // to provide from_slice method for faer::Mat
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 /// use numtest::*;
@@ -90,6 +92,12 @@ use linalg_traits::Vector;
 /// let x0_array1: Array1<f64> = array![5.0, 8.0];
 /// let grad_array1: Array1<f64> = gradient(&f_array1, &x0_array1, None);
 /// assert_arrays_equal_to_decimal!(grad_array1, grad_true, 4);
+///
+/// // faer::Mat
+/// let f_mat = |x: &Mat<f64>| x[(0, 0)].powi(5) + x[(1, 0)].sin().powi(3);
+/// let x0_mat: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
+/// let grad_mat: Mat<f64> = gradient(&f_mat, &x0_mat, None);
+/// assert_arrays_equal_to_decimal!(grad_mat.as_slice(), grad_true, 4);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -138,19 +146,19 @@ where
     // Evaluate the gradient.
     for k in 0..n {
         // Original value of the evaluation point in the kth direction.
-        x0k = x0[k];
+        x0k = x0.vget(k);
 
         // Absolute step size in the kth direction.
         dxk = h * (1.0 + x0k.abs());
 
         // Step forward in the kth direction.
-        x0[k] += dxk;
+        x0.vset(k, x0k + dxk);
 
         // Partial derivative of f with respect to xₖ.
-        g[k] = (f(&x0) - f0) / dxk;
+        g.vset(k, (f(&x0) - f0) / dxk);
 
         // Reset the evaluation point.
-        x0[k] = x0k;
+        x0.vset(k, x0k);
     }
 
     // Return the result.

@@ -65,10 +65,12 @@ use linalg_traits::Vector;
 /// #### Using other vector types
 ///
 /// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, or any other type of vector that implements the `linalg_traits::Vector`
-/// trait.
+/// `ndarray::Array1`, `faer::Mat`, or any other type of vector that implements the
+/// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
+/// use linalg_traits::Vector;  // to provide from_slice method for faer::Mat
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 /// use numtest::*;
@@ -97,6 +99,13 @@ use linalg_traits::Vector;
 /// let v_array1: Array1<f64> = array![10.0, 20.0];
 /// let df_v_array1: f64 = directional_derivative(&f_array1, &x0_array1, &v_array1, None);
 /// assert_equal_to_decimal!(df_v_array1, df_v_true, 5);
+///
+/// // faer::Mat
+/// let f_mat = |x: &Mat<f64>| x[(0, 0)].powi(5) + x[(1, 0)].sin().powi(3);
+/// let x0_mat: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
+/// let v_mat: Mat<f64> = Mat::from_slice(&[10.0, 20.0]);
+/// let df_v_mat: f64 = directional_derivative(&f_mat, &x0_mat, &v_mat, None);
+/// assert_equal_to_decimal!(df_v_mat, df_v_true, 5);
 /// ```
 ///
 /// #### Modifying the relative step size

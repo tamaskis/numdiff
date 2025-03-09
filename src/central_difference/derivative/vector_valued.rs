@@ -52,10 +52,12 @@ use linalg_traits::Vector;
 /// #### Using other vector types
 ///
 /// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, or any other type of vector that implements the `linalg_traits::Vector`
-/// trait.
+/// `ndarray::Array1`, `faer::Mat`, or any other type of vector that implements the
+/// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
+/// use linalg_traits::Vector;  // to provide from_slice method for faer::Mat
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 /// use numtest::*;
@@ -78,6 +80,11 @@ use linalg_traits::Vector;
 /// let f_array1 = |t: f64| array![t.sin(), t.cos()];
 /// let df_array1: Array1<f64> = vderivative(&f_array1, 1.0, None);
 /// assert_arrays_equal_to_decimal!(df_array1, df_true, 10);
+///
+/// // faer::Mat
+/// let f_mat = |t: f64| Mat::<f64>::from_slice(&[t.sin(), t.cos()]);
+/// let df_mat: Mat<f64> = vderivative(&f_mat, 1.0, None);
+/// assert_arrays_equal_to_decimal!(df_mat.as_slice(), df_true, 10);
 /// ```
 ///
 /// #### Modifying the relative step size

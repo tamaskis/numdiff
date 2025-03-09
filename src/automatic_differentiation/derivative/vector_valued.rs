@@ -56,11 +56,11 @@
 ///
 /// #### Using other vector types
 ///
-/// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, or any other type of vector that implements the `linalg_traits::Vector`
-/// trait.
+/// The function produced by `get_vderivative!` can accept _any_ type for `x0`, as long as it
+/// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -91,6 +91,10 @@
 /// // ndarray::Array1
 /// let df_at_1_array1: Array1<f64> = df::<f64, Array1<f64>>(1.0);
 /// assert_arrays_equal_to_decimal!(df_at_1_array1, df_at_1_true, 16);
+///
+/// // faer::Mat
+/// let df_at_1_mat: Mat<f64> = df::<f64, Mat<f64>>(1.0);
+/// assert_arrays_equal_to_decimal!(df_at_1_mat.as_slice(), df_at_1_true, 16);
 /// ```
 #[macro_export]
 macro_rules! get_vderivative {
@@ -116,7 +120,7 @@ macro_rules! get_vderivative {
 
             let mut df = V::Vectorf64::new_with_length(f_x0.len());
             for i in 0..df.len() {
-                df[i] = f_x0[i].get_dual();
+                df.vset(i, f_x0.vget(i).get_dual());
             }
             df
         }

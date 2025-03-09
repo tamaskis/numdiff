@@ -79,10 +79,10 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x[0],
-///         x[2] * 5.0,
-///         x[1].powi(2) * 4.0 - x[2] * 2.0,
-///         x[2] * x[0].sin(),
+///         x.vget(0),
+///         x.vget(2) * 5.0,
+///         x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
+///         x.vget(2) * x.vget(0).sin(),
 ///     ])
 /// }
 ///
@@ -127,6 +127,7 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SVector};
 /// use ndarray::{array, Array1, Array2};
@@ -136,10 +137,10 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x[0],
-///         x[2] * 5.0,
-///         x[1].powi(2) * 4.0 - x[2] * 2.0,
-///         x[2] * x[0].sin(),
+///         x.vget(0),
+///         x.vget(2) * 5.0,
+///         x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
+///         x.vget(2) * x.vget(0).sin(),
 ///     ])
 /// }
 ///
@@ -158,6 +159,10 @@
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 6.0, 7.0];
 /// let jac_eval: Array2<f64> = jac(&x0);
+///
+/// // faer::Mat
+/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 6.0, 7.0]);
+/// let jac_eval: Mat<f64> = jac(&x0);
 /// ```
 #[macro_export]
 macro_rules! get_jacobian {
@@ -193,16 +198,16 @@ macro_rules! get_jacobian {
             let mut f_x0k;
 
             // Original value of the evaluation point in the 0th dual direction.
-            x0k = x0_dual[0];
+            x0k = x0_dual.vget(0);
 
             // Take a unit step forward in the 0th dual direction.
-            x0_dual[0] = Dual::new(x0_dual[0].get_real(), 1.0);
+            x0_dual.vset(0, Dual::new(x0k.get_real(), 1.0));
 
             // Evaluate the function at the evaluation point perturbed in the 0th dual direction.
             f_x0k = $f(&x0_dual);
 
             // Reset the evaluation point.
-            x0_dual[0] = x0k;
+            x0_dual.vset(0, x0k);
 
             // Determine the size of the Jacobian.
             let m = f_x0k.len();
@@ -214,28 +219,28 @@ macro_rules! get_jacobian {
             // Store the partial derivative of f with respect to x₀ in the 0th column of the
             // Jacobian.
             for i in 0..m {
-                jac[(i, 0)] = f_x0k[i].get_dual();
+                jac[(i, 0)] = f_x0k.vget(i).get_dual();
             }
 
             // Evaluate the remaining columns of the Jacobian.
             for k in 1..n {
                 // Original value of the evaluation point in the kth dual direction.
-                x0k = x0_dual[k];
+                x0k = x0_dual.vget(k);
 
                 // Take a unit step forward in the kth dual direction.
-                x0_dual[k] = Dual::new(x0_dual[k].get_real(), 1.0);
+                x0_dual.vset(k, Dual::new(x0k.get_real(), 1.0));
 
                 // Evaluate the function at the evaluation point perturbed in the kth dual
                 // direction.
                 f_x0k = $f(&x0_dual);
 
                 // Reset the evaluation point.
-                x0_dual[k] = x0k;
+                x0_dual.vset(k, x0k);
 
                 // Store the partial derivative of f with respect to xₖ in the kth column of the
                 // Jacobian.
                 for i in 0..m {
-                    jac[(i, k)] = f_x0k[i].get_dual();
+                    jac[(i, k)] = f_x0k.vget(i).get_dual();
                 }
             }
 
@@ -255,7 +260,7 @@ mod tests {
     fn test_jacobian_1() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(2)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(2)])
         }
 
         // Evaluation point.
@@ -279,7 +284,7 @@ mod tests {
     fn test_jacobian_2() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(2), x[0].powi(3)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(2), x.vget(0).powi(3)])
         }
 
         // Evaluation point.
@@ -305,7 +310,7 @@ mod tests {
     fn test_jacobian_3() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(2) + x[1].powi(3)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(2) + x.vget(1).powi(3)])
         }
 
         // Evaluation point.
@@ -331,7 +336,7 @@ mod tests {
     fn test_jacobian_4() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(2), x[1].powi(3)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(2), x.vget(1).powi(3)])
         }
 
         // Evaluation point.
@@ -358,10 +363,10 @@ mod tests {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
-                x[0],
-                x[2] * 5.0,
-                x[1].powi(2) * 4.0 - x[2] * 2.0,
-                x[2] * x[0].sin(),
+                x.vget(0),
+                x.vget(2) * 5.0,
+                x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
+                x.vget(2) * x.vget(0).sin(),
             ])
         }
 

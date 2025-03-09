@@ -63,7 +63,10 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-///     V::DVectorT::from_slice(&[x[0].sin() * x[1].sin(), x[0].cos() * x[1].cos()])
+///     V::DVectorT::from_slice(&[
+///         x.vget(0).sin() * x.vget(1).sin(),
+///         x.vget(0).cos() * x.vget(1).cos(),
+///     ])
 /// }
 ///
 /// // Define the evaluation point.
@@ -91,6 +94,7 @@
 /// it implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -99,7 +103,10 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-///     V::DVectorT::from_slice(&[x[0].sin() * x[1].sin(), x[0].cos() * x[1].cos()])
+///     V::DVectorT::from_slice(&[
+///         x.vget(0).sin() * x.vget(1).sin(),
+///         x.vget(0).cos() * x.vget(1).cos(),
+///     ])
 /// }
 ///
 /// // Define the element of the vector (using 0-based indexing) we are differentiating with respect
@@ -121,6 +128,10 @@
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 1.0];
 /// let dfk_eval: Array1<f64> = dfk(&x0, k);
+///
+/// // faer::Mat
+/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 1.0]);
+/// let dfk_eval: Mat<f64> = dfk(&x0, k);
 /// ```
 #[macro_export]
 macro_rules! get_vpartial_derivative {
@@ -150,7 +161,7 @@ macro_rules! get_vpartial_derivative {
             let mut x0_dual = x0.clone().to_dual_vector();
 
             // Take a unit step forward in the kth dual direction.
-            x0_dual[k] = Dual::new(x0_dual[k].get_real(), 1.0);
+            x0_dual.vset(k, Dual::new(x0_dual.vget(k).get_real(), 1.0));
 
             // Evaluate the function at the dual number.
             let f_x0 = $f(&x0_dual);
@@ -158,7 +169,7 @@ macro_rules! get_vpartial_derivative {
             // Partial derivative of f with respect to xₖ.
             let mut dfk_x0 = V::DVectorf64::new_with_length(f_x0.len());
             for i in 0..dfk_x0.len() {
-                dfk_x0[i] = f_x0[i].get_dual();
+                dfk_x0.vset(i, f_x0.vget(i).get_dual());
             }
             dfk_x0
         }
@@ -176,7 +187,7 @@ mod tests {
     fn test_vpartial_derivative_1() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(2)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(2)])
         }
 
         // Evaluation point.
@@ -203,7 +214,7 @@ mod tests {
     fn test_vpartial_derivative_2() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(4), x[1].powi(3)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(4), x.vget(1).powi(3)])
         }
 
         // Evaluation point.
@@ -230,7 +241,7 @@ mod tests {
     fn test_vpartial_derivative_3() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(3) * x[1].powi(3)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(3) * x.vget(1).powi(3)])
         }
 
         // Evaluation point.
@@ -257,7 +268,7 @@ mod tests {
     fn test_vpartial_derivative_4() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x[0].powi(4), x[1].powi(3)])
+            V::DVectorT::from_slice(&[x.vget(0).powi(4), x.vget(1).powi(3)])
         }
 
         // Evaluation point.
@@ -285,10 +296,10 @@ mod tests {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
-                x[0],
-                x[2] * 5.0,
-                x[1].powi(2) * 4.0 - x[2] * 2.0,
-                x[2] * x[0].sin(),
+                x.vget(0),
+                x.vget(2) * 5.0,
+                x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
+                x.vget(2) * x.vget(0).sin(),
             ])
         }
 

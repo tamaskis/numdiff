@@ -48,7 +48,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-///     x[0].powi(3) * x[1].sin()
+///     x.vget(0).powi(3) * x.vget(1).sin()
 /// }
 ///
 /// // Define the evaluation point.
@@ -73,6 +73,7 @@
 /// it implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// use faer::Mat;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -81,7 +82,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-///     x[0].powi(3) * x[1].sin()
+///     x.vget(0).powi(3) * x.vget(1).sin()
 /// }
 ///
 /// // Define the element of the vector (using 0-based indexing) we are differentiating with respect
@@ -94,15 +95,19 @@
 ///
 /// // nalgebra::DVector
 /// let x0: DVector<f64> = dvector![5.0, 1.0];
-/// let _ = dfk(&x0, k);
+/// let dfk_eval: f64 = dfk(&x0, k);
 ///
 /// // nalgebra::SVector
 /// let x0: SVector<f64, 2> = SVector::from_slice(&[5.0, 1.0]);
-/// let _ = dfk(&x0, k);
+/// let dfk_eval: f64 = dfk(&x0, k);
 ///
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 1.0];
-/// let _ = dfk(&x0, k);
+/// let dfk_eval: f64 = dfk(&x0, k);
+///
+/// // faer::Mat
+/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 1.0]);
+/// let dfk_eval: f64 = dfk(&x0, k);
 /// ```
 #[macro_export]
 macro_rules! get_spartial_derivative {
@@ -132,7 +137,7 @@ macro_rules! get_spartial_derivative {
             let mut x0_dual = x0.clone().to_dual_vector();
 
             // Take a unit step forward in the kth dual direction.
-            x0_dual[k] = Dual::new(x0_dual[k].get_real(), 1.0);
+            x0_dual.vset(k, Dual::new(x0_dual.vget(k).get_real(), 1.0));
 
             // Evaluate the function at the dual number.
             let f_x0 = $f(&x0_dual);
@@ -153,7 +158,7 @@ mod tests {
     fn test_spartial_derivative_1() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(2)
+            x.vget(0).powi(2)
         }
 
         // Evaluation point.
@@ -180,7 +185,7 @@ mod tests {
     fn test_spartial_derivative_2() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
-            x[0].powi(3) * x[1].powi(3)
+            x.vget(0).powi(3) * x.vget(1).powi(3)
         }
 
         // Evaluation point.

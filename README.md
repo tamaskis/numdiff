@@ -10,22 +10,6 @@ Automatic and numerical differentiation.
 
 Please see https://docs.rs/numdiff.
 
-## Overview
-
-This crate implements two different methods for evaluating derivatives in Rust:
-
-1. Automatic differentiation (forward-mode using first-order dual numbers).
-2. Numerical differentiation (using forward difference and central difference approximations).
-
-This crate provides generic functions (for numerical differentiation) and macros (for automatic differentiation) to evaluate various types of derivatives of the following types of functions:
-
-* Univariate, scalar-valued functions (`f: ℝ → ℝ`)
-* Univariate, vector-valued functions (`f: ℝ → ℝᵐ`)
-* Multivariate, scalar-valued functions (`f: ℝⁿ → ℝ`)
-* Multivariate, vector-valued functions (`f: ℝⁿ → ℝᵐ`)
-
-These functions and macros are made generic over the choice of vector representation, as long as the vector type implements the `linalg_traits::Vector` trait. See the [`linalg_traits` documentation](https://docs.rs/linalg-traits/latest/linalg_traits/) for more information.
-
 #### License
 
 <sup>

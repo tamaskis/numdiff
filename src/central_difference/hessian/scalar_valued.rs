@@ -84,11 +84,12 @@ use linalg_traits::Vector;
 /// #### Using other vector types
 ///
 /// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, or any other type of vector that implements the `linalg_traits::Vector`
-/// trait.
+/// `ndarray::Array1`, `faer::Mat`, or any other type of vector that implements the
+/// `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix};
+/// use faer::Mat as FMat;
+/// use linalg_traits::{Mat, Matrix, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SMatrix, SVector};
 /// use ndarray::{array, Array1, Array2};
 /// use numtest::*;
@@ -123,6 +124,12 @@ use linalg_traits::Vector;
 /// let x0_array1: Array1<f64> = array![5.0, 8.0];
 /// let hess_array1: Array2<f64> = shessian(&f_array1, &x0_array1, None);
 /// assert_arrays_equal_to_decimal!(hess_array1, hess_true, 3);
+///
+/// // faer::Mat
+/// let f_mat = |x: &FMat<f64>| x[(0, 0)].powi(5) * x[(1, 0)] + x[(0, 0)] * x[(1, 0)].sin().powi(3);
+/// let x0_mat: FMat<f64> = FMat::from_slice(&[5.0, 8.0]);
+/// let hess_mat: FMat<f64> = shessian(&f_mat, &x0_mat, None);
+/// assert_arrays_equal_to_decimal!(hess_mat.as_row_slice(), hess_true, 3);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -181,8 +188,8 @@ where
     let mut a = vec![0.0; n];
 
     // Populate vector of absolute step sizes.
-    for k in 0..n {
-        a[k] = h * (1.0 + x0[k].abs());
+    for (k, ak) in a.iter_mut().enumerate().take(n) {
+        *ak = h * (1.0 + x0.vget(k).abs());
     }
 
     // Variables to store evaluations of f(x) at various perturbed points.
@@ -195,36 +202,36 @@ where
     for k in 0..n {
         for j in k..n {
             // Original value of the evaluation point in the jth and kth directions.
-            x0j = x0[j];
-            x0k = x0[k];
+            x0j = x0.vget(j);
+            x0k = x0.vget(k);
 
             // Step forward in the jth and kth directions.
-            x0[j] += a[j];
-            x0[k] += a[k];
+            x0.vset(j, x0.vget(j) + a[j]);
+            x0.vset(k, x0.vget(k) + a[k]);
             b = f(&x0);
-            x0[j] = x0j;
-            x0[k] = x0k;
+            x0.vset(j, x0j);
+            x0.vset(k, x0k);
 
             // Step forward in the jth direction and backward in the kth direction.
-            x0[j] += a[j];
-            x0[k] -= a[k];
+            x0.vset(j, x0.vget(j) + a[j]);
+            x0.vset(k, x0.vget(k) - a[k]);
             c = f(&x0);
-            x0[j] = x0j;
-            x0[k] = x0k;
+            x0.vset(j, x0j);
+            x0.vset(k, x0k);
 
             // Step backward in the jth direction and forward in the kth direction.
-            x0[j] -= a[j];
-            x0[k] += a[k];
+            x0.vset(j, x0.vget(j) - a[j]);
+            x0.vset(k, x0.vget(k) + a[k]);
             d = f(&x0);
-            x0[j] = x0j;
-            x0[k] = x0k;
+            x0.vset(j, x0j);
+            x0.vset(k, x0k);
 
             // Step backward in the jth and kth directions.
-            x0[j] -= a[j];
-            x0[k] -= a[k];
+            x0.vset(j, x0.vget(j) - a[j]);
+            x0.vset(k, x0.vget(k) - a[k]);
             e = f(&x0);
-            x0[j] = x0j;
-            x0[k] = x0k;
+            x0.vset(j, x0j);
+            x0.vset(k, x0k);
 
             // Evaluate the (j,k)th and (k,j)th elements of the Hessian.
             hess_jk = (b - c - d + e) / (4.0 * a[j] * a[k]);

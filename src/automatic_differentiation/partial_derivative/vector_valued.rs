@@ -7,8 +7,7 @@
 ///
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `func_name` - Name of the function that will return the partial derivative of
-///                 $\mathbf{f}(\mathbf{x})$ with respect to $x_{k}$ at any point
-///                 $\mathbf{x}\in\mathbb{R}^{n}$.
+///   $\mathbf{f}(\mathbf{x})$ with respect to $x_{k}$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
 ///
 /// # Defining `f`
 ///
@@ -180,8 +179,8 @@ macro_rules! get_vpartial_derivative {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
-    use nalgebra::{dvector, DVector, SVector};
-    use ndarray::{array, Array1};
+    use nalgebra::{DVector, SVector, dvector};
+    use ndarray::{Array1, array};
 
     #[test]
     fn test_vpartial_derivative_1() {

@@ -7,7 +7,7 @@
 ///
 /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the partial derivative of $f(\mathbf{x})$
-///                 with respect to $x_{k}$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
+///   with respect to $x_{k}$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
 ///
 /// # Warning
 ///

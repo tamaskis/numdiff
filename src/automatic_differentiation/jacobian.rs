@@ -6,7 +6,7 @@
 ///
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `func_name` - Name of the function that will return the Jacobian of
-///                 $\mathbf{f}(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
+///   $\mathbf{f}(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
 ///
 /// # Defining `f`
 ///
@@ -253,8 +253,8 @@ macro_rules! get_jacobian {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Mat, Matrix, Scalar, Vector};
-    use nalgebra::{dvector, DMatrix, DVector, SVector};
-    use ndarray::{array, Array1, Array2};
+    use nalgebra::{DMatrix, DVector, SVector, dvector};
+    use ndarray::{Array1, Array2, array};
 
     #[test]
     fn test_jacobian_1() {

@@ -6,7 +6,7 @@
 ///
 /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the gradient of $f(\mathbf{x})$ at any
-///                 point $\mathbf{x}\in\mathbb{R}^{n}$.
+///   point $\mathbf{x}\in\mathbb{R}^{n}$.
 ///
 /// # Warning
 ///
@@ -158,7 +158,7 @@ mod tests {
     use crate::automatic_differentiation::dual_vector::DualVector;
     use linalg_traits::{Scalar, Vector};
     use nalgebra::DVector;
-    use ndarray::{array, Array1};
+    use ndarray::{Array1, array};
     use numtest::*;
 
     #[test]

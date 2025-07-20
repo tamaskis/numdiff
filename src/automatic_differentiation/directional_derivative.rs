@@ -7,8 +7,8 @@
 ///
 /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the directional derivative of
-///                 $f(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$ and in any direction
-///                 $\mathbf{v}\in\mathbb{R}^{n}$.
+///   $f(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$ and in any direction
+///   $\mathbf{v}\in\mathbb{R}^{n}$.
 ///
 /// # Warning
 ///
@@ -149,7 +149,7 @@ mod tests {
     use crate::automatic_differentiation::dual_vector::DualVector;
     use linalg_traits::{Scalar, Vector};
     use nalgebra::SVector;
-    use ndarray::{array, Array1};
+    use ndarray::{Array1, array};
 
     #[test]
     fn test_directional_derivative_1() {

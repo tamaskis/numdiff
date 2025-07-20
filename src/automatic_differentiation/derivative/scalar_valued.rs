@@ -6,7 +6,7 @@
 ///
 /// * `f` - Univariate, scalar-valued function, $f:\mathbb{R}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the derivative of $f(x)$ at any point
-///                 $x\in\mathbb{R}$.
+///   $x\in\mathbb{R}$.
 ///
 /// # Warning
 ///

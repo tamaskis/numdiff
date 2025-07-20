@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+1. Updated `rust` version to 2024.
+1. Updated `linalg-traits` dependency from `0.11.1` to `0.12.0`.
+1. Updated `once_cell` dependency from `1.20.3` to `1.21.3`.
+1. Updated `trig` optional dependency from `0.1.4` to `0.2.0`.
+1. Updated `faer` dev dependency from `0.21.7` to `0.22.6`.
+1. Updated `numtest` dev dependency from `0.2.2` to `0.3.0`.
+
 ## 0.1.6
 
 1. Updated `linalg-traits` dependency from `0.9.1` to `0.11.1`.

@@ -9,7 +9,7 @@ use linalg_traits::Vector;
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `x0` - Evaluation point, $\mathbf{x}_{0}\in\mathbb{R}^{n}$.
 /// * `k` - Element of $\mathbf{x}$ to differentiate with respect to. Note that this uses 0-based
-///         indexing (e.g. $\mathbf{x}=\left(x_{0},...,x_{k},...,x_{n-1}\right)^{T}$).
+///   indexing (e.g. $\mathbf{x}=\left(x_{0},...,x_{k},...,x_{n-1}\right)^{T}$).
 /// * `h` - Relative step size, $h\in\mathbb{R}$. Defaults to [`CBRT_EPS`].
 ///
 /// # Returns
@@ -169,8 +169,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nalgebra::{dvector, DVector, SVector};
-    use ndarray::{array, Array1};
+    use nalgebra::{DVector, SVector, dvector};
+    use ndarray::{Array1, array};
     use numtest::*;
 
     #[test]

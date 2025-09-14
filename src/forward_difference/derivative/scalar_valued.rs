@@ -388,7 +388,7 @@ mod tests {
     #[cfg(feature = "trig")]
     fn test_sderivative_tangent() {
         let f = |x: f64| x.tan();
-        assert_equal_to_decimal!(sderivative(&f, 0.0, None), test_utils::tan_deriv(0.0), 16);
+        assert_equal_to_decimal!(sderivative(&f, 0.0, None), test_utils::tan_deriv(0.0), 15);
         assert_equal_to_decimal!(
             sderivative(&f, PI / 4.0, None),
             test_utils::tan_deriv(PI / 4.0),

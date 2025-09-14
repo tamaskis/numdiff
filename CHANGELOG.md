@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+1. Updated `linalg-traits` dependency from `0.12.0` to `0.12.1`.
+1. Updated `trig` optional dependency from `0.2.0` to `0.2.1`.
+1. Updated `nalgebra` dev dependency from `0.33.2` to `0.34.0`.
+1. Updated `numtest` dev dependency from `0.3.0` to `0.3.1`.
+
 ## 0.2.0
 
 1. Updated `rust` version to 2024.

@@ -42,12 +42,15 @@
 /// use numdiff::{get_gradient, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
 ///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
 /// }
 ///
 /// // Define the evaluation point.
 /// let x0 = vec![5.0, 8.0];
+///
+/// // Parameter vector (empty for this example).
+/// let p = [];
 ///
 /// // Autogenerate the function "g" that can be used to compute the gradient of f(x) at any point
 /// // x.
@@ -56,9 +59,12 @@
 /// // Function defining the true gradient of f(x).
 /// let g_true = |x: &Vec<f64>| vec![5.0 * x[0].powi(4), 3.0 * x[1].sin().powi(2) * x[1].cos()];
 ///
+/// // Evaluate the gradient using "g".
+/// let g_eval: Vec<f64> = g(&x0, &p);
+///
 /// // Verify that the gradient function obtained using get_gradient! computes the gradient
 /// // correctly.
-/// assert_arrays_equal_to_decimal!(g(&x0), g_true(&x0), 16);
+/// assert_arrays_equal_to_decimal!(g(&x0, &p), g_true(&x0), 15);
 /// ```
 ///
 /// #### Using other vector types
@@ -75,9 +81,12 @@
 /// use numdiff::{get_gradient, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
 ///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
 /// }
+///
+/// // Parameter vector (empty for this example).
+/// let p = [];
 ///
 /// // Autogenerate the function "g" that can be used to compute the gradient of f(x) at any point
 /// // x.
@@ -85,19 +94,19 @@
 ///
 /// // nalgebra::DVector
 /// let x0: DVector<f64> = dvector![5.0, 8.0];
-/// let g_eval: DVector<f64> = g(&x0);
+/// let g_eval: DVector<f64> = g(&x0, &p);
 ///
 /// // nalgebra::SVector
 /// let x0: SVector<f64, 2> = SVector::from_slice(&[5.0, 8.0]);
-/// let g_eval: SVector<f64, 2> = g(&x0);
+/// let g_eval: SVector<f64, 2> = g(&x0, &p);
 ///
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 8.0];
-/// let g_eval: Array1<f64> = g(&x0);
+/// let g_eval: Array1<f64> = g(&x0, &p);
 ///
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
-/// let g_eval: Mat<f64> = g(&x0);
+/// let g_eval: Mat<f64> = g(&x0, &p);
 /// ```
 #[macro_export]
 macro_rules! get_gradient {
@@ -110,13 +119,15 @@ macro_rules! get_gradient {
         /// # Arguments
         ///
         /// * `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
+        /// * `p` - Parameter vector. This is a vector of additional runtime parameters that the
+        ///   function may depend on but is not differentiated with respect to.
         ///
         /// # Returns
         ///
         /// Gradient of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `∇f(x₀) ∈ ℝⁿ`
-        fn $func_name<S, V>(x0: &V) -> V::Vectorf64
+        fn $func_name<S, V>(x0: &V, p: &[f64]) -> V::Vectorf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -140,7 +151,7 @@ macro_rules! get_gradient {
                 x0_dual.vset(k, Dual::new(x0k.get_real(), 1.0));
 
                 // Partial derivative of f with respect to xₖ.
-                g.vset(k, $f(&x0_dual).get_dual());
+                g.vset(k, $f(&x0_dual, p).get_dual());
 
                 // Reset the evaluation point.
                 x0_dual.vset(k, x0k);
@@ -164,12 +175,15 @@ mod tests {
     #[test]
     fn test_gradient_1() {
         // Function to find the gradient of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
             x.vget(0).powi(2)
         }
 
         // Evaluation point.
         let x0 = vec![2.0];
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True gradient function.
         let g = |x: &Vec<f64>| vec![2.0 * x[0]];
@@ -178,7 +192,7 @@ mod tests {
         get_gradient!(f, g_autodiff);
 
         // Evaluate the gradient using both functions.
-        let g_eval_autodiff: Vec<f64> = g_autodiff(&x0);
+        let g_eval_autodiff: Vec<f64> = g_autodiff(&x0, &p);
         let g_eval: Vec<f64> = g(&x0);
 
         // Test autodiff gradient against true gradient.
@@ -188,12 +202,15 @@ mod tests {
     #[test]
     fn test_gradient_2() {
         // Function to find the gradient of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
             x.vget(0).powi(2) + x.vget(1).powi(3)
         }
 
         // Evaluation point.
         let x0: DVector<f64> = DVector::from_slice(&[1.0, 2.0]);
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True gradient function.
         let g = |x: &DVector<f64>| DVector::<f64>::from_slice(&[2.0 * x[0], 3.0 * x[1].powi(2)]);
@@ -202,7 +219,7 @@ mod tests {
         get_gradient!(f, g_autodiff);
 
         // Evaluate the gradient using both functions.
-        let g_eval_autodiff: DVector<f64> = g_autodiff(&x0);
+        let g_eval_autodiff: DVector<f64> = g_autodiff(&x0, &p);
         let g_eval: DVector<f64> = g(&x0);
 
         // Test autodiff gradient against true gradient.
@@ -212,12 +229,15 @@ mod tests {
     #[test]
     fn test_gradient_3() {
         // Function to find the gradient of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> S {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
             x.vget(0).powi(5) + x.vget(1).sin().powi(3)
         }
 
         // Evaluation point.
         let x0 = array![5.0, 8.0];
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True gradient function.
         let g = |x: &Array1<f64>| array![5.0 * x[0].powi(4), 3.0 * x[1].sin().powi(2) * x[1].cos()];
@@ -226,10 +246,48 @@ mod tests {
         get_gradient!(f, g_autodiff);
 
         // Evaluate the gradient using both functions.
-        let g_eval_autodiff: Array1<f64> = g_autodiff(&x0);
+        let g_eval_autodiff: Array1<f64> = g_autodiff(&x0, &p);
         let g_eval: Array1<f64> = g(&x0);
 
         // Test autodiff gradient against true gradient.
         assert_arrays_equal_to_decimal!(g_eval_autodiff, g_eval, 16);
+    }
+
+    #[test]
+    fn test_gradient_4() {
+        // Function to find the gradient of.
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
+            let alpha = S::new(p[0]);
+            let beta = S::new(p[1]);
+            let gamma = S::new(p[2]);
+            (alpha * x.vget(0)).exp() * (beta * x.vget(1)).sin() + gamma * x.vget(0) * x.vget(1)
+        }
+
+        // Parameter vector.
+        let p = [0.5, 2.0, 1.2];
+
+        // Evaluation point.
+        let x0 = DVector::from_vec(vec![1.0, 0.5]);
+
+        // True gradient function.
+        let g = |x: &DVector<f64>, p: &[f64]| {
+            let exp_term = (p[0] * x[0]).exp();
+            let sin_term = (p[1] * x[1]).sin();
+            let cos_term = (p[1] * x[1]).cos();
+            DVector::from_vec(vec![
+                p[0] * exp_term * sin_term + p[2] * x[1],
+                exp_term * p[1] * cos_term + p[2] * x[0],
+            ])
+        };
+
+        // Gradient function obtained via forward-mode automatic differentiation.
+        get_gradient!(f, g_autodiff);
+
+        // Evaluate the gradient using both methods.
+        let g_eval: DVector<f64> = g(&x0, &p);
+        let g_eval_autodiff: DVector<f64> = g_autodiff(&x0, &p);
+
+        // Test autodiff gradient against true gradient.
+        assert_arrays_equal_to_decimal!(g_eval_autodiff, g_eval, 14);
     }
 }

@@ -61,7 +61,7 @@
 /// use numdiff::{get_vpartial_derivative, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
 ///         x.vget(0).sin() * x.vget(1).sin(),
 ///         x.vget(0).cos() * x.vget(1).cos(),
@@ -82,7 +82,7 @@
 /// // Verify that the partial derivative function obtained using get_vpartial_derivative! computes
 /// // the partial derivative correctly.
 /// assert_eq!(
-///     dfk(&x0, k),
+///     dfk(&x0, k, &[]),
 ///     vec![1.0_f64.cos() * 2.0_f64.sin(), -1.0_f64.sin() * 2.0_f64.cos()]
 /// );
 /// ```
@@ -101,7 +101,7 @@
 /// use numdiff::{get_vpartial_derivative, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
 ///         x.vget(0).sin() * x.vget(1).sin(),
 ///         x.vget(0).cos() * x.vget(1).cos(),
@@ -118,19 +118,19 @@
 ///
 /// // nalgebra::DVector
 /// let x0: DVector<f64> = dvector![5.0, 1.0];
-/// let dfk_eval: DVector<f64> = dfk(&x0, k);
+/// let dfk_eval: DVector<f64> = dfk(&x0, k, &[]);
 ///
 /// // nalgebra::SVector
 /// let x0: SVector<f64, 2> = SVector::from_slice(&[5.0, 1.0]);
-/// let dfk_eval: DVector<f64> = dfk(&x0, k);
+/// let dfk_eval: DVector<f64> = dfk(&x0, k, &[]);
 ///
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 1.0];
-/// let dfk_eval: Array1<f64> = dfk(&x0, k);
+/// let dfk_eval: Array1<f64> = dfk(&x0, k, &[]);
 ///
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 1.0]);
-/// let dfk_eval: Mat<f64> = dfk(&x0, k);
+/// let dfk_eval: Mat<f64> = dfk(&x0, k, &[]);
 /// ```
 #[macro_export]
 macro_rules! get_vpartial_derivative {
@@ -142,16 +142,18 @@ macro_rules! get_vpartial_derivative {
         ///
         /// # Arguments
         ///
-        /// `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
-        /// `k` - Element of `x` to differentiate with respect to. Note that this uses 0-based
-        ///       indexing (e.g. `x = (x₀,...,xₖ,...,xₙ₋₁)ᵀ).
+        /// * `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
+        /// * `k` - Element of `x` to differentiate with respect to. Note that this uses 0-based
+        ///   indexing (e.g. `x = (x₀,...,xₖ,...,xₙ₋₁)ᵀ).
+        /// * `p` - Parameter vector. This is a vector of additional runtime parameters that the
+        ///   function may depend on but is not differentiated with respect to.
         ///
         /// # Returns
         ///
         /// Partial derivative of `f` with respect to `xₖ`, evaluated at `x = x₀`.
         ///
         /// `(∂f/∂xₖ)|ₓ₌ₓ₀ ∈ ℝᵐ`
-        fn $func_name<S, V>(x0: &V, k: usize) -> V::DVectorf64
+        fn $func_name<S, V>(x0: &V, k: usize, p: &[f64]) -> V::DVectorf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -163,7 +165,7 @@ macro_rules! get_vpartial_derivative {
             x0_dual.vset(k, Dual::new(x0_dual.vget(k).get_real(), 1.0));
 
             // Evaluate the function at the dual number.
-            let f_x0 = $f(&x0_dual);
+            let f_x0 = $f(&x0_dual, p);
 
             // Partial derivative of f with respect to xₖ.
             let mut dfk_x0 = V::DVectorf64::new_with_length(f_x0.len());
@@ -185,7 +187,7 @@ mod tests {
     #[test]
     fn test_vpartial_derivative_1() {
         // Function to take the partial derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(2)])
         }
 
@@ -202,7 +204,7 @@ mod tests {
         get_vpartial_derivative!(f, dfk_autodiff);
 
         // Evaluate the partial derivative using both functions.
-        let dfk_eval_autodiff: Vec<f64> = dfk_autodiff(&x0, k);
+        let dfk_eval_autodiff: Vec<f64> = dfk_autodiff(&x0, k, &[]);
         let dfk_eval: Vec<f64> = dfk(&x0);
 
         // Test autodiff partial derivative against true partial derivative.
@@ -212,7 +214,7 @@ mod tests {
     #[test]
     fn test_vpartial_derivative_2() {
         // Function to take the partial derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(4), x.vget(1).powi(3)])
         }
 
@@ -229,7 +231,7 @@ mod tests {
         get_vpartial_derivative!(f, dfk_autodiff);
 
         // Evaluate the partial derivative using both functions.
-        let dfk_eval_autodiff: DVector<f64> = dfk_autodiff(&x0, k);
+        let dfk_eval_autodiff: DVector<f64> = dfk_autodiff(&x0, k, &[]);
         let dfk_eval: DVector<f64> = dfk(&x0);
 
         // Test autodiff partial derivative against true partial derivative.
@@ -239,7 +241,7 @@ mod tests {
     #[test]
     fn test_vpartial_derivative_3() {
         // Function to take the partial derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(3) * x.vget(1).powi(3)])
         }
 
@@ -256,7 +258,7 @@ mod tests {
         get_vpartial_derivative!(f, dfk_autodiff);
 
         // Evaluate the partial derivative using both functions.
-        let dfk_eval_autodiff: Vec<f64> = dfk_autodiff(&x0, k);
+        let dfk_eval_autodiff: Vec<f64> = dfk_autodiff(&x0, k, &[]);
         let dfk_eval: Vec<f64> = dfk(&x0);
 
         // Test autodiff partial derivative against true partial derivative.
@@ -266,7 +268,7 @@ mod tests {
     #[test]
     fn test_vpartial_derivative_4() {
         // Function to take the partial derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(4), x.vget(1).powi(3)])
         }
 
@@ -283,7 +285,7 @@ mod tests {
         get_vpartial_derivative!(f, dfk_autodiff);
 
         // Evaluate the partial derivative using both functions.
-        let dfk_eval_autodiff: Array1<f64> = dfk_autodiff(&x0, k);
+        let dfk_eval_autodiff: Array1<f64> = dfk_autodiff(&x0, k, &[]);
         let dfk_eval: Array1<f64> = dfk(&x0);
 
         // Test autodiff partial derivative against true partial derivative.
@@ -293,7 +295,7 @@ mod tests {
     #[test]
     fn test_vpartial_derivative_5() {
         // Function to take the partial derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
                 x.vget(0),
                 x.vget(2) * 5.0,
@@ -316,8 +318,51 @@ mod tests {
         get_vpartial_derivative!(f, dfk_autodiff);
 
         // Evaluate the partial derivative using both functions.
-        let dfk_eval_autodiff: DVector<f64> = dfk_autodiff(&x0, k);
+        let dfk_eval_autodiff: DVector<f64> = dfk_autodiff(&x0, k, &[]);
         let dfk_eval: SVector<f64, 4> = dfk(&x0);
+
+        // Test autodiff partial derivative against true partial derivative.
+        assert_eq!(dfk_eval_autodiff, dfk_eval);
+    }
+
+    #[test]
+    fn test_vpartial_derivative_6() {
+        // Function to take the partial derivative of.
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+            let a = S::new(p[0]);
+            let b = S::new(p[1]);
+            let c = S::new(p[2]);
+            let d = S::new(p[3]);
+            let e = S::new(p[4]);
+            V::DVectorT::from_slice(&[
+                a * (b * x.vget(0)).exp() * (c * x.vget(1)).cos(),
+                d * x.vget(0) * x.vget(1) + e,
+            ])
+        }
+
+        // Parameter vector.
+        let p = [2.0, 0.3, 1.5, -1.2, 5.0];
+
+        // Evaluation point.
+        let x0 = DVector::from_vec(vec![0.5, 1.0]);
+
+        // Element to differentiate with respect to.
+        let k = 0;
+
+        // True partial derivative function.
+        let dfk = |x: &DVector<f64>, p: &[f64]| {
+            DVector::from_vec(vec![
+                p[0] * p[1] * (p[1] * x[0]).exp() * (p[2] * x[1]).cos(),
+                p[3] * x[1],
+            ])
+        };
+
+        // Partial derivative function obtained via forward-mode automatic differentiation.
+        get_vpartial_derivative!(f, dfk_autodiff);
+
+        // Evaluate the partial derivative using both functions.
+        let dfk_eval_autodiff: DVector<f64> = dfk_autodiff(&x0, k, &p);
+        let dfk_eval: DVector<f64> = dfk(&x0, &p);
 
         // Test autodiff partial derivative against true partial derivative.
         assert_eq!(dfk_eval_autodiff, dfk_eval);

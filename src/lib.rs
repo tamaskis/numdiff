@@ -38,6 +38,14 @@
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_directional_derivative!`] |
 //! | Jacobian| $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_jacobian!`] |
 //!
+//! ## Passing extra parameters
+//!
+//! Many times, we want to automatically differentiate functions that can also depend on parameters
+//! defined at runtime. However, automatic differentiation is performed at compile time, so we
+//! cannot simply "capture" these parameters using closures. To solve this problem, all automatic
+//! differentiation macros expect the function to not only accept the point at which it is
+//! differentiated, but also a vector of runtime parameters that can be modified at runtime.
+//!
 //! ## Limitations
 //!
 //! * These macros only work on functions that are generic both over the type of scalar and the type

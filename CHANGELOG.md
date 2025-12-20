@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+1. Updated automatic differentiation to support providing runtime parameters to functions that were automatically differentiated at compile time. Essentially, functions that are autodifferentiated are now specified as `f(x,p)` instead of just `f(x)`.
+1. Updated `linalg-traits` dependency from `0.12.1` to `0.13.0`.
+1. Removed `once_cell` dependency.
+1. Updated `trig` optional dependency from `0.2.1` to `0.3.0`.
+1. Updated `faer` dev dependency from `0.22.6` to `0.23.2`.
+1. Updated `nalgebra` dev dependency from `0.33.2` to `0.34.0`.
+1. Updated `ndarray` dev dependency from `0.16.1` to `0.17.1`.
+
 ## 0.2.1
 
 1. Updated `linalg-traits` dependency from `0.12.0` to `0.12.1`.

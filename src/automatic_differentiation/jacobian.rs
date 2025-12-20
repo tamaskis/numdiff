@@ -13,7 +13,7 @@
 /// The multivariate, vector-valued function `f` must have the following function signature:
 ///
 /// ```ignore
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
 ///     // place function contents here
 /// }
 /// ```
@@ -77,10 +77,10 @@
 /// use numdiff::{get_jacobian, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
 ///         x.vget(0),
-///         x.vget(2) * 5.0,
+///         x.vget(2) * p[0],  // Using parameter p[0] instead of hardcoded 5.0
 ///         x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
 ///         x.vget(2) * x.vget(0).sin(),
 ///     ])
@@ -89,12 +89,15 @@
 /// // Define the evaluation point.
 /// let x0 = vec![5.0, 6.0, 7.0];
 ///
+/// // Define parameters.
+/// let p = vec![5.0];  // p[0] = 5.0
+///
 /// // Autogenerate the function "jac" that can be used to compute the Jacobian of f(x) at any point
 /// // x.
 /// get_jacobian!(f, jac);
 ///
 /// // Evaluate the Jacobian using "jac".
-/// let jac_eval: Mat<f64> = jac(&x0);
+/// let jac_eval: Mat<f64> = jac(&x0, &p);
 ///
 /// // True Jacobian of f(x) at the evaluation point.
 /// let jac_eval_true: Mat<f64> = Mat::from_row_slice(
@@ -135,7 +138,7 @@
 /// use numdiff::{get_jacobian, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
 ///         x.vget(0),
 ///         x.vget(2) * 5.0,
@@ -144,25 +147,28 @@
 ///     ])
 /// }
 ///
+/// // Parameter vector (empty for this example).
+/// let p = [];
+///
 /// // Autogenerate the function "jac" that can be used to compute the Jacobian of f(x) at any point
 /// // x.
 /// get_jacobian!(f, jac);
 ///
 /// // nalgebra::DVector
 /// let x0: DVector<f64> = dvector![5.0, 6.0, 7.0];
-/// let jac_eval: DMatrix<f64> = jac(&x0);
+/// let jac_eval: DMatrix<f64> = jac(&x0, &p);
 ///
 /// // nalgebra::SVector
 /// let x0: SVector<f64, 3> = SVector::from_slice(&[5.0, 6.0, 7.0]);
-/// let jac_eval: DMatrix<f64> = jac(&x0);
+/// let jac_eval: DMatrix<f64> = jac(&x0, &p);
 ///
 /// // ndarray::Array1
 /// let x0: Array1<f64> = array![5.0, 6.0, 7.0];
-/// let jac_eval: Array2<f64> = jac(&x0);
+/// let jac_eval: Array2<f64> = jac(&x0, &p);
 ///
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 6.0, 7.0]);
-/// let jac_eval: Mat<f64> = jac(&x0);
+/// let jac_eval: Mat<f64> = jac(&x0, &p);
 /// ```
 #[macro_export]
 macro_rules! get_jacobian {
@@ -174,14 +180,16 @@ macro_rules! get_jacobian {
         ///
         /// # Arguments
         ///
-        /// `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
+        /// * `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
+        /// * `p` - Parameter vector. This is a vector of additional runtime parameters that the
+        ///   function may depend on but is not differentiated with respect to.
         ///
         /// # Returns
         ///
         /// Jacobian of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `J(x₀) = (∂f/∂x)|ₓ₌ₓ₀ ∈ ℝᵐˣⁿ`
-        fn $func_name<S, V>(x0: &V) -> V::DMatrixMxNf64
+        fn $func_name<S, V>(x0: &V, p: &[f64]) -> V::DMatrixMxNf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -204,7 +212,7 @@ macro_rules! get_jacobian {
             x0_dual.vset(0, Dual::new(x0k.get_real(), 1.0));
 
             // Evaluate the function at the evaluation point perturbed in the 0th dual direction.
-            f_x0k = $f(&x0_dual);
+            f_x0k = $f(&x0_dual, p);
 
             // Reset the evaluation point.
             x0_dual.vset(0, x0k);
@@ -232,7 +240,7 @@ macro_rules! get_jacobian {
 
                 // Evaluate the function at the evaluation point perturbed in the kth dual
                 // direction.
-                f_x0k = $f(&x0_dual);
+                f_x0k = $f(&x0_dual, p);
 
                 // Reset the evaluation point.
                 x0_dual.vset(k, x0k);
@@ -259,12 +267,15 @@ mod tests {
     #[test]
     fn test_jacobian_1() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(2)])
         }
 
         // Evaluation point.
         let x0 = vec![2.0];
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True Jacobian function.
         let jac = |x: &Vec<f64>| Mat::from_row_slice(1, 1, &[2.0 * x[0]]);
@@ -273,7 +284,7 @@ mod tests {
         get_jacobian!(f, jac_autodiff);
 
         // Evaluate the Jacobian using both functions.
-        let jac_eval_autodiff: Mat<f64> = jac_autodiff(&x0);
+        let jac_eval_autodiff: Mat<f64> = jac_autodiff(&x0, &p);
         let jac_eval: Mat<f64> = jac(&x0);
 
         // Test autodiff Jacobian against true Jacobian.
@@ -283,12 +294,15 @@ mod tests {
     #[test]
     fn test_jacobian_2() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(2), x.vget(0).powi(3)])
         }
 
         // Evaluation point.
         let x0 = array![2.0];
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True Jacobian function.
         let jac = |x: &Array1<f64>| {
@@ -299,7 +313,7 @@ mod tests {
         get_jacobian!(f, jac_autodiff);
 
         // Evaluate the Jacobian using both functions.
-        let jac_eval_autodiff: Array2<f64> = jac_autodiff(&x0);
+        let jac_eval_autodiff: Array2<f64> = jac_autodiff(&x0, &p);
         let jac_eval: Array2<f64> = jac(&x0);
 
         // Test autodiff Jacobian against true Jacobian.
@@ -309,12 +323,15 @@ mod tests {
     #[test]
     fn test_jacobian_3() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(2) + x.vget(1).powi(3)])
         }
 
         // Evaluation point.
         let x0 = dvector![1.0, 2.0];
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True Jacobian function.
         let jac = |x: &DVector<f64>| {
@@ -325,7 +342,7 @@ mod tests {
         get_jacobian!(f, jac_autodiff);
 
         // Evaluate the Jacobian using both functions.
-        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0);
+        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0, &p);
         let jac_eval: DMatrix<f64> = jac(&x0);
 
         // Test autodiff Jacobian against true Jacobian.
@@ -335,12 +352,15 @@ mod tests {
     #[test]
     fn test_jacobian_4() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[x.vget(0).powi(2), x.vget(1).powi(3)])
         }
 
         // Evaluation point.
         let x0 = SVector::<f64, 2>::from_row_slice(&[1.0, 2.0]);
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True Jacobian function.
         let jac = |x: &SVector<f64, 2>| {
@@ -351,7 +371,7 @@ mod tests {
         get_jacobian!(f, jac_autodiff);
 
         // Evaluate the Jacobian using both functions.
-        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0);
+        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0, &p);
         let jac_eval: DMatrix<f64> = jac(&x0);
 
         // Test autodiff Jacobian against true Jacobian.
@@ -361,7 +381,7 @@ mod tests {
     #[test]
     fn test_jacobian_5() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V) -> V::DVectorT<S> {
+        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
                 x.vget(0),
                 x.vget(2) * 5.0,
@@ -372,6 +392,9 @@ mod tests {
 
         // Evaluation point.
         let x0: SVector<f64, 3> = SVector::from_row_slice(&[5.0, 6.0, 7.0]);
+
+        // Parameter vector (empty for this test).
+        let p = [];
 
         // True Jacobian function.
         let jac = |x: &SVector<f64, 3>| {
@@ -399,8 +422,53 @@ mod tests {
         get_jacobian!(f, jac_autodiff);
 
         // Evaluate the Jacobian using both functions.
-        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0);
+        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0, &p);
         let jac_eval: DMatrix<f64> = jac(&x0);
+
+        // Test autodiff Jacobian against true Jacobian.
+        assert_eq!(jac_eval_autodiff, jac_eval);
+    }
+
+    #[test]
+    fn test_jacobian_6() {
+        // Function to take the Jacobian of.
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+            let a = S::new(p[0]);
+            let b = S::new(p[1]);
+            let c = S::new(p[2]);
+            let d = S::new(p[3]);
+            V::DVectorT::from_slice(&[
+                a * (b * x.vget(0)).sin(),
+                c * x.vget(0) * x.vget(1) + d * x.vget(1).cos(),
+            ])
+        }
+
+        // Parameter vector.
+        let p = [2.0, 0.5, 1.2, -1.5];
+
+        // Evaluation point.
+        let x0 = dvector![1.0, 0.8];
+
+        // True Jacobian function.
+        let jac = |x: &DVector<f64>, p: &[f64]| {
+            DMatrix::<f64>::from_row_slice(
+                2,
+                2,
+                &[
+                    p[0] * p[1] * (p[1] * x[0]).cos(),
+                    0.0,
+                    p[2] * x[1],
+                    p[2] * x[0] - p[3] * x[1].sin(),
+                ],
+            )
+        };
+
+        // Jacobian function obtained via forward-mode automatic differentiation.
+        get_jacobian!(f, jac_autodiff);
+
+        // Evaluate the Jacobian using both methods.
+        let jac_eval_autodiff: DMatrix<f64> = jac_autodiff(&x0, &p);
+        let jac_eval: DMatrix<f64> = jac(&x0, &p);
 
         // Test autodiff Jacobian against true Jacobian.
         assert_eq!(jac_eval_autodiff, jac_eval);

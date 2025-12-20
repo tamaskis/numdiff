@@ -36,7 +36,7 @@
 /// use numdiff::{get_vderivative, Dual};
 ///
 /// // Define the function, f(t).
-/// fn f<S: Scalar, V: Vector<S>>(t: S) -> V {
+/// fn f<S: Scalar, V: Vector<S>>(t: S, _p: &[f64]) -> V {
 ///     V::from_slice(&[t.sin(), t.cos()])
 /// }
 ///
@@ -45,7 +45,7 @@
 /// get_vderivative!(f, df);
 ///
 /// // Compute the derivative of f(t) at the evaluation point, t = 1.
-/// let df_at_1 = df::<f64, Vec<f64>>(1.0);
+/// let df_at_1 = df::<f64, Vec<f64>>(1.0, &[]);
 ///
 /// // True derivative of f(t) at the evaluation point.
 /// let df_at_1_true: Vec<f64> = vec![1.0_f64.cos(), -1.0_f64.sin()];
@@ -69,7 +69,7 @@
 ///  use numdiff::{get_vderivative, Dual};
 ///
 /// // Define the function, f(t).
-/// fn f<S: Scalar, V: Vector<S>>(t: S) -> V {
+/// fn f<S: Scalar, V: Vector<S>>(t: S, _p: &[f64]) -> V {
 ///     V::from_slice(&[t.sin(), t.cos()])
 /// }
 ///
@@ -81,19 +81,19 @@
 /// let df_at_1_true: Vec<f64> = vec![1.0_f64.cos(), -1.0_f64.sin()];
 ///
 /// // nalgebra::DVector
-/// let df_at_1_dvector: DVector<f64> = df::<f64, DVector<f64>>(1.0);
+/// let df_at_1_dvector: DVector<f64> = df::<f64, DVector<f64>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(df_at_1_dvector, df_at_1_true, 16);
 ///
 /// // nalgebra::SVector
-/// let df_at_1_svector: SVector<f64, 2> = df::<f64, SVector<f64, 2>>(1.0);
+/// let df_at_1_svector: SVector<f64, 2> = df::<f64, SVector<f64, 2>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(df_at_1_svector, df_at_1_true, 16);
 ///
 /// // ndarray::Array1
-/// let df_at_1_array1: Array1<f64> = df::<f64, Array1<f64>>(1.0);
+/// let df_at_1_array1: Array1<f64> = df::<f64, Array1<f64>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(df_at_1_array1, df_at_1_true, 16);
 ///
 /// // faer::Mat
-/// let df_at_1_mat: Mat<f64> = df::<f64, Mat<f64>>(1.0);
+/// let df_at_1_mat: Mat<f64> = df::<f64, Mat<f64>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(df_at_1_mat.as_slice(), df_at_1_true, 16);
 /// ```
 #[macro_export]
@@ -107,16 +107,18 @@ macro_rules! get_vderivative {
         /// # Arguments
         ///
         /// * `x0` - Evaluation point, `x₀ ∈ ℝ`.
+        /// * `p` - Parameter vector. This is a vector of additional runtime parameters that the
+        ///   function may depend on but is not differentiated with respect to.
         ///
         /// # Returns
         ///
         /// Derivative of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝᵐ`
-        fn $func_name<S: Scalar, V: Vector<S>>(value: S) -> V::Vectorf64 {
+        fn $func_name<S: Scalar, V: Vector<S>>(value: S, p: &[f64]) -> V::Vectorf64 {
             let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
 
-            let f_x0: V::VectorT<Dual> = $f(temp_value);
+            let f_x0: V::VectorT<Dual> = $f(temp_value, p);
 
             let mut df = V::Vectorf64::new_with_length(f_x0.len());
             for i in 0..df.len() {
@@ -134,13 +136,50 @@ mod tests {
     use numtest::*;
 
     #[test]
-    fn test_vderivative() {
-        fn f<S: Scalar, V: Vector<S>>(x: S) -> V {
+    fn test_vderivative_1() {
+        fn f<S: Scalar, V: Vector<S>>(x: S, _p: &[f64]) -> V {
             V::from_slice(&[x.sin(), x.cos()])
         }
         let x0 = 2.0;
         get_vderivative!(f, df);
         let df_actual = |x: f64| vec![x.cos(), -x.sin()];
-        assert_arrays_equal!(df::<f64, Vec<f64>>(x0), df_actual(x0));
+        assert_arrays_equal!(df::<f64, Vec<f64>>(x0, &[]), df_actual(x0));
+    }
+
+    #[test]
+    fn test_vderivative_2() {
+        // Function to take the derivative of.
+        fn f<S: Scalar, V: Vector<S>>(x: S, p: &[f64]) -> V {
+            let a = S::new(p[0]);
+            let b = S::new(p[1]);
+            let c = S::new(p[2]);
+            let d = S::new(p[3]);
+            V::from_slice(&[a * (b * x).sin(), c * (d * x).cos()])
+        }
+
+        // Evaluation point.
+        let x0 = 0.2;
+
+        // Parameter vector.
+        let p = [2.0, 3.0, 1.5, 0.5];
+
+        // True derivative function.
+        fn df(x: f64, p: &[f64]) -> Vec<f64> {
+            let a = p[0];
+            let b = p[1];
+            let c = p[2];
+            let d = p[3];
+            vec![a * b * (b * x).cos(), -c * d * (d * x).sin()]
+        }
+
+        // Derivative function obtained via forward-mode automatic differentation.
+        get_vderivative!(f, df_autodiff);
+
+        // Evaluate the derivative using both functions.
+        let df_eval_autodiff: Vec<f64> = df_autodiff::<f64, Vec<f64>>(x0, &p);
+        let df_eval: Vec<f64> = df(x0, &p);
+
+        // Test autodiff derivative against true derivative.
+        assert_eq!(df_eval_autodiff, df_eval);
     }
 }

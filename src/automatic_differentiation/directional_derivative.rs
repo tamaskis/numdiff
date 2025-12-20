@@ -19,7 +19,9 @@
 /// The function produced by this macro will perform 1 evaluation of $f(\mathbf{x})$ to evaluate its
 /// directional derivative.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the directional derivative of
 ///
@@ -115,6 +117,62 @@
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
 /// let v: Mat<f64> = Mat::from_slice(&[10.0, 20.0]);
 /// let df_v_eval: f64 = df_v(&x0, &v, &p);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the directional derivative of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}+bx_{1}^{2}+cx_{0}x_{1}+d\exp(ex_{0})$$
+///
+/// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters. Compare the result against the true
+/// directional derivative, which is $\nabla f \cdot \mathbf{v}$, where the gradient is
+///
+/// $$\nabla f=\begin{bmatrix}2ax_{0}+cx_{1}+de\exp(ex_{0})\\\\2bx_{1}+cx_{0}\end{bmatrix}$$
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_directional_derivative, Dual, DualVector};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     let d = S::new(p[3]);
+///     let e = S::new(p[4]);
+///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d * (e * x.vget(0)).exp()
+/// }
+///
+/// // Parameter vector.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = 0.8;
+/// let d = 0.3;
+/// let e = 0.5;
+/// let p = [a, b, c, d, e];
+///
+/// // Evaluation point and direction.
+/// let x0 = vec![1.0, -0.5];
+/// let v = vec![0.6, 0.8];
+///
+/// // Autogenerate the directional derivative function.
+/// get_directional_derivative!(f, df_v);
+///
+/// // True directional derivative function.
+/// let df_v_true = |x: &Vec<f64>, v: &Vec<f64>| {
+///     let grad_x0 = 2.0 * a * x[0] + c * x[1] + d * e * (e * x[0]).exp();
+///     let grad_x1 = 2.0 * b * x[1] + c * x[0];
+///     grad_x0 * v[0] + grad_x1 * v[1]
+/// };
+///
+/// // Compute the directional derivative using both the automatically generated directional
+/// // derivative function and the true directional derivative function, and compare the results.
+/// let df_v_eval: f64 = df_v(&x0, &v, &p);
+/// let df_v_eval_true: f64 = df_v_true(&x0, &v);
+/// assert_equal_to_decimal!(df_v_eval, df_v_eval_true, 14);
 /// ```
 #[macro_export]
 macro_rules! get_directional_derivative {

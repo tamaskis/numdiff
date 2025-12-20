@@ -1,6 +1,6 @@
 [package]
 name = "numdiff"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Tamas Kis"]
 edition = "2024"
 description = "Numerical differentiation via forward-mode automatic differentiation and finite difference approximations."

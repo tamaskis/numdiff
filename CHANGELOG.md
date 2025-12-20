@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+1. Added examples passing runtime parameters into derivative functions that were generated via automatic differentiation at compile time.
+
 ## 0.3.0
 
 1. Updated automatic differentiation to support providing runtime parameters to functions that were automatically differentiated at compile time. Essentially, functions that are autodifferentiated are now specified as `f(x,p)` instead of just `f(x)`.

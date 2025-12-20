@@ -17,7 +17,9 @@
 /// The function produced by this macro will perform 1 evaluation of $\mathbf{f}(x)$ to evaluate its
 /// derivative.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the derivative of
 ///
@@ -95,6 +97,52 @@
 /// // faer::Mat
 /// let df_at_1_mat: Mat<f64> = df::<f64, Mat<f64>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(df_at_1_mat.as_slice(), df_at_1_true, 16);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the derivative of a parameterized vector function
+///
+/// $$f(t)=\begin{bmatrix}at^{2}+b\\\\ce^{t}+d\end{bmatrix}$$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// derivative of
+///
+/// $$f'(t)=\begin{bmatrix}2at\\\\ce^{t}\end{bmatrix}$$
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_vderivative, Dual};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(t: S, p: &[f64]) -> V {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     let d = S::new(p[3]);
+///     V::from_slice(&[a * t.powi(2) + b, c * t.exp() + d])
+/// }
+///
+/// // Parameter vector.
+/// let a = 1.5;
+/// let b = -2.0;
+/// let c = 0.8;
+/// let d = 3.0;
+/// let p = [a, b, c, d];
+///
+/// // Autogenerate the derivative function.
+/// get_vderivative!(f, df);
+///
+/// // True derivative function.
+/// let df_true = |t: f64| vec![2.0 * a * t, c * t.exp()];
+///
+/// // Compute the derivative at t = 1.0 using both the automatically generated derivative function
+/// // and the true derivative function, and compare the results.
+/// let df_at_1: Vec<f64> = df::<f64, Vec<f64>>(1.0, &p);
+/// let df_at_1_true: Vec<f64> = df_true(1.0);
+/// assert_arrays_equal_to_decimal!(df_at_1, df_at_1_true, 15);
 /// ```
 #[macro_export]
 macro_rules! get_vderivative {

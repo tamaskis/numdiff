@@ -17,7 +17,9 @@
 /// The function produced by this macro will perform 1 evaluation of $f(x)$ to evaluate its
 /// derivative.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the derivative of
 ///
@@ -48,6 +50,50 @@
 ///
 /// // Check the accuracy of the derivative.
 /// assert_equal_to_decimal!(df_at_2, 12.0, 16);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the derivative of a parameterized function
+///
+/// $$f(x)=ax^{2}+bx+c$$
+///
+/// where $a$, $b$, and $c$ are runtime parameters. Compare the result against the true derivative
+/// of
+///
+/// $$f'(x)=2ax+b$$
+///
+/// ```
+/// use linalg_traits::Scalar;
+/// use numtest::*;
+///
+/// use numdiff::{get_sderivative, Dual};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar>(x: S, p: &[f64]) -> S {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     a * x.powi(2) + b * x + c
+/// }
+///
+/// // Parameter vector.
+/// let a = 2.5;
+/// let b = -1.3;
+/// let c = 4.7;
+/// let p = [a, b, c];
+///
+/// // Autogenerate the derivative function.
+/// get_sderivative!(f, df);
+///
+/// // True derivative function.
+/// let df_true = |x: f64| 2.0 * a * x + b;
+///
+/// // Compute the derivative at x = 1.0 using both the automatically generated derivative function
+/// // and the true derivative function, and compare the results.
+/// let df_at_1: f64 = df(1.0, &p);
+/// let df_at_1_true: f64 = df_true(1.0);
+/// assert_eq!(df_at_1, df_at_1_true);
 /// ```
 #[macro_export]
 macro_rules! get_sderivative {

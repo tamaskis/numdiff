@@ -38,7 +38,7 @@
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_directional_derivative!`] |
 //! | Jacobian| $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_jacobian!`] |
 //!
-//! ## Passing extra parameters
+//! ## Passing Runtime Parameters
 //!
 //! Many times, we want to automatically differentiate functions that can also depend on parameters
 //! defined at runtime. However, automatic differentiation is performed at compile time, so we

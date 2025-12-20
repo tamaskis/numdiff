@@ -18,7 +18,9 @@
 /// The function produced by this macro will perform 1 evaluation of $f(\mathbf{x})$ to evaluate its
 /// partial derivative with respect to $x_{k}$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the partial derivative of
 ///
@@ -108,6 +110,64 @@
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 1.0]);
 /// let dfk_eval: f64 = dfk(&x0, k, &[]);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the partial derivative of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}+bx_{1}^{2}+cx_{0}x_{1}+d\sin(ex_{0})$$
+///
+/// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters. The partial derivatives are:
+///
+/// * $\dfrac{\partial f}{\partial x_{0}}=2ax_{0}+cx_{1}+de\cos(ex_{0})$
+/// * $\dfrac{\partial f}{\partial x_{1}}=2bx_{1}+cx_{0}$
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_spartial_derivative, Dual, DualVector};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     let d = S::new(p[3]);
+///     let e = S::new(p[4]);
+///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d * (e * x.vget(0)).sin()
+/// }
+///
+/// // Define individual parameters.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = 0.8;
+/// let d = 3.0;
+/// let e = 0.5;
+///
+/// // Parameter vector.
+/// let p = [a, b, c, d, e];
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // Autogenerate the partial derivative function.
+/// get_spartial_derivative!(f, dfk);
+///
+/// // True partial derivative functions.
+/// let df_dx0_true = |x: &[f64]| 2.0 * a * x[0] + c * x[1] + d * e * (e * x[0]).cos();
+/// let df_dx1_true = |x: &[f64]| 2.0 * b * x[1] + c * x[0];
+///
+/// // Compute ∂f/∂x₀ at x₀ and compare with true function.
+/// let df_dx0: f64 = dfk(&x0, 0, &p);
+/// let expected_df_dx0 = df_dx0_true(&x0);
+/// assert_equal_to_decimal!(df_dx0, expected_df_dx0, 14);
+///
+/// // Compute ∂f/∂x₁ at x0 and compare with true function.
+/// let df_dx1: f64 = dfk(&x0, 1, &p);
+/// let expected_df_dx1 = df_dx1_true(&x0);
+/// assert_equal_to_decimal!(df_dx1, expected_df_dx1, 15);
 /// ```
 #[macro_export]
 macro_rules! get_spartial_derivative {

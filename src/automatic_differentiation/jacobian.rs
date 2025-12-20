@@ -42,7 +42,9 @@
 /// The function produced by this macro will perform $n$ evaluations of $\mathbf{f}(\mathbf{x})$ to
 /// evaluate its Jacobian.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the Jacobian of
 ///
@@ -77,11 +79,11 @@
 /// use numdiff::{get_jacobian, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
 ///         x.vget(0),
-///         x.vget(2) * p[0],  // Using parameter p[0] instead of hardcoded 5.0
-///         x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
+///         x.vget(2) * S::new(5.0),
+///         x.vget(1).powi(2) * S::new(4.0) - x.vget(2) * S::new(2.0),
 ///         x.vget(2) * x.vget(0).sin(),
 ///     ])
 /// }
@@ -89,8 +91,8 @@
 /// // Define the evaluation point.
 /// let x0 = vec![5.0, 6.0, 7.0];
 ///
-/// // Define parameters.
-/// let p = vec![5.0];  // p[0] = 5.0
+/// // Parameter vector (empty for this example).
+/// let p = [];
 ///
 /// // Autogenerate the function "jac" that can be used to compute the Jacobian of f(x) at any point
 /// // x.
@@ -169,6 +171,73 @@
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 6.0, 7.0]);
 /// let jac_eval: Mat<f64> = jac(&x0, &p);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the Jacobian of a parameterized system
+///
+/// $$
+/// \mathbf{f}(\mathbf{x})=
+/// \begin{bmatrix}
+/// ax_{0}^{2}+bx_{1} \\\\
+/// cx_{0}+dx_{1}^{2}
+/// \end{bmatrix}
+/// $$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// Jacobian of
+///
+/// $$
+/// \mathbf{J}=
+/// \begin{bmatrix}
+/// 2ax_{0} & b \\\\
+/// c & 2dx_{1}
+/// \end{bmatrix}
+/// $$
+///
+/// ```
+/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_jacobian, Dual, DualVector};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     let d = S::new(p[3]);
+///     V::DVectorT::from_slice(&[
+///         a * x.vget(0).powi(2) + b * x.vget(1),
+///         c * x.vget(0) + d * x.vget(1).powi(2)
+///     ])
+/// }
+///
+/// // Parameter vector.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = -0.8;
+/// let d = 3.0;
+/// let p = [a, b, c, d];
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // Autogenerate the Jacobian function.
+/// get_jacobian!(f, jac);
+///
+/// // True Jacobian function.
+/// let jac_true = |x: &Vec<f64>| Mat::from_row_slice(2, 2, &[
+///     2.0 * a * x[0], b,
+///     c, 2.0 * d * x[1]
+/// ]);
+///
+/// // Compute the Jacobian using both the automatically generated Jacobian function and the true
+/// // Jacobian function, and compare the results.
+/// let jac_eval: Mat<f64> = jac(&x0, &p);
+/// let jac_eval_true: Mat<f64> = jac_true(&x0);
+/// assert_eq!(jac_eval, jac_eval_true);
 /// ```
 #[macro_export]
 macro_rules! get_jacobian {

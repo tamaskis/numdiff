@@ -36,7 +36,9 @@
 /// The function produced by this macro will perform 1 evaluation of $\mathbf{f}(\mathbf{x})$ to
 /// evaluate its partial derivative with respect to $x_{k}$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the partial derivative of
 ///
@@ -131,6 +133,73 @@
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 1.0]);
 /// let dfk_eval: Mat<f64> = dfk(&x0, k, &[]);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the partial derivative of a parameterized vector function
+///
+/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}ax_{0}^{2}+bx_{1}\\\\c\sin(dx_{0})+ex_{1}^{2}\end{bmatrix}$$
+///
+/// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters. The partial derivatives are:
+///
+/// * $\dfrac{\partial \mathbf{f}}{\partial x_{0}}=\begin{bmatrix}2ax_{0}\\\\cd\cos(dx_{0})\end{bmatrix}$
+/// * $\dfrac{\partial \mathbf{f}}{\partial x_{1}}=\begin{bmatrix}b\\\\2ex_{1}\end{bmatrix}$
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_vpartial_derivative, Dual, DualVector};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     let d = S::new(p[3]);
+///     let e = S::new(p[4]);
+///     V::DVectorT::from_slice(&[
+///         a * x.vget(0).powi(2) + b * x.vget(1),
+///         c * (d * x.vget(0)).sin() + e * x.vget(1).powi(2)
+///     ])
+/// }
+///
+/// // Define individual parameters.
+/// let a = 1.5;
+/// let b = -2.0;
+/// let c = 3.0;
+/// let d = 0.5;
+/// let e = 2.5;
+///
+/// // Parameter vector.
+/// let p = [a, b, c, d, e];
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, 0.8];
+///
+/// // Autogenerate the partial derivative function.
+/// get_vpartial_derivative!(f, dfk);
+///
+/// // True partial derivative functions.
+/// let df_dx0_true = |x: &[f64]| vec![
+///     2.0 * a * x[0],
+///     c * d * (d * x[0]).cos()
+/// ];
+/// let df_dx1_true = |x: &[f64]| vec![
+///     b,
+///     2.0 * e * x[1]
+/// ];
+///
+/// // Compute ∂f/∂x₀ at x₀ and compare with true function.
+/// let df_dx0 = dfk(&x0, 0, &p);
+/// let expected_df_dx0 = df_dx0_true(&x0);
+/// assert_arrays_equal_to_decimal!(df_dx0, expected_df_dx0, 14);
+///
+/// // Compute ∂f/∂x₁ at x₀ and compare with true function.
+/// let df_dx1 = dfk(&x0, 1, &p);
+/// let expected_df_dx1 = df_dx1_true(&x0);
+/// assert_arrays_equal_to_decimal!(df_dx1, expected_df_dx1, 15);
 /// ```
 #[macro_export]
 macro_rules! get_vpartial_derivative {

@@ -17,7 +17,9 @@
 /// The function produced by this macro will perform $n$ evaluations of $f(\mathbf{x})$ to evaluate
 /// its gradient.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Compute the gradient of
 ///
@@ -107,6 +109,55 @@
 /// // faer::Mat
 /// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
 /// let g_eval: Mat<f64> = g(&x0, &p);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the gradient of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}+bx_{1}^{2}+cx_{0}x_{1}+d$$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// gradient of
+///
+/// $$\nabla f=\begin{bmatrix}2ax_{0}+cx_{1}\\\\2bx_{1}+cx_{0}\end{bmatrix}$$
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_gradient, Dual, DualVector};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     let d = S::new(p[3]);
+///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d
+/// }
+///
+/// // Parameter vector.
+/// let a = 2.0;
+/// let b = 1.5;
+/// let c = 0.8;
+/// let d = -3.0;
+/// let p = [a, b, c, d];
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -2.0];
+///
+/// // Autogenerate the gradient function.
+/// get_gradient!(f, g);
+///
+/// // True gradient function.
+/// let g_true = |x: &Vec<f64>| vec![2.0 * a * x[0] + c * x[1], 2.0 * b * x[1] + c * x[0]];
+///
+/// // Compute the gradient using both the automatically generated gradient function and the true
+/// // gradient function, and compare the results.
+/// let g_eval: Vec<f64> = g(&x0, &p);
+/// let g_eval_true: Vec<f64> = g_true(&x0);
+/// assert_arrays_equal_to_decimal!(g_eval, g_eval_true, 15);
 /// ```
 #[macro_export]
 macro_rules! get_gradient {

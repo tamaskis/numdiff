@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+
+1. Fixed a stale note in the crate-level documentation.
+1. Fixed some lints in unit testing.
+
 ## 0.4.0
 
 1. Updated `linalg-traits` dependency from `0.13.0` to `0.14.0`.

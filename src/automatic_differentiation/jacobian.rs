@@ -7,6 +7,8 @@
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `func_name` - Name of the function that will return the Jacobian of
 ///   $\mathbf{f}(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
+/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
+///   that `f` accepts `p: &[f64]`).
 ///
 /// # Defining `f`
 ///
@@ -239,9 +241,69 @@
 /// let jac_eval_true: Mat<f64> = jac_true(&x0);
 /// assert_eq!(jac_eval, jac_eval_true);
 /// ```
+///
+/// ## Example Passing Custom Parameter Types
+///
+/// Use a custom parameter struct instead of `f64` values.
+///
+/// ```
+/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_jacobian, Dual, DualVector};
+///
+/// struct Data {
+///     a: f64,
+///     b: f64,
+///     c: f64,
+///     d: f64,
+/// }
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> V::DVectorT<S> {
+///     let data = &p[0];
+///     let a = S::new(data.a);
+///     let b = S::new(data.b);
+///     let c = S::new(data.c);
+///     let d = S::new(data.d);
+///     V::DVectorT::from_slice(&[
+///         a * x.vget(0).powi(2) + b * x.vget(1),
+///         c * x.vget(0) + d * x.vget(1).powi(2)
+///     ])
+/// }
+///
+/// // Parameter vector containing custom structs.
+/// let p = [Data {
+///     a: 1.5,
+///     b: 2.0,
+///     c: -0.8,
+///     d: 3.0,
+/// }];
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // Tell the macro to generate a function accepting &[Data].
+/// get_jacobian!(f, jac, Data);
+///
+/// // True Jacobian function.
+/// let jac_true = |x: &Vec<f64>| Mat::from_row_slice(2, 2, &[
+///     2.0 * p[0].a * x[0], p[0].b,
+///     p[0].c, 2.0 * p[0].d * x[1]
+/// ]);
+///
+/// // Compute the Jacobian using both the automatically generated Jacobian function and the true
+/// // Jacobian function, and compare the results.
+/// let jac_eval: Mat<f64> = jac(&x0, &p);
+/// let jac_eval_true: Mat<f64> = jac_true(&x0);
+/// assert_eq!(jac_eval, jac_eval_true);
+/// ```
 #[macro_export]
 macro_rules! get_jacobian {
     ($f:ident, $func_name:ident) => {
+        get_jacobian!($f, $func_name, f64);
+    };
+    ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Jacobian of a multivariate, vector-valued function `f: ℝⁿ → ℝᵐ`.
         ///
         /// This function is generated for a specific function `f` using the
@@ -258,7 +320,7 @@ macro_rules! get_jacobian {
         /// Jacobian of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `J(x₀) = (∂f/∂x)|ₓ₌ₓ₀ ∈ ℝᵐˣⁿ`
-        fn $func_name<S, V>(x0: &V, p: &[f64]) -> V::DMatrixMxNf64
+        fn $func_name<S, V>(x0: &V, p: &[$param_type]) -> V::DMatrixMxNf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -541,5 +603,58 @@ mod tests {
 
         // Test autodiff Jacobian against true Jacobian.
         assert_eq!(jac_eval_autodiff, jac_eval);
+    }
+
+    #[test]
+    fn test_jacobian_custom_params() {
+        struct Data {
+            a: f64,
+            b: f64,
+            c: f64,
+            d: f64,
+        }
+
+        // Function to take the Jacobian of.
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> V::DVectorT<S> {
+            let data = &p[0];
+            let a = S::new(data.a);
+            let b = S::new(data.b);
+            let c = S::new(data.c);
+            let d = S::new(data.d);
+            V::DVectorT::from_slice(&[
+                a * x.vget(0).powi(2) + b * x.vget(1),
+                c * x.vget(0) + d * x.vget(1).powi(2),
+            ])
+        }
+
+        // Parameter vector.
+        let p = [Data {
+            a: 1.5,
+            b: 2.0,
+            c: -0.8,
+            d: 3.0,
+        }];
+
+        // Evaluation point.
+        let x0 = vec![1.0, -0.5];
+
+        // Jacobian function obtained via forward-mode automatic differentiation.
+        get_jacobian!(f, jac, Data);
+
+        // True Jacobian function.
+        let jac_true = |x: &Vec<f64>| {
+            Mat::from_row_slice(
+                2,
+                2,
+                &[2.0 * p[0].a * x[0], p[0].b, p[0].c, 2.0 * p[0].d * x[1]],
+            )
+        };
+
+        // Evaluate the Jacobian using both functions.
+        let jac_eval: Mat<f64> = jac(&x0, &p);
+        let jac_eval_true: Mat<f64> = jac_true(&x0);
+
+        // Test autodiff Jacobian against true Jacobian.
+        assert_eq!(jac_eval, jac_eval_true);
     }
 }

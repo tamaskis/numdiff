@@ -8,6 +8,8 @@
 /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the partial derivative of $f(\mathbf{x})$
 ///   with respect to $x_{k}$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
+/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
+///   that `f` accepts `p: &[f64]`).
 ///
 /// # Warning
 ///
@@ -136,7 +138,10 @@
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
 ///     let e = S::new(p[4]);
-///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d * (e * x.vget(0)).sin()
+///     a * x.vget(0).powi(2)
+///         + b * x.vget(1).powi(2)
+///         + c * x.vget(0) * x.vget(1)
+///         + d * (e * x.vget(0)).sin()
 /// }
 ///
 /// // Define individual parameters.
@@ -169,9 +174,73 @@
 /// let expected_df_dx1 = df_dx1_true(&x0);
 /// assert_equal_to_decimal!(df_dx1, expected_df_dx1, 15);
 /// ```
+///
+/// ## Example Passing Custom Parameter Types
+///
+/// Use a custom parameter struct instead of `f64` values.
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_spartial_derivative, Dual, DualVector};
+///
+/// struct Data {
+///     a: f64,
+///     b: f64,
+///     c: f64,
+///     d: f64,
+///     e: f64,
+/// }
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
+///     let data = &p[0];
+///     let a = S::new(data.a);
+///     let b = S::new(data.b);
+///     let c = S::new(data.c);
+///     let d = S::new(data.d);
+///     let e = S::new(data.e);
+///     a * x.vget(0).powi(2)
+///         + b * x.vget(1).powi(2)
+///         + c * x.vget(0) * x.vget(1)
+///         + d * (e * x.vget(0)).sin()
+/// }
+///
+/// // Parameter vector containing custom structs.
+/// let p = [Data {
+///     a: 1.5,
+///     b: 2.0,
+///     c: 0.8,
+///     d: 3.0,
+///     e: 0.5,
+/// }];
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // Tell the macro to generate a function accepting &[Data].
+/// get_spartial_derivative!(f, dfk, Data);
+///
+/// // True partial derivative functions.
+/// let df_dx0_true = |x: &[f64]| {
+///     2.0 * p[0].a * x[0] + p[0].c * x[1] + p[0].d * p[0].e * (p[0].e * x[0]).cos()
+/// };
+/// let df_dx1_true = |x: &[f64]| 2.0 * p[0].b * x[1] + p[0].c * x[0];
+///
+/// // Compute the partial derivatives using both the automatically generated partial derivative
+/// // function and the true partial derivative functions, and compare the results.
+/// let df_dx0: f64 = dfk(&x0, 0, &p);
+/// let df_dx1: f64 = dfk(&x0, 1, &p);
+/// assert_equal_to_decimal!(df_dx0, df_dx0_true(&x0), 14);
+/// assert_equal_to_decimal!(df_dx1, df_dx1_true(&x0), 15);
+/// ```
 #[macro_export]
 macro_rules! get_spartial_derivative {
     ($f:ident, $func_name:ident) => {
+        get_spartial_derivative!($f, $func_name, f64);
+    };
+    ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Partial derivative of a multivariate, scalar-valued function `f: ℝⁿ → ℝ`.
         ///
         /// This function is generated for a specific function `f` using the
@@ -190,7 +259,7 @@ macro_rules! get_spartial_derivative {
         /// Partial derivative of `f` with respect to `xₖ`, evaluated at `x = x₀`.
         ///
         /// `(∂f/∂xₖ)|ₓ₌ₓ₀ ∈ ℝ`
-        fn $func_name<S, V>(x0: &V, k: usize, p: &[f64]) -> f64
+        fn $func_name<S, V>(x0: &V, k: usize, p: &[$param_type]) -> f64
         where
             S: Scalar,
             V: Vector<S>,
@@ -215,6 +284,7 @@ mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
     use nalgebra::SVector;
+    use numtest::*;
 
     #[test]
     fn test_spartial_derivative_1() {
@@ -301,5 +371,59 @@ mod tests {
 
         // Test autodiff partial derivative against true partial derivative.
         assert_eq!(dfk_eval_autodiff, dfk_eval);
+    }
+
+    #[test]
+    fn test_spartial_derivative_custom_params() {
+        struct Data {
+            a: f64,
+            b: f64,
+            c: f64,
+            d: f64,
+            e: f64,
+        }
+
+        // Function to take the partial derivative of.
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
+            let data = &p[0];
+            let a = S::new(data.a);
+            let b = S::new(data.b);
+            let c = S::new(data.c);
+            let d = S::new(data.d);
+            let e = S::new(data.e);
+            a * x.vget(0).powi(2)
+                + b * x.vget(1).powi(2)
+                + c * x.vget(0) * x.vget(1)
+                + d * (e * x.vget(0)).sin()
+        }
+
+        // Parameter vector.
+        let p = [Data {
+            a: 1.5,
+            b: 2.0,
+            c: 0.8,
+            d: 3.0,
+            e: 0.5,
+        }];
+
+        // Evaluation point.
+        let x0 = vec![1.0, -0.5];
+
+        // Partial derivative function obtained via forward-mode automatic differentiation.
+        get_spartial_derivative!(f, dfk, Data);
+
+        // True partial derivative functions.
+        let df_dx0_true = |x: &[f64]| {
+            2.0 * p[0].a * x[0] + p[0].c * x[1] + p[0].d * p[0].e * (p[0].e * x[0]).cos()
+        };
+        let df_dx1_true = |x: &[f64]| 2.0 * p[0].b * x[1] + p[0].c * x[0];
+
+        // Evaluate the partial derivatives using both functions.
+        let df_dx0: f64 = dfk(&x0, 0, &p);
+        let df_dx1: f64 = dfk(&x0, 1, &p);
+
+        // Test autodiff partial derivatives against true partial derivatives.
+        assert_equal_to_decimal!(df_dx0, df_dx0_true(&x0), 14);
+        assert_equal_to_decimal!(df_dx1, df_dx1_true(&x0), 15);
     }
 }

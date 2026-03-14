@@ -7,6 +7,8 @@
 /// * `f` - Univariate, vector-valued function, $\mathbb{f}:\mathbb{R}\to\mathbb{R}^{m}$.
 /// * `func_name` - Name of the function that will return the derivative of $\mathbf{f}(x)$ at any
 ///   point $x\in\mathbb{R}$.
+/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
+///   that `f` accepts `p: &[f64]`).
 ///
 /// # Warning
 ///
@@ -144,9 +146,60 @@
 /// let df_at_1_true: Vec<f64> = df_true(1.0);
 /// assert_arrays_equal_to_decimal!(df_at_1, df_at_1_true, 15);
 /// ```
+///
+/// ## Example Passing Custom Parameter Types
+///
+/// Use a custom parameter struct instead of `f64` values.
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_vderivative, Dual};
+///
+/// struct Data {
+///     a: f64,
+///     b: f64,
+///     c: f64,
+///     d: f64,
+/// }
+///
+/// // Define the function, f(t).
+/// fn f<S: Scalar, V: Vector<S>>(t: S, p: &[Data]) -> V {
+///     let data = &p[0];
+///     let a = S::new(data.a);
+///     let b = S::new(data.b);
+///     let c = S::new(data.c);
+///     let d = S::new(data.d);
+///     V::from_slice(&[a * t.powi(2) + b, c * t.exp() + d])
+/// }
+///
+/// // Parameter vector containing custom structs.
+/// let p = [Data {
+///     a: 1.5,
+///     b: -2.0,
+///     c: 0.8,
+///     d: 3.0,
+/// }];
+///
+/// // Tell the macro to generate a function accepting &[Data].
+/// get_vderivative!(f, df, Data);
+///
+/// // True derivative function.
+/// let df_true = |t: f64| vec![2.0 * p[0].a * t, p[0].c * t.exp()];
+///
+/// // Compute the derivative at t = 1.0 using both the automatically generated derivative function
+/// //and the true derivative function, and compare the results.
+/// let df_at_1: Vec<f64> = df::<f64, Vec<f64>>(1.0, &p);
+/// let df_at_1_true: Vec<f64> = df_true(1.0);
+/// assert_arrays_equal_to_decimal!(df_at_1, df_at_1_true, 15);
+/// ```
 #[macro_export]
 macro_rules! get_vderivative {
     ($f:ident, $func_name:ident) => {
+        get_vderivative!($f, $func_name, f64);
+    };
+    ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Derivative of a univariate, vector-valued function `f: ℝ → ℝᵐ`.
         ///
         /// This function is generated for a specific function `f` using the
@@ -163,7 +216,7 @@ macro_rules! get_vderivative {
         /// Derivative of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝᵐ`
-        fn $func_name<S: Scalar, V: Vector<S>>(value: S, p: &[f64]) -> V::Vectorf64 {
+        fn $func_name<S: Scalar, V: Vector<S>>(value: S, p: &[$param_type]) -> V::Vectorf64 {
             let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
 
             let f_x0: V::VectorT<Dual> = $f(temp_value, p);
@@ -229,5 +282,49 @@ mod tests {
 
         // Test autodiff derivative against true derivative.
         assert_eq!(df_eval_autodiff, df_eval);
+    }
+
+    #[test]
+    fn test_vderivative_custom_params() {
+        struct Data {
+            a: f64,
+            b: f64,
+            c: f64,
+            d: f64,
+        }
+
+        // Function to take the derivative of.
+        fn f<S: Scalar, V: Vector<S>>(t: S, p: &[Data]) -> V {
+            let data = &p[0];
+            let a = S::new(data.a);
+            let b = S::new(data.b);
+            let c = S::new(data.c);
+            let d = S::new(data.d);
+            V::from_slice(&[a * t.powi(2) + b, c * t.exp() + d])
+        }
+
+        // Parameter vector.
+        let p = [Data {
+            a: 1.5,
+            b: -2.0,
+            c: 0.8,
+            d: 3.0,
+        }];
+
+        // Derivative function obtained via forward-mode automatic differentiation.
+        get_vderivative!(f, df, Data);
+
+        // True derivative function.
+        let df_true = |t: f64| vec![2.0 * p[0].a * t, p[0].c * t.exp()];
+
+        // Evaluation point.
+        let t0 = 1.0;
+
+        // Evaluate the derivative using both functions.
+        let df_eval: Vec<f64> = df::<f64, Vec<f64>>(t0, &p);
+        let df_eval_true: Vec<f64> = df_true(t0);
+
+        // Test autodiff derivative against true derivative.
+        assert_arrays_equal_to_decimal!(df_eval, df_eval_true, 15);
     }
 }

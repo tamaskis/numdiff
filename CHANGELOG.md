@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+1. Added ability to pass custom types as extra runtime parameters to the automatic differentiation macros.
+
 ## 0.4.1
 
 1. Fixed a stale note in the crate-level documentation.

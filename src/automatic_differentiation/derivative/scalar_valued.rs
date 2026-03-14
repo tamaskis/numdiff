@@ -7,6 +7,8 @@
 /// * `f` - Univariate, scalar-valued function, $f:\mathbb{R}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the derivative of $f(x)$ at any point
 ///   $x\in\mathbb{R}$.
+/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
+///   that `f` accepts `p: &[f64]`).
 ///
 /// # Warning
 ///
@@ -95,9 +97,58 @@
 /// let df_at_1_true: f64 = df_true(1.0);
 /// assert_eq!(df_at_1, df_at_1_true);
 /// ```
+///
+/// ## Example Passing Custom Parameter Types
+///
+/// Use a custom parameter struct instead of `f64` values.
+///
+/// ```
+/// use linalg_traits::Scalar;
+/// use numtest::*;
+///
+/// use numdiff::{get_sderivative, Dual};
+///
+/// struct Data {
+///     a: f64,
+///     b: f64,
+///     c: f64,
+/// }
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar>(x: S, p: &[Data]) -> S {
+///     let data = &p[0];
+///     let a = S::new(data.a);
+///     let b = S::new(data.b);
+///     let c = S::new(data.c);
+///     a * x.powi(2) + b * x + c
+/// }
+///
+/// // Parameter vector containing custom structs.
+/// let p = [Data {
+///     a: 2.5,
+///     b: -1.3,
+///     c: 4.7,
+/// }];
+///
+/// // Tell the macro to generate a function accepting &[Data].
+/// get_sderivative!(f, df, Data);
+///
+/// // True derivative function.
+/// let df_true = |x: f64| 2.0 * p[0].a * x + p[0].b;
+///
+/// // Compute the derivative at x = 1.0 using both the automatically generated derivative function
+/// // and the true derivative function, and compare the results.
+/// let x0 = 1.0;
+/// let df_eval: f64 = df(x0, &p);
+/// let df_eval_true: f64 = df_true(x0);
+/// assert_equal_to_decimal!(df_eval, df_eval_true, 15);
+/// ```
 #[macro_export]
 macro_rules! get_sderivative {
     ($f:ident, $func_name:ident) => {
+        get_sderivative!($f, $func_name, f64);
+    };
+    ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Derivative of a univariate, scalar-valued function `f: ℝ → ℝ`.
         ///
         /// This function is generated for a specific function `f` using the
@@ -114,7 +165,7 @@ macro_rules! get_sderivative {
         /// Derivative of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝ`
-        fn $func_name<S: Scalar>(x0: S, p: &[f64]) -> f64 {
+        fn $func_name<S: Scalar>(x0: S, p: &[$param_type]) -> f64 {
             // Step forward in the dual direction.
             let x0 = Dual::new(x0.to_f64().unwrap(), 1.0);
 
@@ -864,5 +915,46 @@ mod tests {
 
         // Test autodiff derivative against true derivative.
         assert_equal_to_decimal!(df_eval_autodiff, df_eval, 16);
+    }
+
+    #[test]
+    fn test_sderivative_custom_params() {
+        struct Data {
+            a: f64,
+            b: f64,
+            c: f64,
+        }
+
+        // Function to take the derivative of.
+        fn f<S: Scalar>(x: S, p: &[Data]) -> S {
+            let data = &p[0];
+            let a = S::new(data.a);
+            let b = S::new(data.b);
+            let c = S::new(data.c);
+            a * x.powi(2) + b * x + c
+        }
+
+        // Parameter vector.
+        let p = [Data {
+            a: 2.5,
+            b: -1.3,
+            c: 4.7,
+        }];
+
+        // Derivative function obtained via forward-mode automatic differentiation.
+        get_sderivative!(f, df, Data);
+
+        // True derivative function.
+        let df_true = |x: f64| 2.0 * p[0].a * x + p[0].b;
+
+        // Evaluation point.
+        let x0 = 1.0;
+
+        // Evaluate the derivative using both functions.
+        let df_eval: f64 = df(x0, &p);
+        let df_eval_true: f64 = df_true(x0);
+
+        // Test autodiff derivative against true derivative.
+        assert_equal_to_decimal!(df_eval, df_eval_true, 15);
     }
 }

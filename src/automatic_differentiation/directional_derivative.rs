@@ -224,7 +224,8 @@
 /// let x0 = vec![1.0, -0.5];
 /// let v = vec![0.6, 0.8];
 ///
-/// // Tell the macro to generate a function accepting &Data.
+/// // Autogenerate the directional derivative function, telling the macro to expect a runtime
+/// // parameter of type &Data.
 /// get_directional_derivative!(f, df_v, Data);
 ///
 /// // True directional derivative function.

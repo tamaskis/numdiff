@@ -199,7 +199,8 @@
 /// // Evaluation point.
 /// let x0 = vec![1.0, -2.0];
 ///
-/// // Tell the macro to generate a function accepting &Data.
+/// // Autogenerate the gradient function, telling the macro to expect a runtime parameter of type
+/// // &Data.
 /// get_gradient!(f, g, Data);
 ///
 /// // True gradient function.

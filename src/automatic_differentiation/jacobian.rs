@@ -282,7 +282,8 @@
 /// // Evaluation point.
 /// let x0 = vec![1.0, -0.5];
 ///
-/// // Tell the macro to generate a function accepting &Data.
+/// // Autogenerate the Jacobian function, telling the macro to expect a runtime parameter of type
+/// // &Data.
 /// get_jacobian!(f, jac, Data);
 ///
 /// // True Jacobian function.
@@ -641,11 +642,7 @@ mod tests {
 
         // True Jacobian function.
         let jac_true = |x: &Vec<f64>| {
-            Mat::from_row_slice(
-                2,
-                2,
-                &[2.0 * p.a * x[0], p.b, p.c, 2.0 * p.d * x[1]],
-            )
+            Mat::from_row_slice(2, 2, &[2.0 * p.a * x[0], p.b, p.c, 2.0 * p.d * x[1]])
         };
 
         // Evaluate the Jacobian using both functions.

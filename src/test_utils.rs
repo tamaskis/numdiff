@@ -86,17 +86,17 @@ pub(crate) fn atan_deriv(x: f64) -> f64 {
     1.0 / (1.0 + x.powi(2))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trig"))]
 pub(crate) fn acsc_deriv(x: f64) -> f64 {
     -1.0 / (x.abs() * (x.powi(2) - 1.0).sqrt())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trig"))]
 pub(crate) fn asec_deriv(x: f64) -> f64 {
     1.0 / (x.abs() * (x.powi(2) - 1.0).sqrt())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trig"))]
 pub(crate) fn acot_deriv(x: f64) -> f64 {
     -1.0 / (1.0 + x.powi(2))
 }
@@ -150,17 +150,17 @@ pub(crate) fn atanh_deriv(x: f64) -> f64 {
     1.0 / (1.0 - x.powi(2))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trig"))]
 pub(crate) fn acsch_deriv(x: f64) -> f64 {
     -1.0 / (x.abs() * (x.powi(2) + 1.0).sqrt())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trig"))]
 pub(crate) fn asech_deriv(x: f64) -> f64 {
     -1.0 / (x * (1.0 - x.powi(2)).sqrt())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trig"))]
 pub(crate) fn acoth_deriv(x: f64) -> f64 {
     1.0 / (1.0 - x.powi(2))
 }

@@ -19,7 +19,9 @@ use linalg_traits::Vector;
 ///
 /// This function performs 2 evaluations of $f(x)$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the derivative of
 ///
@@ -103,6 +105,45 @@ use linalg_traits::Vector;
 /// let df_true: Vec<f64> = vec![1.0_f64.cos(), -1.0_f64.sin()];
 ///
 /// assert_arrays_equal_to_decimal!(df, df_true, 3);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the derivative of a parameterized vector function
+///
+/// $$f(t)=\begin{bmatrix}at^{2}+b\\\\ce^{t}+d\end{bmatrix}$$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// derivative of
+///
+/// $$f'(t)=\begin{bmatrix}2at\\\\ce^{t}\end{bmatrix}$$
+///
+/// ```
+/// use numtest::*;
+///
+/// use numdiff::forward_difference::vderivative;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = -2.0;
+/// let c = 0.8;
+/// let d = 3.0;
+///
+/// // Define the parameterized function.
+/// fn f_param(t: f64, a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
+///     vec![a * t.powi(2) + b, c * t.exp() + d]
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |t: f64| f_param(t, a, b, c, d);
+///
+/// // True derivative function.
+/// let df_true = |t: f64| vec![2.0 * a * t, c * t.exp()];
+///
+/// // Approximate the derivative at t = 1.0 and compare with true derivative.
+/// let df_at_1: Vec<f64> = vderivative(&f, 1.0, None);
+/// let df_at_1_true: Vec<f64> = df_true(1.0);
+/// assert_arrays_equal_to_decimal!(df_at_1, df_at_1_true, 5);
 /// ```
 pub fn vderivative<V>(f: &impl Fn(f64) -> V, x0: f64, h: Option<f64>) -> V
 where

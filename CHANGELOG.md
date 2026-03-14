@@ -4,6 +4,7 @@
 
 1. Fixed a stale note in the crate-level documentation.
 1. Fixed some lints in unit testing.
+1. Added examples for passing extra runtime parameters to all functions.
 
 ## 0.4.0
 

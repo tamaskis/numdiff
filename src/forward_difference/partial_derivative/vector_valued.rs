@@ -23,7 +23,9 @@ use linalg_traits::Vector;
 ///
 /// This function performs 2 evaluations of $\mathbf{f}(\mathbf{x})$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the partial derivative of
 ///
@@ -136,6 +138,64 @@ use linalg_traits::Vector;
 /// let pf_true: Vec<f64> = vec![1.0_f64.cos() * 2.0_f64.sin(), -1.0_f64.sin() * 2.0_f64.cos()];
 ///
 /// assert_arrays_equal_to_decimal!(pf, pf_true, 3);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the partial derivative of a parameterized vector function
+///
+/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}ax_{0}^{2}+bx_{1}\\\\c\sin(dx_{0})+ex_{1}^{2}\end{bmatrix}$$
+///
+/// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters. The partial derivatives are:
+///
+/// * $\dfrac{\partial \mathbf{f}}{\partial x_{0}}=\begin{bmatrix}2ax_{0}\\\\cd\cos(dx_{0})\end{bmatrix}$
+/// * $\dfrac{\partial \mathbf{f}}{\partial x_{1}}=\begin{bmatrix}b\\\\2ex_{1}\end{bmatrix}$
+///
+/// ```
+/// use numtest::*;
+///
+/// use numdiff::forward_difference::vpartial_derivative;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = -2.0;
+/// let c = 3.0;
+/// let d = 0.5;
+/// let e = 2.5;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64, e: f64) -> Vec<f64> {
+///     vec![
+///         a * x[0].powi(2) + b * x[1],
+///         c * (d * x[0]).sin() + e * x[1].powi(2)
+///     ]
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d, e);
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, 0.8];
+///
+/// // True partial derivative functions.
+/// let df_dx0_true = |x: &[f64]| vec![
+///     2.0 * a * x[0],
+///     c * d * (d * x[0]).cos()
+/// ];
+/// let df_dx1_true = |x: &[f64]| vec![
+///     b,
+///     2.0 * e * x[1]
+/// ];
+///
+/// // Approximate ∂f/∂x₀ at x₀ and compare with true function.
+/// let df_dx0 = vpartial_derivative(&f, &x0, 0, None);
+/// let expected_df_dx0 = df_dx0_true(&x0);
+/// assert_arrays_equal_to_decimal!(df_dx0, expected_df_dx0, 5);
+///
+/// // Approximate ∂f/∂x₁ at x₀ and compare with true function.
+/// let df_dx1 = vpartial_derivative(&f, &x0, 1, None);
+/// let expected_df_dx1 = df_dx1_true(&x0);
+/// assert_arrays_equal_to_decimal!(df_dx1, expected_df_dx1, 6);
 /// ```
 pub fn vpartial_derivative<V, U>(f: &impl Fn(&V) -> U, x0: &V, k: usize, h: Option<f64>) -> U
 where

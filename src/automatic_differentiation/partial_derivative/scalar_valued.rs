@@ -250,7 +250,7 @@ macro_rules! get_spartial_derivative {
         ///
         /// `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
         /// `k` - Element of `x` to differentiate with respect to. Note that this uses 0-based
-        ///       indexing (e.g. `x = (x₀,...,xₖ,...,xₙ₋₁)ᵀ).
+        ///       indexing (e.g. `x = (x₀,...,xₖ,...,xₙ₋₁)ᵀ`).
         /// `p` - Parameter vector. This is a vector of additional runtime parameters that the
         ///       function may depend on but is not differentiated with respect to.
         ///
@@ -343,6 +343,7 @@ mod tests {
     #[test]
     fn test_spartial_derivative_3() {
         /// Function to take the partial derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
             let a = S::new(p[0]);
             let b = S::new(p[1]);
@@ -384,6 +385,7 @@ mod tests {
         }
 
         // Function to take the partial derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
             let a = S::new(p.a);
             let b = S::new(p.b);

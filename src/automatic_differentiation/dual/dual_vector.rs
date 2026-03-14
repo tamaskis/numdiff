@@ -1,4 +1,4 @@
-use crate::automatic_differentiation::dual::Dual;
+use crate::Dual;
 use linalg_traits::{Scalar, Vector};
 
 /// Trait to create a vector of dual numbers.
@@ -23,7 +23,7 @@ where
     fn to_dual_vector(self) -> V::VectorT<Dual> {
         let mut vec_dual = V::VectorT::new_with_length(self.len());
         for i in 0..self.len() {
-            vec_dual.vset(i, Dual::new(self.vget(i).to_f64().unwrap(), 0.0));
+            vec_dual.vset(i, Dual::from_real(self.vget(i).to_f64().unwrap()));
         }
         vec_dual
     }
@@ -32,7 +32,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nalgebra::{dvector, SVector};
+    use nalgebra::{SVector, dvector};
     use ndarray::array;
 
     #[test]
@@ -41,9 +41,9 @@ mod tests {
         assert_eq!(
             vec.to_dual_vector(),
             vec![
-                Dual::new(1.0, 0.0),
-                Dual::new(2.0, 0.0),
-                Dual::new(3.0, 0.0)
+                Dual::from_real(1.0),
+                Dual::from_real(2.0),
+                Dual::from_real(3.0)
             ]
         );
     }
@@ -54,9 +54,9 @@ mod tests {
         assert_eq!(
             vec.to_dual_vector(),
             dvector![
-                Dual::new(1.0, 0.0),
-                Dual::new(2.0, 0.0),
-                Dual::new(3.0, 0.0)
+                Dual::from_real(1.0),
+                Dual::from_real(2.0),
+                Dual::from_real(3.0)
             ]
         );
     }
@@ -67,9 +67,9 @@ mod tests {
         assert_eq!(
             vec.to_dual_vector(),
             SVector::<Dual, 3>::from_row_slice(&[
-                Dual::new(1.0, 0.0),
-                Dual::new(2.0, 0.0),
-                Dual::new(3.0, 0.0)
+                Dual::from_real(1.0),
+                Dual::from_real(2.0),
+                Dual::from_real(3.0)
             ])
         );
     }
@@ -80,9 +80,9 @@ mod tests {
         assert_eq!(
             vec.to_dual_vector(),
             vec![
-                Dual::new(1.0, 0.0),
-                Dual::new(2.0, 0.0),
-                Dual::new(3.0, 0.0)
+                Dual::from_real(1.0),
+                Dual::from_real(2.0),
+                Dual::from_real(3.0)
             ]
         );
     }

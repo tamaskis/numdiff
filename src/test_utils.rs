@@ -4,7 +4,7 @@ use trig::Trig;
 
 #[cfg(test)]
 pub(crate) fn polyi_deriv(n: i32, x: f64) -> f64 {
-    (n as f64) * x.powi(n - 1)
+    <f64 as From<i32>>::from(n) * x.powi(n - 1)
 }
 
 #[cfg(test)]

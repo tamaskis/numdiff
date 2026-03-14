@@ -146,7 +146,12 @@
 //! [`central_difference::jacobian()` - Example Passing Runtime Parameters](fn@central_difference::jacobian#example-passing-runtime-parameters)
 
 // Linter setup.
-#![warn(missing_docs)]
+#![warn(missing_docs, warnings, clippy::all, clippy::pedantic, clippy::cargo)]
+#![allow(
+    clippy::float_cmp,
+    clippy::multiple_crate_versions,
+    clippy::unreadable_literal
+)]
 
 // Module declarations.
 pub(crate) mod automatic_differentiation;
@@ -159,5 +164,7 @@ pub mod forward_difference;
 pub(crate) mod test_utils;
 
 // Re-exports.
-pub use automatic_differentiation::dual::Dual;
-pub use automatic_differentiation::dual_vector::DualVector;
+pub use automatic_differentiation::dual::dual::Dual;
+pub use automatic_differentiation::dual::dual_vector::DualVector;
+pub use automatic_differentiation::dual::hyper_dual::HyperDual;
+pub use automatic_differentiation::dual::hyper_dual_vector::HyperDualVector;

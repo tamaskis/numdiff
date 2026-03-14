@@ -563,6 +563,7 @@ mod tests {
     #[test]
     fn test_jacobian_6() {
         // Function to take the Jacobian of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
             let a = S::new(p[0]);
             let b = S::new(p[1]);
@@ -615,6 +616,7 @@ mod tests {
         }
 
         // Function to take the Jacobian of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
             let a = S::new(p.a);
             let b = S::new(p.b);

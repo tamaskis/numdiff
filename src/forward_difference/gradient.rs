@@ -19,7 +19,9 @@ use linalg_traits::Vector;
 ///
 /// This function performs $n+1$ evaluations of $f(\mathbf{x})$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the gradient of
 ///
@@ -118,6 +120,48 @@ use linalg_traits::Vector;
 ///
 /// assert_arrays_equal_to_decimal!(grad, grad_true, -1);
 /// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the gradient of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}+bx_{1}^{2}+cx_{0}x_{1}+d$$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// gradient of
+///
+/// $$\nabla f=\begin{bmatrix}2ax_{0}+cx_{1}\\\\2bx_{1}+cx_{0}\end{bmatrix}$$
+///
+/// ```
+/// use numtest::*;
+///
+/// use numdiff::forward_difference::gradient;
+///
+/// // Runtime parameters.
+/// let a = 2.0;
+/// let b = 1.5;
+/// let c = 0.8;
+/// let d = -3.0;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64) -> f64 {
+///     a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d);
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -2.0];
+///
+/// // True gradient function.
+/// let grad_true = |x: &Vec<f64>| vec![2.0 * a * x[0] + c * x[1], 2.0 * b * x[1] + c * x[0]];
+///
+/// // Approximate the gradient and compare with true gradient.
+/// let grad_eval: Vec<f64> = gradient(&f, &x0, None);
+/// let grad_eval_true: Vec<f64> = grad_true(&x0);
+/// assert_arrays_equal_to_decimal!(grad_eval, grad_eval_true, 5);
+/// ```
 pub fn gradient<V>(f: &impl Fn(&V) -> f64, x0: &V, h: Option<f64>) -> V
 where
     V: Vector<f64>,
@@ -169,7 +213,7 @@ where
 mod tests {
     use super::*;
     use nalgebra::SVector;
-    use ndarray::{array, Array1};
+    use ndarray::{Array1, array};
     use numtest::*;
 
     #[test]

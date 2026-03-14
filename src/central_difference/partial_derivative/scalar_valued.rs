@@ -22,7 +22,9 @@ use linalg_traits::Vector;
 ///
 /// This function performs 2 evaluations of $f(\mathbf{x})$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the partial derivative of
 ///
@@ -129,6 +131,55 @@ use linalg_traits::Vector;
 /// let pf_true: f64 = 5.0_f64.powi(3) * 1.0_f64.cos();
 ///
 /// assert_equal_to_decimal!(pf, pf_true, 4);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the partial derivative of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}+bx_{1}^{2}+cx_{0}x_{1}+d\sin(ex_{0})$$
+///
+/// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters. The partial derivatives are:
+///
+/// * $\dfrac{\partial f}{\partial x_{0}}=2ax_{0}+cx_{1}+de\cos(ex_{0})$
+/// * $\dfrac{\partial f}{\partial x_{1}}=2bx_{1}+cx_{0}$
+///
+/// ```
+/// use numtest::*;
+///
+/// use numdiff::central_difference::spartial_derivative;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = 0.8;
+/// let d = 3.0;
+/// let e = 0.5;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64, e: f64) -> f64 {
+///     a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d * (e * x[0]).sin()
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d, e);
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // True partial derivative functions.
+/// let df_dx0_true = |x: &[f64]| 2.0 * a * x[0] + c * x[1] + d * e * (e * x[0]).cos();
+/// let df_dx1_true = |x: &[f64]| 2.0 * b * x[1] + c * x[0];
+///
+/// // Approximate ∂f/∂x₀ at x₀ and compare with true function.
+/// let df_dx0: f64 = spartial_derivative(&f, &x0, 0, None);
+/// let expected_df_dx0 = df_dx0_true(&x0);
+/// assert_equal_to_decimal!(df_dx0, expected_df_dx0, 8);
+///
+/// // Approximate ∂f/∂x₁ at x₀ and compare with true function.
+/// let df_dx1: f64 = spartial_derivative(&f, &x0, 1, None);
+/// let expected_df_dx1 = df_dx1_true(&x0);
+/// assert_equal_to_decimal!(df_dx1, expected_df_dx1, 9);
 /// ```
 pub fn spartial_derivative<V>(f: &impl Fn(&V) -> f64, x0: &V, k: usize, h: Option<f64>) -> f64
 where

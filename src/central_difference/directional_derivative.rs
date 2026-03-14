@@ -23,7 +23,9 @@ use linalg_traits::Vector;
 /// * This function performs 2 evaluations of $f(\mathbf{x})$.
 /// * This implementation does _not_ assume that $\mathbf{v}$ is a unit vector.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the directional derivative of
 ///
@@ -127,6 +129,54 @@ use linalg_traits::Vector;
 ///
 /// assert_equal_to_decimal!(df_v, df_v_true, 0);
 /// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the directional derivative of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}+bx_{1}^{2}+cx_{0}x_{1}+d\exp(ex_{0})$$
+///
+/// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters. Compare the result against the true
+/// directional derivative, which is $\nabla f \cdot \mathbf{v}$, where the gradient is
+///
+/// $$\nabla f=\begin{bmatrix}2ax_{0}+cx_{1}+de\exp(ex_{0})\\\\2bx_{1}+cx_{0}\end{bmatrix}$$
+///
+/// ```
+/// use numtest::*;
+///
+/// use numdiff::central_difference::directional_derivative;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = 0.8;
+/// let d = 0.3;
+/// let e = 0.5;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64, e: f64) -> f64 {
+///     a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d * (e * x[0]).exp()
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d, e);
+///
+/// // Evaluation point and direction.
+/// let x0 = vec![1.0, -0.5];
+/// let v = vec![0.6, 0.8];
+///
+/// // True directional derivative function.
+/// let df_v_true = |x: &Vec<f64>, v: &Vec<f64>| {
+///     let grad_x0 = 2.0 * a * x[0] + c * x[1] + d * e * (e * x[0]).exp();
+///     let grad_x1 = 2.0 * b * x[1] + c * x[0];
+///     grad_x0 * v[0] + grad_x1 * v[1]
+/// };
+///
+/// // Approximate the directional derivative and compare with true result.
+/// let df_v_eval: f64 = directional_derivative(&f, &x0, &v, None);
+/// let df_v_eval_true: f64 = df_v_true(&x0, &v);
+/// assert_equal_to_decimal!(df_v_eval, df_v_eval_true, 8);
+/// ```
 pub fn directional_derivative<V>(f: &impl Fn(&V) -> f64, x0: &V, v: &V, h: Option<f64>) -> f64
 where
     V: Vector<f64>,
@@ -142,7 +192,7 @@ where
 mod tests {
     use super::*;
     use nalgebra::SVector;
-    use ndarray::{array, Array1};
+    use ndarray::{Array1, array};
     use numtest::*;
 
     #[test]

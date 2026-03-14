@@ -26,7 +26,9 @@ use linalg_traits::Vector;
 /// define the number of rows ($m$) of the Jacobian. Instead, the number of rows is determined at
 /// runtime.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the Jacobian of
 ///
@@ -248,6 +250,67 @@ use linalg_traits::Vector;
 ///
 /// assert_arrays_equal_to_decimal!(jac, jac_true, 1);
 /// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the Jacobian of a parameterized system
+///
+/// $$
+/// \mathbf{f}(\mathbf{x})=
+/// \begin{bmatrix}
+/// ax_{0}^{2}+bx_{1} \\\\
+/// cx_{0}+dx_{1}^{2}
+/// \end{bmatrix}
+/// $$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// Jacobian of
+///
+/// $$
+/// \mathbf{J}=
+/// \begin{bmatrix}
+/// 2ax_{0} & b \\\\
+/// c & 2dx_{1}
+/// \end{bmatrix}
+/// $$
+///
+/// ```
+/// use linalg_traits::{Mat, Matrix};
+/// use numtest::*;
+///
+/// use numdiff::forward_difference::jacobian;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = -0.8;
+/// let d = 3.0;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
+///     vec![
+///         a * x[0].powi(2) + b * x[1],
+///         c * x[0] + d * x[1].powi(2)
+///     ]
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d);
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // True Jacobian function.
+/// let jac_true = Mat::from_row_slice(2, 2, &[
+///     2.0 * a * x0[0], b,
+///     c, 2.0 * d * x0[1]
+/// ]);
+///
+/// // Approximate the Jacobian and compare with true Jacobian.
+/// let jac_eval: Mat<f64> = jacobian(&f, &x0, None);
+/// assert_arrays_equal_to_decimal!(jac_eval, jac_true, 5);
+/// ```
+///
 pub fn jacobian<V, U>(f: &impl Fn(&V) -> U, x0: &V, h: Option<f64>) -> V::DMatrixMxN
 where
     V: Vector<f64>,
@@ -308,8 +371,8 @@ where
 mod tests {
     use super::*;
     use linalg_traits::{Mat, Matrix};
-    use nalgebra::{dvector, DMatrix, DVector, SMatrix, SVector};
-    use ndarray::{array, Array1, Array2};
+    use nalgebra::{DMatrix, DVector, SMatrix, SVector, dvector};
+    use ndarray::{Array1, Array2, array};
     use numtest::*;
 
     #[test]

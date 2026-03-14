@@ -21,7 +21,9 @@ use linalg_traits::Vector;
 ///
 /// This function performs $\frac{n(n+1)}{2}+1$ evaluations of $f(x)$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the Hessian of
 ///
@@ -225,6 +227,61 @@ use linalg_traits::Vector;
 /// assert_arrays_equal_to_decimal!(hess[0], hess_true[0], -2);
 /// assert_arrays_equal_to_decimal!(hess[1], hess_true[1], -1);
 /// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the Hessian of a parameterized vector function
+///
+/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}ax_{0}^{2}x_{1}+bx_{1}^{2}\\\\cx_{0}x_{1}+dx_{0}^{2}\end{bmatrix}$$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. The Hessians are:
+///
+/// * For component 1: $\mathbf{H}_{1}=\begin{bmatrix}2ax_{1} & 2ax_{0}\\\\2ax_{0} & 2b\end{bmatrix}$
+/// * For component 2: $\mathbf{H}_{2}=\begin{bmatrix}2d & c\\\\c & 0\end{bmatrix}$
+///
+/// ```
+/// use linalg_traits::{Mat, Matrix};
+/// use numtest::*;
+///
+/// use numdiff::forward_difference::vhessian;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = 0.8;
+/// let d = 3.0;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
+///     vec![
+///         a * x[0].powi(2) * x[1] + b * x[1].powi(2),
+///         c * x[0] * x[1] + d * x[0].powi(2)
+///     ]
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d);
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // True Hessian functions.
+/// let hess_f0_true = Mat::from_row_slice(2, 2, &[
+///     2.0 * a * x0[1], 2.0 * a * x0[0],
+///     2.0 * a * x0[0], 2.0 * b
+/// ]);
+/// let hess_f1_true = Mat::from_row_slice(2, 2, &[
+///     2.0 * d, c,
+///     c, 0.0
+/// ]);
+/// let hess_true = vec![hess_f0_true, hess_f1_true];
+///
+/// // Approximate the Hessian and compare with true Hessians.
+/// let hess_eval: Vec<Mat<f64>> = vhessian(&f, &x0, None);
+/// assert_arrays_equal_to_decimal!(hess_eval[0], hess_true[0], 4);
+/// assert_arrays_equal_to_decimal!(hess_eval[1], hess_true[1], 5);
+/// ```
+///
 pub fn vhessian<V, U>(f: &impl Fn(&V) -> U, x0: &V, h: Option<f64>) -> Vec<V::MatrixNxN>
 where
     V: Vector<f64>,

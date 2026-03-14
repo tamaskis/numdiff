@@ -18,7 +18,9 @@ use crate::constants::SQRT_EPS;
 ///
 /// This function performs 2 evaluations of $f(x)$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the derivative of
 ///
@@ -52,6 +54,44 @@ use crate::constants::SQRT_EPS;
 /// let f = |x: f64| x.powi(3);
 /// let df: f64 = sderivative(&f, 2.0, Some(0.001));
 /// assert_equal_to_decimal!(df, 12.0, 1);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the derivative of a parameterized function
+///
+/// $$f(x)=ax^{2}+bx+c$$
+///
+/// where $a$, $b$, and $c$ are runtime parameters. Compare the result against the true derivative
+/// of
+///
+/// $$f'(x)=2ax+b$$
+///
+/// ```
+/// use numtest::*;
+///
+/// use numdiff::forward_difference::sderivative;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: f64, a: f64, b: f64, c:f64) -> f64 {
+///     a * x.powi(2) + b * x + c
+/// }
+///
+/// // Runtime parameters.
+/// let a = 2.5;
+/// let b = -1.3;
+/// let c = 4.7;
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: f64| f_param(x, a, b, c);
+///
+/// // True derivative function.
+/// let df_true = |x: f64| 2.0 * a * x + b;
+///
+/// // Approximate the derivative at x = 1.0 and compare with true derivative.
+/// let df_at_1: f64 = sderivative(&f, 1.0, None);
+/// let df_at_1_true: f64 = df_true(1.0);
+/// assert_equal_to_decimal!(df_at_1, df_at_1_true, 5);
 /// ```
 pub fn sderivative(f: &impl Fn(f64) -> f64, x0: f64, h: Option<f64>) -> f64 {
     // Default the relative step size to h = √(ε) if not specified.

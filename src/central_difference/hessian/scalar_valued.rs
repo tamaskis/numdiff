@@ -19,7 +19,9 @@ use linalg_traits::Vector;
 ///
 /// This function performs $2n(n+1)$ evaluations of $f(x)$.
 ///
-/// # Example
+/// # Examples
+///
+/// ## Basic Example
 ///
 /// Approximate the Hessian of
 ///
@@ -159,6 +161,57 @@ use linalg_traits::Vector;
 /// );
 ///
 /// assert_arrays_equal_to_decimal!(hess, hess_true, 1);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Approximate the Hessian of a parameterized function
+///
+/// $$f(\mathbf{x})=ax_{0}^{2}x_{1}+bx_{0}x_{1}^{2}+cx_{0}^{2}+dx_{1}^{2}$$
+///
+/// where $a$, $b$, $c$, and $d$ are runtime parameters. Compare the result against the true
+/// Hessian of
+///
+/// $$
+/// \mathbf{H}=
+/// \begin{bmatrix}
+/// 2ax_{1}+2c & 2ax_{0}+2bx_{1} \\\\
+/// 2ax_{0}+2bx_{1} & 2bx_{0}+2d
+/// \end{bmatrix}
+/// $$
+///
+/// ```
+/// use linalg_traits::{Mat, Matrix};
+/// use numtest::*;
+///
+/// use numdiff::central_difference::shessian;
+///
+/// // Runtime parameters.
+/// let a = 1.5;
+/// let b = 2.0;
+/// let c = 0.8;
+/// let d = 3.0;
+///
+/// // Define the parameterized function.
+/// fn f_param(x: &Vec<f64>, a: f64, b: f64, c: f64, d: f64) -> f64 {
+///     a * x[0].powi(2) * x[1] + b * x[0] * x[1].powi(2) + c * x[0].powi(2) + d * x[1].powi(2)
+/// }
+///
+/// // Wrap the parameterized function with a closure that captures the parameters.
+/// let f = |x: &Vec<f64>| f_param(x, a, b, c, d);
+///
+/// // Evaluation point.
+/// let x0 = vec![1.0, -0.5];
+///
+/// // True Hessian function.
+/// let hess_true = Mat::from_row_slice(2, 2, &[
+///     2.0 * a * x0[1] + 2.0 * c, 2.0 * a * x0[0] + 2.0 * b * x0[1],
+///     2.0 * a * x0[0] + 2.0 * b * x0[1], 2.0 * b * x0[0] + 2.0 * d
+/// ]);
+///
+/// // Approximate the Hessian and compare with true Hessian.
+/// let hess_eval: Mat<f64> = shessian(&f, &x0, None);
+/// assert_arrays_equal_to_decimal!(hess_eval, hess_true, 6);
 /// ```
 pub fn shessian<V>(f: &impl Fn(&V) -> f64, x0: &V, h: Option<f64>) -> V::MatrixNxN
 where

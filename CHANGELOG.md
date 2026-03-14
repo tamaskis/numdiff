@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+1. Updated automatic differentiation macros so optional `param_type` now represents the full type of `p` (e.g. `[Data]` for `&[Data]`), while the default remains `&[f64]`.
+
 ## 0.5.0
 
 1. Added ability to pass custom types as extra runtime parameters to the automatic differentiation macros.

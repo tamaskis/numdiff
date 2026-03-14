@@ -7,8 +7,8 @@
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `func_name` - Name of the function that will return the Jacobian of
 ///   $\mathbf{f}(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
-/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
-///   that `f` accepts `p: &[f64]`).
+/// * `param_type` (optional) - Type of the extra runtime parameter `p` that is passed to `f`.
+///   Defaults to `[f64]` (implying that `f` accepts `p: &[f64]`).
 ///
 /// # Defining `f`
 ///
@@ -260,36 +260,35 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> V::DVectorT<S> {
-///     let data = &p[0];
-///     let a = S::new(data.a);
-///     let b = S::new(data.b);
-///     let c = S::new(data.c);
-///     let d = S::new(data.d);
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
+///     let a = S::new(p.a);
+///     let b = S::new(p.b);
+///     let c = S::new(p.c);
+///     let d = S::new(p.d);
 ///     V::DVectorT::from_slice(&[
 ///         a * x.vget(0).powi(2) + b * x.vget(1),
 ///         c * x.vget(0) + d * x.vget(1).powi(2)
 ///     ])
 /// }
 ///
-/// // Parameter vector containing custom structs.
-/// let p = [Data {
+/// // Runtime parameter struct.
+/// let p = Data {
 ///     a: 1.5,
 ///     b: 2.0,
 ///     c: -0.8,
 ///     d: 3.0,
-/// }];
+/// };
 ///
 /// // Evaluation point.
 /// let x0 = vec![1.0, -0.5];
 ///
-/// // Tell the macro to generate a function accepting &[Data].
+/// // Tell the macro to generate a function accepting &Data.
 /// get_jacobian!(f, jac, Data);
 ///
 /// // True Jacobian function.
 /// let jac_true = |x: &Vec<f64>| Mat::from_row_slice(2, 2, &[
-///     2.0 * p[0].a * x[0], p[0].b,
-///     p[0].c, 2.0 * p[0].d * x[1]
+///     2.0 * p.a * x[0], p.b,
+///     p.c, 2.0 * p.d * x[1]
 /// ]);
 ///
 /// // Compute the Jacobian using both the automatically generated Jacobian function and the true
@@ -301,7 +300,7 @@
 #[macro_export]
 macro_rules! get_jacobian {
     ($f:ident, $func_name:ident) => {
-        get_jacobian!($f, $func_name, f64);
+        get_jacobian!($f, $func_name, [f64]);
     };
     ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Jacobian of a multivariate, vector-valued function `f: ℝⁿ → ℝᵐ`.
@@ -320,7 +319,7 @@ macro_rules! get_jacobian {
         /// Jacobian of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `J(x₀) = (∂f/∂x)|ₓ₌ₓ₀ ∈ ℝᵐˣⁿ`
-        fn $func_name<S, V>(x0: &V, p: &[$param_type]) -> V::DMatrixMxNf64
+        fn $func_name<S, V>(x0: &V, p: &$param_type) -> V::DMatrixMxNf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -615,25 +614,24 @@ mod tests {
         }
 
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> V::DVectorT<S> {
-            let data = &p[0];
-            let a = S::new(data.a);
-            let b = S::new(data.b);
-            let c = S::new(data.c);
-            let d = S::new(data.d);
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
+            let a = S::new(p.a);
+            let b = S::new(p.b);
+            let c = S::new(p.c);
+            let d = S::new(p.d);
             V::DVectorT::from_slice(&[
                 a * x.vget(0).powi(2) + b * x.vget(1),
                 c * x.vget(0) + d * x.vget(1).powi(2),
             ])
         }
 
-        // Parameter vector.
-        let p = [Data {
+        // Runtime parameter struct.
+        let p = Data {
             a: 1.5,
             b: 2.0,
             c: -0.8,
             d: 3.0,
-        }];
+        };
 
         // Evaluation point.
         let x0 = vec![1.0, -0.5];
@@ -646,7 +644,7 @@ mod tests {
             Mat::from_row_slice(
                 2,
                 2,
-                &[2.0 * p[0].a * x[0], p[0].b, p[0].c, 2.0 * p[0].d * x[1]],
+                &[2.0 * p.a * x[0], p.b, p.c, 2.0 * p.d * x[1]],
             )
         };
 

@@ -8,8 +8,8 @@
 /// * `f` - Multivariate, vector-valued function, $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$.
 /// * `func_name` - Name of the function that will return the partial derivative of
 ///   $\mathbf{f}(\mathbf{x})$ with respect to $x_{k}$ at any point $\mathbf{x}\in\mathbb{R}^{n}$.
-/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
-///   that `f` accepts `p: &[f64]`).
+/// * `param_type` (optional) - Type of the extra runtime parameter `p` that is passed to `f`.
+///   Defaults to `[f64]` (implying that `f` accepts `p: &[f64]`).
 ///
 /// # Defining `f`
 ///
@@ -223,42 +223,41 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> V::DVectorT<S> {
-///     let data = &p[0];
-///     let a = S::new(data.a);
-///     let b = S::new(data.b);
-///     let c = S::new(data.c);
-///     let d = S::new(data.d);
-///     let e = S::new(data.e);
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
+///     let a = S::new(p.a);
+///     let b = S::new(p.b);
+///     let c = S::new(p.c);
+///     let d = S::new(p.d);
+///     let e = S::new(p.e);
 ///     V::DVectorT::from_slice(&[
 ///         a * x.vget(0).powi(2) + b * x.vget(1),
 ///         c * (d * x.vget(0)).sin() + e * x.vget(1).powi(2)
 ///     ])
 /// }
 ///
-/// // Parameter vector containing custom structs.
-/// let p = [Data {
+/// // Runtime parameter struct.
+/// let p = Data {
 ///     a: 1.5,
 ///     b: -2.0,
 ///     c: 3.0,
 ///     d: 0.5,
 ///     e: 2.5,
-/// }];
+/// };
 ///
 /// // Evaluation point.
 /// let x0 = vec![1.0, 0.8];
 ///
-/// // Tell the macro to generate a function accepting &[Data].
+/// // Tell the macro to generate a function accepting &Data.
 /// get_vpartial_derivative!(f, dfk, Data);
 ///
 /// // True partial derivative functions.
 /// let df_dx0_true = |x: &[f64]| vec![
-///     2.0 * p[0].a * x[0],
-///     p[0].c * p[0].d * (p[0].d * x[0]).cos()
+///     2.0 * p.a * x[0],
+///     p.c * p.d * (p.d * x[0]).cos()
 /// ];
 /// let df_dx1_true = |x: &[f64]| vec![
-///     p[0].b,
-///     2.0 * p[0].e * x[1]
+///     p.b,
+///     2.0 * p.e * x[1]
 /// ];
 ///
 /// // Compute the partial derivatives using both the automatically generated partial derivative
@@ -271,7 +270,7 @@
 #[macro_export]
 macro_rules! get_vpartial_derivative {
     ($f:ident, $func_name:ident) => {
-        get_vpartial_derivative!($f, $func_name, f64);
+        get_vpartial_derivative!($f, $func_name, [f64]);
     };
     ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Partial derivative of a multivariate, vector-valued function `f: ℝⁿ → ℝᵐ`.
@@ -292,7 +291,7 @@ macro_rules! get_vpartial_derivative {
         /// Partial derivative of `f` with respect to `xₖ`, evaluated at `x = x₀`.
         ///
         /// `(∂f/∂xₖ)|ₓ₌ₓ₀ ∈ ℝᵐ`
-        fn $func_name<S, V>(x0: &V, k: usize, p: &[$param_type]) -> V::DVectorf64
+        fn $func_name<S, V>(x0: &V, k: usize, p: &$param_type) -> V::DVectorf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -519,27 +518,26 @@ mod tests {
         }
 
         // Function to take the partial derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> V::DVectorT<S> {
-            let data = &p[0];
-            let a = S::new(data.a);
-            let b = S::new(data.b);
-            let c = S::new(data.c);
-            let d = S::new(data.d);
-            let e = S::new(data.e);
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
+            let a = S::new(p.a);
+            let b = S::new(p.b);
+            let c = S::new(p.c);
+            let d = S::new(p.d);
+            let e = S::new(p.e);
             V::DVectorT::from_slice(&[
                 a * x.vget(0).powi(2) + b * x.vget(1),
                 c * (d * x.vget(0)).sin() + e * x.vget(1).powi(2),
             ])
         }
 
-        // Parameter vector.
-        let p = [Data {
+        // Runtime parameter struct.
+        let p = Data {
             a: 1.5,
             b: -2.0,
             c: 3.0,
             d: 0.5,
             e: 2.5,
-        }];
+        };
 
         // Evaluation point.
         let x0 = vec![1.0, 0.8];
@@ -548,9 +546,8 @@ mod tests {
         get_vpartial_derivative!(f, dfk, Data);
 
         // True partial derivative functions.
-        let df_dx0_true =
-            |x: &[f64]| vec![2.0 * p[0].a * x[0], p[0].c * p[0].d * (p[0].d * x[0]).cos()];
-        let df_dx1_true = |x: &[f64]| vec![p[0].b, 2.0 * p[0].e * x[1]];
+        let df_dx0_true = |x: &[f64]| vec![2.0 * p.a * x[0], p.c * p.d * (p.d * x[0]).cos()];
+        let df_dx1_true = |x: &[f64]| vec![p.b, 2.0 * p.e * x[1]];
 
         // Evaluate the partial derivatives using both functions.
         let df_dx0: Vec<f64> = dfk(&x0, 0, &p);

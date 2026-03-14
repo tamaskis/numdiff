@@ -9,8 +9,8 @@
 /// * `func_name` - Name of the function that will return the directional derivative of
 ///   $f(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$ and in any direction
 ///   $\mathbf{v}\in\mathbb{R}^{n}$.
-/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
-///   that `f` accepts `p: &[f64]`).
+/// * `param_type` (optional) - Type of the extra runtime parameter `p` that is passed to `f`.
+///   Defaults to `[f64]` (implying that `f` accepts `p: &[f64]`).
 ///
 /// # Warning
 ///
@@ -199,40 +199,39 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
-///     let data = &p[0];
-///     let a = S::new(data.a);
-///     let b = S::new(data.b);
-///     let c = S::new(data.c);
-///     let d = S::new(data.d);
-///     let e = S::new(data.e);
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
+///     let a = S::new(p.a);
+///     let b = S::new(p.b);
+///     let c = S::new(p.c);
+///     let d = S::new(p.d);
+///     let e = S::new(p.e);
 ///     a * x.vget(0).powi(2)
 ///         + b * x.vget(1).powi(2)
 ///         + c * x.vget(0) * x.vget(1)
 ///         + d * (e * x.vget(0)).exp()
 /// }
 ///
-/// // Parameter vector containing custom structs.
-/// let p = [Data {
+/// // Runtime parameter struct.
+/// let p = Data {
 ///     a: 1.5,
 ///     b: 2.0,
 ///     c: 0.8,
 ///     d: 0.3,
 ///     e: 0.5,
-/// }];
+/// };
 ///
 /// // Evaluation point and direction.
 /// let x0 = vec![1.0, -0.5];
 /// let v = vec![0.6, 0.8];
 ///
-/// // Tell the macro to generate a function accepting &[Data].
+/// // Tell the macro to generate a function accepting &Data.
 /// get_directional_derivative!(f, df_v, Data);
 ///
 /// // True directional derivative function.
 /// let df_v_true = |x: &Vec<f64>, v: &Vec<f64>| {
 ///     let grad_x0 =
-///         2.0 * p[0].a * x[0] + p[0].c * x[1] + p[0].d * p[0].e * (p[0].e * x[0]).exp();
-///     let grad_x1 = 2.0 * p[0].b * x[1] + p[0].c * x[0];
+///         2.0 * p.a * x[0] + p.c * x[1] + p.d * p.e * (p.e * x[0]).exp();
+///     let grad_x1 = 2.0 * p.b * x[1] + p.c * x[0];
 ///     grad_x0 * v[0] + grad_x1 * v[1]
 /// };
 ///
@@ -245,7 +244,7 @@
 #[macro_export]
 macro_rules! get_directional_derivative {
     ($f:ident, $func_name:ident) => {
-        get_directional_derivative!($f, $func_name, f64);
+        get_directional_derivative!($f, $func_name, [f64]);
     };
     ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Directional derivative of a multivariate, scalar-valued function `f: ℝⁿ → ℝ`.
@@ -266,7 +265,7 @@ macro_rules! get_directional_derivative {
         /// `x = x₀`.
         ///
         /// `∇ᵥf(x₀) = ∇f(x₀)ᵀv ∈ ℝ`
-        fn $func_name<S, V>(x0: &V, v: &V, p: &[$param_type]) -> f64
+        fn $func_name<S, V>(x0: &V, v: &V, p: &$param_type) -> f64
         where
             S: Scalar,
             V: Vector<S>,
@@ -435,27 +434,26 @@ mod tests {
         }
 
         // Function to find the directional derivative of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
-            let data = &p[0];
-            let a = S::new(data.a);
-            let b = S::new(data.b);
-            let c = S::new(data.c);
-            let d = S::new(data.d);
-            let e = S::new(data.e);
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
+            let a = S::new(p.a);
+            let b = S::new(p.b);
+            let c = S::new(p.c);
+            let d = S::new(p.d);
+            let e = S::new(p.e);
             a * x.vget(0).powi(2)
                 + b * x.vget(1).powi(2)
                 + c * x.vget(0) * x.vget(1)
                 + d * (e * x.vget(0)).exp()
         }
 
-        // Parameter vector.
-        let p = [Data {
+        // Runtime parameter struct.
+        let p = Data {
             a: 1.5,
             b: 2.0,
             c: 0.8,
             d: 0.3,
             e: 0.5,
-        }];
+        };
 
         // Evaluation point.
         let x0 = vec![1.0, -0.5];
@@ -468,9 +466,8 @@ mod tests {
 
         // True directional derivative function.
         let df_v_true = |x: &Vec<f64>, v: &Vec<f64>| {
-            let grad_x0 =
-                2.0 * p[0].a * x[0] + p[0].c * x[1] + p[0].d * p[0].e * (p[0].e * x[0]).exp();
-            let grad_x1 = 2.0 * p[0].b * x[1] + p[0].c * x[0];
+            let grad_x0 = 2.0 * p.a * x[0] + p.c * x[1] + p.d * p.e * (p.e * x[0]).exp();
+            let grad_x1 = 2.0 * p.b * x[1] + p.c * x[0];
             grad_x0 * v[0] + grad_x1 * v[1]
         };
 

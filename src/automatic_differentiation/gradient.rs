@@ -7,8 +7,8 @@
 /// * `f` - Multivariate, scalar-valued function, $f:\mathbb{R}^{n}\to\mathbb{R}$.
 /// * `func_name` - Name of the function that will return the gradient of $f(\mathbf{x})$ at any
 ///   point $\mathbf{x}\in\mathbb{R}^{n}$.
-/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
-///   that `f` accepts `p: &[f64]`).
+/// * `param_type` (optional) - Type of the extra runtime parameter `p` that is passed to `f`.
+///   Defaults to `[f64]` (implying that `f` accepts `p: &[f64]`).
 ///
 /// # Warning
 ///
@@ -180,33 +180,32 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
-///     let data = &p[0];
-///     let a = S::new(data.a);
-///     let b = S::new(data.b);
-///     let c = S::new(data.c);
-///     let d = S::new(data.d);
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
+///     let a = S::new(p.a);
+///     let b = S::new(p.b);
+///     let c = S::new(p.c);
+///     let d = S::new(p.d);
 ///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d
 /// }
 ///
-/// // Parameter vector containing custom structs.
-/// let p = [Data {
+/// // Runtime parameter struct.
+/// let p = Data {
 ///     a: 2.0,
 ///     b: 1.5,
 ///     c: 0.8,
 ///     d: -3.0,
-/// }];
+/// };
 ///
 /// // Evaluation point.
 /// let x0 = vec![1.0, -2.0];
 ///
-/// // Tell the macro to generate a function accepting &[Data].
+/// // Tell the macro to generate a function accepting &Data.
 /// get_gradient!(f, g, Data);
 ///
 /// // True gradient function.
 /// let g_true = |x: &Vec<f64>| vec![
-///     2.0 * p[0].a * x[0] + p[0].c * x[1],
-///     2.0 * p[0].b * x[1] + p[0].c * x[0],
+///     2.0 * p.a * x[0] + p.c * x[1],
+///     2.0 * p.b * x[1] + p.c * x[0],
 /// ];
 ///
 /// // Compute the gradient using both the automatically generated gradient function and the true
@@ -218,7 +217,7 @@
 #[macro_export]
 macro_rules! get_gradient {
     ($f:ident, $func_name:ident) => {
-        get_gradient!($f, $func_name, f64);
+        get_gradient!($f, $func_name, [f64]);
     };
     ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Gradient of a multivariate, scalar-valued function `f: ℝⁿ → ℝ`.
@@ -237,7 +236,7 @@ macro_rules! get_gradient {
         /// Gradient of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `∇f(x₀) ∈ ℝⁿ`
-        fn $func_name<S, V>(x0: &V, p: &[$param_type]) -> V::Vectorf64
+        fn $func_name<S, V>(x0: &V, p: &$param_type) -> V::Vectorf64
         where
             S: Scalar,
             V: Vector<S>,
@@ -411,22 +410,21 @@ mod tests {
         }
 
         // Function to find the gradient of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
-            let data = &p[0];
-            let a = S::new(data.a);
-            let b = S::new(data.b);
-            let c = S::new(data.c);
-            let d = S::new(data.d);
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
+            let a = S::new(p.a);
+            let b = S::new(p.b);
+            let c = S::new(p.c);
+            let d = S::new(p.d);
             a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d
         }
 
-        // Parameter vector.
-        let p = [Data {
+        // Runtime parameter struct.
+        let p = Data {
             a: 2.0,
             b: 1.5,
             c: 0.8,
             d: -3.0,
-        }];
+        };
 
         // Evaluation point.
         let x0 = vec![1.0, -2.0];
@@ -435,12 +433,8 @@ mod tests {
         get_gradient!(f, g, Data);
 
         // True gradient function.
-        let g_true = |x: &Vec<f64>| {
-            vec![
-                2.0 * p[0].a * x[0] + p[0].c * x[1],
-                2.0 * p[0].b * x[1] + p[0].c * x[0],
-            ]
-        };
+        let g_true =
+            |x: &Vec<f64>| vec![2.0 * p.a * x[0] + p.c * x[1], 2.0 * p.b * x[1] + p.c * x[0]];
 
         // Evaluate the gradient using both functions.
         let g_eval: Vec<f64> = g(&x0, &p);

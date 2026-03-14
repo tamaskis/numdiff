@@ -9,6 +9,8 @@
 /// * `func_name` - Name of the function that will return the directional derivative of
 ///   $f(\mathbf{x})$ at any point $\mathbf{x}\in\mathbb{R}^{n}$ and in any direction
 ///   $\mathbf{v}\in\mathbb{R}^{n}$.
+/// * `param_type` (optional) - Type of each runtime parameter in `p`. Defaults to [`f64`] (implying
+///   that `f` accepts `p: &[f64]`).
 ///
 /// # Warning
 ///
@@ -143,7 +145,10 @@
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
 ///     let e = S::new(p[4]);
-///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d * (e * x.vget(0)).exp()
+///     a * x.vget(0).powi(2)
+///         + b * x.vget(1).powi(2)
+///         + c * x.vget(0) * x.vget(1)
+///         + d * (e * x.vget(0)).exp()
 /// }
 ///
 /// // Parameter vector.
@@ -174,9 +179,75 @@
 /// let df_v_eval_true: f64 = df_v_true(&x0, &v);
 /// assert_equal_to_decimal!(df_v_eval, df_v_eval_true, 14);
 /// ```
+///
+/// ## Example Passing Custom Parameter Types
+///
+/// Use a custom parameter struct instead of `f64` values.
+///
+/// ```
+/// use linalg_traits::{Scalar, Vector};
+/// use numtest::*;
+///
+/// use numdiff::{get_directional_derivative, Dual, DualVector};
+///
+/// struct Data {
+///     a: f64,
+///     b: f64,
+///     c: f64,
+///     d: f64,
+///     e: f64,
+/// }
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
+///     let data = &p[0];
+///     let a = S::new(data.a);
+///     let b = S::new(data.b);
+///     let c = S::new(data.c);
+///     let d = S::new(data.d);
+///     let e = S::new(data.e);
+///     a * x.vget(0).powi(2)
+///         + b * x.vget(1).powi(2)
+///         + c * x.vget(0) * x.vget(1)
+///         + d * (e * x.vget(0)).exp()
+/// }
+///
+/// // Parameter vector containing custom structs.
+/// let p = [Data {
+///     a: 1.5,
+///     b: 2.0,
+///     c: 0.8,
+///     d: 0.3,
+///     e: 0.5,
+/// }];
+///
+/// // Evaluation point and direction.
+/// let x0 = vec![1.0, -0.5];
+/// let v = vec![0.6, 0.8];
+///
+/// // Tell the macro to generate a function accepting &[Data].
+/// get_directional_derivative!(f, df_v, Data);
+///
+/// // True directional derivative function.
+/// let df_v_true = |x: &Vec<f64>, v: &Vec<f64>| {
+///     let grad_x0 =
+///         2.0 * p[0].a * x[0] + p[0].c * x[1] + p[0].d * p[0].e * (p[0].e * x[0]).exp();
+///     let grad_x1 = 2.0 * p[0].b * x[1] + p[0].c * x[0];
+///     grad_x0 * v[0] + grad_x1 * v[1]
+/// };
+///
+/// // Compute the directional derivative using both the automatically generated directional
+/// // derivative function and the true directional derivative function, and compare the results.
+/// let df_v_eval: f64 = df_v(&x0, &v, &p);
+/// let df_v_eval_true: f64 = df_v_true(&x0, &v);
+/// assert_equal_to_decimal!(df_v_eval, df_v_eval_true, 14);
+/// ```
 #[macro_export]
 macro_rules! get_directional_derivative {
     ($f:ident, $func_name:ident) => {
+        get_directional_derivative!($f, $func_name, f64);
+    };
+    ($f:ident, $func_name:ident, $param_type:ty) => {
         /// Directional derivative of a multivariate, scalar-valued function `f: ℝⁿ → ℝ`.
         ///
         /// This function is generated for a specific function `f` using the
@@ -195,7 +266,7 @@ macro_rules! get_directional_derivative {
         /// `x = x₀`.
         ///
         /// `∇ᵥf(x₀) = ∇f(x₀)ᵀv ∈ ℝ`
-        fn $func_name<S, V>(x0: &V, v: &V, p: &[f64]) -> f64
+        fn $func_name<S, V>(x0: &V, v: &V, p: &[$param_type]) -> f64
         where
             S: Scalar,
             V: Vector<S>,
@@ -351,5 +422,63 @@ mod tests {
 
         // Test autodiff directional derivative against true directional derivative.
         assert_equal_to_decimal!(df_v_eval_autodiff, df_v_eval, 15);
+    }
+
+    #[test]
+    fn test_directional_derivative_custom_params() {
+        struct Data {
+            a: f64,
+            b: f64,
+            c: f64,
+            d: f64,
+            e: f64,
+        }
+
+        // Function to find the directional derivative of.
+        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[Data]) -> S {
+            let data = &p[0];
+            let a = S::new(data.a);
+            let b = S::new(data.b);
+            let c = S::new(data.c);
+            let d = S::new(data.d);
+            let e = S::new(data.e);
+            a * x.vget(0).powi(2)
+                + b * x.vget(1).powi(2)
+                + c * x.vget(0) * x.vget(1)
+                + d * (e * x.vget(0)).exp()
+        }
+
+        // Parameter vector.
+        let p = [Data {
+            a: 1.5,
+            b: 2.0,
+            c: 0.8,
+            d: 0.3,
+            e: 0.5,
+        }];
+
+        // Evaluation point.
+        let x0 = vec![1.0, -0.5];
+
+        // Direction of differentiation.
+        let v = vec![0.6, 0.8];
+
+        // Directional derivative function obtained via forward-mode automatic differentiation.
+        get_directional_derivative!(f, df_v, Data);
+
+        // True directional derivative function.
+        let df_v_true = |x: &Vec<f64>, v: &Vec<f64>| {
+            let grad_x0 =
+                2.0 * p[0].a * x[0] + p[0].c * x[1] + p[0].d * p[0].e * (p[0].e * x[0]).exp();
+            let grad_x1 = 2.0 * p[0].b * x[1] + p[0].c * x[0];
+            grad_x0 * v[0] + grad_x1 * v[1]
+        };
+
+        // Evaluate the directional derivative using both functions.
+        let df_v_eval: f64 = df_v(&x0, &v, &p);
+        let df_v_eval_true: f64 = df_v_true(&x0, &v);
+
+        // Test autodiff directional derivative against true directional derivative.
+        assert_equal_to_decimal!(df_v_eval, df_v_eval_true, 14);
     }
 }

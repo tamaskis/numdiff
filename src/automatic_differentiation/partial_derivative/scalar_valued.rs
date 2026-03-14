@@ -218,7 +218,8 @@
 /// // Evaluation point.
 /// let x0 = vec![1.0, -0.5];
 ///
-/// // Tell the macro to generate a function accepting &Data.
+/// // Autogenerate the partial derivative function, telling the macro to expect a runtime parameter
+/// // of type &Data.
 /// get_spartial_derivative!(f, dfk, Data);
 ///
 /// // True partial derivative functions.

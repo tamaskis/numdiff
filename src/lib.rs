@@ -43,8 +43,13 @@
 //! Many times, we want to automatically differentiate functions that can also depend on parameters
 //! defined at runtime. However, automatic differentiation is performed at compile time, so we
 //! cannot simply "capture" these parameters using closures. To solve this problem, all automatic
-//! differentiation macros expect the function to not only accept the point at which it is
-//! differentiated, but also a vector of runtime parameters that can be modified at runtime.
+//! differentiation macros expect the function being differentiated to not only accept the point at
+//! which it is differentiated, but also a runtime parameter of an arbitrary type (could be a
+//! `&[f64]`, could be a `&T` where `T` is some custom struct, etc.).
+//!
+//! Examples are included for each macro (for example, here is the example for the
+//! [`get_jacobian!`] macro):
+//! [`get_jacobian!` - Example Passing Custom Parameter Types](macro@get_jacobian#example-passing-custom-parameter-types)
 //!
 //! ## Limitations
 //!
@@ -102,7 +107,9 @@
 //! * Incorrect implementation of certain functions, such as [`num_traits::Float::floor`] (see the
 //!   [source code](https://github.com/elrnv/autodiff/blob/master/src/forward_autodiff.rs)).
 //!
-//! # Central Difference Approximations
+//! # Finite Difference Methods
+//!
+//! ## Central Difference Approximations
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
 //! | --------------- | ------------- | ---------------------------------- |
@@ -116,7 +123,7 @@
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::shessian()`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::vhessian()`] |
 //!
-//! # Forward Difference Approximations
+//! ## Forward Difference Approximations
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
 //! | --------------- | ------------- | ---------------------------------- |
@@ -129,6 +136,14 @@
 //! | Jacobian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::jacobian()`] |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::shessian()`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::vhessian()`] |
+//!
+//! ## Passing Runtime Parameters
+//!
+//! For the finite difference methods, we can simply capture any runtime parameters using closures.
+//!
+//! Examples are included for each function (for example, here is the example for the
+//! [`central_difference::jacobian()`] function):
+//! [`central_difference::jacobian()` - Example Passing Runtime Parameters](fn@central_difference::jacobian#example-passing-runtime-parameters)
 
 // Linter setup.
 #![warn(missing_docs)]

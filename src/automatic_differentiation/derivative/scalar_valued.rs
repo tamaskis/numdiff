@@ -129,7 +129,8 @@
 ///     c: 4.7,
 /// };
 ///
-/// // Tell the macro to generate a function accepting &Data.
+/// // Autogenerate the derivative function, telling the macro to expect a runtime parameter of type
+/// // &Data.
 /// get_sderivative!(f, df, Data);
 ///
 /// // True derivative function.

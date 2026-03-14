@@ -181,7 +181,8 @@
 ///     d: 3.0,
 /// };
 ///
-/// // Tell the macro to generate a function accepting &Data.
+/// // Autogenerate the derivative function, telling the macro to expect a runtime parameter of type
+/// // &Data.
 /// get_vderivative!(f, df, Data);
 ///
 /// // True derivative function.

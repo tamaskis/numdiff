@@ -7,7 +7,7 @@ description = "Numerical differentiation via forward-mode automatic differentiat
 documentation = "https://docs.rs/numdiff"
 repository = "https://github.com/tamaskis/numdiff"
 license = "MIT OR Apache-2.0"
-keywords = ["numerical", "differentiation", "finite-difference", "forward-mode-automatic-differentiation", "autodiff"]
+keywords = ["numerical", "differentiation", "finite-difference", "forward-mode", "autodiff"]
 categories = ["mathematics", "science"]
 
 exclude = [".gitignore", ".github/", ".vscode/", "Cargo.lock", "book/"]

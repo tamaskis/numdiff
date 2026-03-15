@@ -37,6 +37,8 @@
 //! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_gradient!`] |
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_directional_derivative!`] |
 //! | Jacobian| $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_jacobian!`] |
+//! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_shessian!`] |
+//! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_vhessian!`] |
 //!
 //! ## Passing Runtime Parameters
 //!

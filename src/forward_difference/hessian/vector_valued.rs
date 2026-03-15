@@ -282,6 +282,7 @@ use linalg_traits::Vector;
 /// assert_arrays_equal_to_decimal!(hess_eval[1], hess_true[1], 5);
 /// ```
 ///
+#[allow(clippy::many_single_char_names)]
 pub fn vhessian<V, U>(f: &impl Fn(&V) -> U, x0: &V, h: Option<f64>) -> Vec<V::MatrixNxN>
 where
     V: Vector<f64>,

@@ -1,12 +1,14 @@
 [package]
 name = "numdiff"
-version = "0.6.1"
+version = "0.7.0"
 authors = ["Tamas Kis"]
 edition = "2024"
 description = "Numerical differentiation via forward-mode automatic differentiation and finite difference approximations."
 documentation = "https://docs.rs/numdiff"
 repository = "https://github.com/tamaskis/numdiff"
 license = "MIT OR Apache-2.0"
+keywords = ["numerical", "differentiation", "finite-difference", "forward-mode-automatic-differentiation", "autodiff"]
+categories = ["mathematics", "science"]
 
 exclude = [".gitignore", ".github/", ".vscode/", "Cargo.lock", "book/"]
 
@@ -15,13 +17,13 @@ rustdoc-args = [ "--html-in-header", "src/docs-header.html" ]
 features = ["trig"]
 
 [dependencies]
-linalg-traits = "0.14.0"
+linalg-traits = "0.15.0"
 num-traits = "0.2.19"
-trig = { version = "0.3.1", optional = true }
+trig = { version = "0.4.0", optional = true }
 
 [dev-dependencies]
 faer = "0.24.0"
-linalg-traits = { version = "0.14.0", features = ["nalgebra", "ndarray", "faer", "faer-traits"] }
+linalg-traits = { version = "0.15.0", features = ["nalgebra", "ndarray", "faer", "faer-traits"] }
 nalgebra = "0.34.1"
 ndarray = "0.17.2"
-numtest = "0.4.0"
+numtest = "0.5.0"

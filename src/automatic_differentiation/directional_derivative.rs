@@ -285,8 +285,7 @@ macro_rules! get_directional_derivative {
 
 #[cfg(test)]
 mod tests {
-    use crate::automatic_differentiation::dual::Dual;
-    use crate::automatic_differentiation::dual_vector::DualVector;
+    use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
     use nalgebra::SVector;
     use ndarray::{Array1, array};
@@ -389,6 +388,7 @@ mod tests {
     #[test]
     fn test_directional_derivative_4() {
         // Function to find the directional derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
             let a = S::new(p[0]);
             let b = S::new(p[1]);
@@ -435,6 +435,7 @@ mod tests {
         }
 
         // Function to find the directional derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
             let a = S::new(p.a);
             let b = S::new(p.b);

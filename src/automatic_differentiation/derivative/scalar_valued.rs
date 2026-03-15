@@ -180,8 +180,7 @@ macro_rules! get_sderivative {
 
 #[cfg(test)]
 mod tests {
-    use crate::automatic_differentiation::dual::Dual;
-    use crate::test_utils;
+    use crate::{Dual, test_utils};
     use linalg_traits::Scalar;
     use numtest::*;
     use std::f64::consts::PI;
@@ -339,6 +338,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::items_after_statements)]
     fn test_sderivative_polynomial() {
         // Test #1.
         fn f1<S: Scalar>(_x: S, _p: &[f64]) -> S {
@@ -890,12 +890,6 @@ mod tests {
             (alpha * x).exp() * (beta * x).cos()
         }
 
-        // Evaluation point.
-        let x0 = 0.3;
-
-        // Parameter vector.
-        let p = [0.5, 2.0];
-
         // True derivative function.
         fn df<S: Scalar>(x: S, p: &[f64]) -> S {
             let alpha = S::new(p[0]);
@@ -905,6 +899,12 @@ mod tests {
             let sin_term = (beta * x).sin();
             exp_term * (alpha * cos_term - beta * sin_term)
         }
+
+        // Evaluation point.
+        let x0 = 0.3;
+
+        // Parameter vector.
+        let p = [0.5, 2.0];
 
         // Derivative function obtained via forward-mode automatic differentation.
         get_sderivative!(f, df_autodiff);
@@ -926,6 +926,7 @@ mod tests {
         }
 
         // Function to take the derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar>(x: S, p: &Data) -> S {
             let a = S::new(p.a);
             let b = S::new(p.b);

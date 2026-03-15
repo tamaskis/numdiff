@@ -213,7 +213,7 @@ use linalg_traits::Vector;
 /// let hess_eval: Mat<f64> = shessian(&f, &x0, None);
 /// assert_arrays_equal_to_decimal!(hess_eval, hess_true, 4);
 /// ```
-///
+#[allow(clippy::many_single_char_names)]
 pub fn shessian<V>(f: &impl Fn(&V) -> f64, x0: &V, h: Option<f64>) -> V::MatrixNxN
 where
     V: Vector<f64>,

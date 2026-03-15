@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0
+
+1. Added `HyperDual` struct.
+1. Added `HyperDualVector` trait.
+1. Added `Dual::from_real` method for backend implementation of `Dual`.
+1. Refactored backend of `Dual` to use `Dual::from_real(real)` in place of `Dual::new(0.0)`.
+1. Enabled stricter lints.
+1. Updated `linalg-traits` dependency from `0.14.0` to `0.15.0`.
+1. Updated `trig` optional dependency from `0.3.1` to `0.4.0`.
+1. Updated `numtest` dev dependency from `0.4.0` to `0.5.0`.
+
 ## 0.6.1
 
 1. Improved crate-level documentation.

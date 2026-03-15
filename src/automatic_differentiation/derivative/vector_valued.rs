@@ -232,7 +232,7 @@ macro_rules! get_vderivative {
 
 #[cfg(test)]
 mod tests {
-    use crate::automatic_differentiation::dual::Dual;
+    use crate::Dual;
     use linalg_traits::{Scalar, Vector};
     use numtest::*;
 
@@ -250,6 +250,7 @@ mod tests {
     #[test]
     fn test_vderivative_2() {
         // Function to take the derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: S, p: &[f64]) -> V {
             let a = S::new(p[0]);
             let b = S::new(p[1]);
@@ -258,13 +259,8 @@ mod tests {
             V::from_slice(&[a * (b * x).sin(), c * (d * x).cos()])
         }
 
-        // Evaluation point.
-        let x0 = 0.2;
-
-        // Parameter vector.
-        let p = [2.0, 3.0, 1.5, 0.5];
-
         // True derivative function.
+        #[allow(clippy::many_single_char_names)]
         fn df(x: f64, p: &[f64]) -> Vec<f64> {
             let a = p[0];
             let b = p[1];
@@ -272,6 +268,12 @@ mod tests {
             let d = p[3];
             vec![a * b * (b * x).cos(), -c * d * (d * x).sin()]
         }
+
+        // Evaluation point.
+        let x0 = 0.2;
+
+        // Parameter vector.
+        let p = [2.0, 3.0, 1.5, 0.5];
 
         // Derivative function obtained via forward-mode automatic differentation.
         get_vderivative!(f, df_autodiff);
@@ -294,6 +296,7 @@ mod tests {
         }
 
         // Function to take the derivative of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(t: S, p: &Data) -> V {
             let a = S::new(p.a);
             let b = S::new(p.b);

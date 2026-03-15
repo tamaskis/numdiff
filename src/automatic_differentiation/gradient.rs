@@ -275,8 +275,7 @@ macro_rules! get_gradient {
 
 #[cfg(test)]
 mod tests {
-    use crate::automatic_differentiation::dual::Dual;
-    use crate::automatic_differentiation::dual_vector::DualVector;
+    use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
     use nalgebra::DVector;
     use ndarray::{Array1, array};
@@ -411,6 +410,7 @@ mod tests {
         }
 
         // Function to find the gradient of.
+        #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> S {
             let a = S::new(p.a);
             let b = S::new(p.b);

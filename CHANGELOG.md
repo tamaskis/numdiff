@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1
+
+1. Added `numdiff::get_shessian!`.
+1. Added `numdiff::get_vhessian!`.
+
 ## 0.7.0
 
 1. Added `HyperDual` struct.

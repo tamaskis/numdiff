@@ -248,11 +248,12 @@ macro_rules! get_spartial_derivative {
         ///
         /// # Arguments
         ///
-        /// `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
-        /// `k` - Element of `x` to differentiate with respect to. Note that this uses 0-based
-        ///       indexing (e.g. `x = (x₀,...,xₖ,...,xₙ₋₁)ᵀ`).
-        /// `p` - Parameter vector. This is a vector of additional runtime parameters that the
-        ///       function may depend on but is not differentiated with respect to.
+        /// * `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
+        /// * `k` - Element of `x` to differentiate with respect to. Note that this uses 0-based
+        ///   indexing (e.g. `x = (x₀,...,xₖ,...,xₙ₋₁)ᵀ`).
+        /// * `p` - Extra runtime parameter. This is a parameter (can be of any arbitrary type)
+        ///   defined at runtime that the function may depend on but is not differentiated with
+        ///   respect to.
         ///
         /// # Returns
         ///

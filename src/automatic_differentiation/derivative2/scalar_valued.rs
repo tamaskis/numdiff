@@ -1,0 +1,1033 @@
+/// Get a function that returns the second derivative of the provided univariate, scalar-valued
+/// function.
+///
+/// The second derivative is computed using forward-mode automatic differentiation.
+///
+/// # Arguments
+///
+/// * `f` - Univariate, scalar-valued function, $f:\mathbb{R}\to\mathbb{R}$.
+/// * `func_name` - Name of the function that will return the second derivative of $f(x)$ at any
+///   point $x\in\mathbb{R}$.
+/// * `param_type` (optional) - Type of the extra runtime parameter `p` that is passed to `f`.
+///   Defaults to `[f64]` (implying that `f` accepts `p: &[f64]`).
+///
+/// # Warning
+///
+/// `f` cannot be defined as closure. It must be defined as a function.
+///
+/// # Note
+///
+/// The function produced by this macro will perform 1 evaluation of $f(x)$ to evaluate its second
+/// derivative.
+///
+/// # Examples
+///
+/// ## Basic Example
+///
+/// Compute the second derivative of
+///
+/// $$f(x)=x^{3}$$
+///
+/// at $x=2$, and compare the result to the true result of $f''(2)=12$.
+///
+/// ```
+/// use linalg_traits::Scalar;
+/// use numtest::*;
+///
+/// use numdiff::{get_sderivative2, HyperDual};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+///     x.powi(3)
+/// }
+///
+/// // Parameter vector (empty for this example).
+/// let p = [];
+///
+/// // Autogenerate the function "d2f" that can be used to compute the second derivative of f(x) at
+/// // any point x.
+/// get_sderivative2!(f, d2f);
+///
+/// // Compute the second derivative of f(x) at the evaluation point, x = 2.
+/// let d2f_at_2: f64 = d2f(2.0, &p);
+///
+/// // Check the accuracy of the second derivative.
+/// assert_equal_to_decimal!(d2f_at_2, 12.0, 16);
+/// ```
+///
+/// ## Example Passing Runtime Parameters
+///
+/// Compute the second derivative of a parameterized function
+///
+/// $$f(x)=ax^{2}+bx+c$$
+///
+/// where $a$, $b$, and $c$ are runtime parameters. Compare the result against the true second
+/// derivative of
+///
+/// $$f''(x)=2a$$
+///
+/// ```
+/// use linalg_traits::Scalar;
+/// use numtest::*;
+///
+/// use numdiff::{get_sderivative2, HyperDual};
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar>(x: S, p: &[f64]) -> S {
+///     let a = S::new(p[0]);
+///     let b = S::new(p[1]);
+///     let c = S::new(p[2]);
+///     a * x.powi(2) + b * x + c
+/// }
+///
+/// // Parameter vector.
+/// let a = 2.5;
+/// let b = -1.3;
+/// let c = 4.7;
+/// let p = [a, b, c];
+///
+/// // Autogenerate the second derivative function.
+/// get_sderivative2!(f, d2f);
+///
+/// // True second derivative function.
+/// let d2f_true = |_x: f64| 2.0 * a;
+///
+/// // Compute the second derivative at x = 1.0 using both the automatically generated second
+/// // derivative function and the true second derivative function, and compare the results.
+/// let d2f_at_1: f64 = d2f(1.0, &p);
+/// let d2f_at_1_true: f64 = d2f_true(1.0);
+/// assert_eq!(d2f_at_1, d2f_at_1_true);
+/// ```
+///
+/// ## Example Passing Custom Parameter Types
+///
+/// Use a custom parameter struct instead of `f64` values.
+///
+/// ```
+/// use linalg_traits::Scalar;
+/// use numtest::*;
+///
+/// use numdiff::{get_sderivative2, HyperDual};
+///
+/// struct Data {
+///     a: f64,
+///     b: f64,
+///     c: f64,
+/// }
+///
+/// // Define the function, f(x).
+/// fn f<S: Scalar>(x: S, p: &Data) -> S {
+///     let a = S::new(p.a);
+///     let b = S::new(p.b);
+///     let c = S::new(p.c);
+///     a * x.powi(2) + b * x + c
+/// }
+///
+/// // Runtime parameter struct.
+/// let p = Data {
+///     a: 2.5,
+///     b: -1.3,
+///     c: 4.7,
+/// };
+///
+/// // Autogenerate the second derivative function, telling the macro to expect a runtime parameter
+/// // of type `&Data`.
+/// get_sderivative2!(f, d2f, Data);
+///
+/// // True second derivative function.
+/// let d2f_true = |_x: f64| 2.0 * p.a;
+///
+/// // Compute the second derivative at x = 1.0 using both the automatically generated second
+/// // derivative function and the true second derivative function, and compare the results.
+/// let x0 = 1.0;
+/// let d2f_eval: f64 = d2f(x0, &p);
+/// let d2f_eval_true: f64 = d2f_true(x0);
+/// assert_equal_to_decimal!(d2f_eval, d2f_eval_true, 15);
+/// ```
+#[macro_export]
+macro_rules! get_sderivative2 {
+    ($f:ident, $func_name:ident) => {
+        get_sderivative2!($f, $func_name, [f64]);
+    };
+    ($f:ident, $func_name:ident, $param_type:ty) => {
+        /// Second derivative of a univariate, scalar-valued function `f: ℝ → ℝ`.
+        ///
+        /// This function is generated for a specific function `f` using the
+        /// `numdiff::get_sderivative2!` macro.
+        ///
+        /// # Arguments
+        ///
+        /// * `x0` - Evaluation point, `x₀ ∈ ℝ`.
+        /// * `p` - Extra runtime parameter. This is a parameter (can be of any arbitrary type)
+        ///   defined at runtime that the function may depend on but is not differentiated with
+        ///   respect to.
+        ///
+        /// # Returns
+        ///
+        /// Second derivative of `f` with respect to `x`, evaluated at `x = x₀`.
+        ///
+        /// `(d²f/dx²)|ₓ₌ₓ₀ ∈ ℝ`
+        fn $func_name<S: Scalar>(x0: S, p: &$param_type) -> f64 {
+            // Step forward in both hyper-dual directions.
+            let x0 = HyperDual::new(x0.to_f64().unwrap(), 1.0, 1.0, 0.0);
+
+            // Evaluate the function at the hyper-dual number.
+            let f_x0 = $f(x0, p);
+
+            // Second derivative of f with respect to x evaluated at x = x₀.
+            f_x0.get_d()
+        }
+    };
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{HyperDual, test_utils};
+    use linalg_traits::Scalar;
+    use numtest::*;
+    use std::f64::consts::PI;
+
+    #[cfg(feature = "trig")]
+    use trig::Trig;
+
+    #[test]
+    fn test_product_rule() {
+        // f(x) and f"(x).
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(3)
+        }
+        fn d2f<S: Scalar>(x: S) -> S {
+            S::new(6.0) * x
+        }
+
+        // g(x) and g"(x).
+        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sin()
+        }
+        fn d2g<S: Scalar>(x: S) -> S {
+            -x.sin()
+        }
+
+        // h(x) = f(x)g(x)
+        fn h<S: Scalar>(x: S, p: &[f64]) -> S {
+            f(x, p) * g(x, p)
+        }
+
+        // h"(x) = f"(x)g(x) + 2f'(x)g'(x) + f(x)g"(x)
+        #[allow(clippy::similar_names)]
+        fn d2h<S: Scalar>(x: S) -> S {
+            let f_val = x.powi(3);
+            let df_val = S::new(3.0) * x.powi(2);
+            let d2f_val = d2f(x);
+            let g_val = x.sin();
+            let dg_val = x.cos();
+            let d2g_val = d2g(x);
+            d2f_val * g_val + S::new(2.0) * df_val * dg_val + f_val * d2g_val
+        }
+
+        // Parameter vector (empty for this test).
+        let p = [];
+
+        // h"(x) obtained via forward-mode automatic differentiation.
+        get_sderivative2!(h, d2h_autodiff);
+
+        // Test autodiff h"(x) against true h"(x).
+        assert_equal_to_decimal!(d2h_autodiff(-1.5, &p), d2h(-1.5), 14);
+        assert_equal_to_decimal!(d2h_autodiff(1.5, &p), d2h(1.5), 14);
+    }
+
+    #[test]
+    fn test_quotient_rule() {
+        // f(x) and f"(x).
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(3)
+        }
+        fn d2f<S: Scalar>(x: S) -> S {
+            S::new(6.0) * x
+        }
+
+        // g(x) and g"(x).
+        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sin()
+        }
+        fn d2g<S: Scalar>(x: S) -> S {
+            -x.sin()
+        }
+
+        // h(x) = f(x) / g(x)
+        fn h<S: Scalar>(x: S, p: &[f64]) -> S {
+            f(x, p) / g(x, p)
+        }
+
+        // h"(x) = [f"(x)g(x) - f(x)g"(x)] / g(x)² - 2[f'(x)g(x) - f(x)g'(x)]g'(x) / g(x)³
+        #[allow(clippy::similar_names)]
+        fn d2h<S: Scalar>(x: S) -> S {
+            let f_val = x.powi(3);
+            let df_val = S::new(3.0) * x.powi(2);
+            let d2f_val = d2f(x);
+            let g_val = x.sin();
+            let dg_val = x.cos();
+            let d2g_val = d2g(x);
+            let g_squared = g_val.powi(2);
+            let g_cubed = g_val.powi(3);
+            (d2f_val * g_val - f_val * d2g_val) / g_squared
+                - S::new(2.0) * (df_val * g_val - f_val * dg_val) * dg_val / g_cubed
+        }
+
+        // Parameter vector (empty for this test).
+        let p = [];
+
+        // h"(x) obtained via forward-mode automatic differentiation.
+        get_sderivative2!(h, d2h_autodiff);
+
+        // Test autodiff h"(x) against true h"(x).
+        assert_equal_to_decimal!(d2h_autodiff(-1.5, &p), d2h(-1.5), 14);
+        assert_equal_to_decimal!(d2h_autodiff(1.5, &p), d2h(1.5), 14);
+    }
+
+    #[test]
+    fn test_chain_rule_one_composition() {
+        // f(x) and f"(x).
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(3)
+        }
+        fn d2f<S: Scalar>(x: S) -> S {
+            S::new(6.0) * x
+        }
+
+        // g(x) and g"(x).
+        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sin()
+        }
+        fn d2g<S: Scalar>(x: S) -> S {
+            -x.sin()
+        }
+
+        // h(x) = g(f(x))
+        fn h<S: Scalar>(x: S, p: &[f64]) -> S {
+            g(f(x, p), p)
+        }
+
+        // h"(x) = [g"(f(x))][f'(x)]² + [g'(f(x))][f"(x)]
+        #[allow(clippy::similar_names)]
+        fn d2h<S: Scalar>(x: S) -> S {
+            let f_val = f(x, &[]);
+            let df_val = S::new(3.0) * x.powi(2);
+            let d2f_val = d2f(x);
+            let dg_val = f_val.cos();
+            let d2g_val = d2g(f_val);
+            d2g_val * df_val.powi(2) + dg_val * d2f_val
+        }
+
+        // h"(x) obtained via forward-mode automatic differentiation.
+        get_sderivative2!(h, d2h_autodiff);
+
+        // Test autodiff h"(x) against true h"(x).
+        assert_equal_to_decimal!(d2h_autodiff(-1.5, &[]), d2h(-1.5), 12);
+        assert_equal_to_decimal!(d2h_autodiff(1.5, &[]), d2h(1.5), 12);
+    }
+
+    #[test]
+    fn test_chain_rule_two_compositions() {
+        // f(x) and f"(x).
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(3)
+        }
+        fn d2f<S: Scalar>(x: S) -> S {
+            S::new(6.0) * x
+        }
+
+        // g(x) and g"(x)
+        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sin()
+        }
+        fn d2g<S: Scalar>(x: S) -> S {
+            -x.sin()
+        }
+
+        // h(x) and h"(x).
+        fn h<S: Scalar>(x: S, _p: &[f64]) -> S {
+            S::new(5.0) / x.powi(2)
+        }
+        fn d2h<S: Scalar>(x: S) -> S {
+            S::new(30.0) / x.powi(4)
+        }
+
+        // j(x) = h(g(f(x)))
+        fn j<S: Scalar>(x: S, p: &[f64]) -> S {
+            h(g(f(x, p), p), p)
+        }
+
+        // j"(x) = [h"(g(f(x)))][g'(f(x))]²[f'(x)]²
+        //          + [h'(g(f(x)))][g"(f(x))][f'(x)]²
+        //          + [h'(g(f(x)))][g'(f(x))][f"(x)]
+        #[allow(clippy::similar_names)]
+        fn d2j<S: Scalar>(x: S) -> S {
+            let f_val = f(x, &[]);
+            let df_val = S::new(3.0) * x.powi(2);
+            let d2f_val = d2f(x);
+            let g_val = g(f_val, &[]);
+            let dg_val = f_val.cos();
+            let d2g_val = d2g(f_val);
+            let dh_val = S::new(-10.0) / g_val.powi(3);
+            let d2h_val = d2h(g_val);
+            d2h_val * dg_val.powi(2) * df_val.powi(2)
+                + dh_val * d2g_val * df_val.powi(2)
+                + dh_val * dg_val * d2f_val
+        }
+
+        // j"(x) obtained via forward-mode automatic differentiation.
+        get_sderivative2!(j, d2j_autodiff);
+
+        // Test autodiff j"(x) against true j"(x).
+        assert_equal_to_decimal!(d2j_autodiff(1.5, &[]), d2j(1.5), 10);
+    }
+
+    #[test]
+    #[allow(clippy::items_after_statements)]
+    fn test_sderivative2_polynomial() {
+        // Test #1.
+        fn f1<S: Scalar>(_x: S, _p: &[f64]) -> S {
+            S::one()
+        }
+        get_sderivative2!(f1, d2f1);
+        assert_eq!(d2f1(2.0, &[]), test_utils::polyi_deriv2(0, 2.0));
+
+        // Test #2.
+        fn f2<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x
+        }
+        get_sderivative2!(f2, d2f2);
+        assert_eq!(d2f2(2.0, &[]), test_utils::polyi_deriv2(1, 2.0));
+
+        // Test #3.
+        fn f3<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(2)
+        }
+        get_sderivative2!(f3, d2f3);
+        assert_eq!(d2f3(2.0, &[]), test_utils::polyi_deriv2(2, 2.0));
+
+        // Test #4.
+        fn f4<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(3)
+        }
+        get_sderivative2!(f4, d2f4);
+        assert_eq!(d2f4(2.0, &[]), test_utils::polyi_deriv2(3, 2.0));
+
+        // Test #5.
+        fn f5<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(4)
+        }
+        get_sderivative2!(f5, d2f5);
+        assert_eq!(d2f5(2.0, &[]), test_utils::polyi_deriv2(4, 2.0));
+
+        // Test #6.
+        fn f6<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(5)
+        }
+        get_sderivative2!(f6, d2f6);
+        assert_eq!(d2f6(2.0, &[]), test_utils::polyi_deriv2(5, 2.0));
+
+        // Test #7.
+        fn f7<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(6)
+        }
+        get_sderivative2!(f7, d2f7);
+        assert_eq!(d2f7(2.0, &[]), test_utils::polyi_deriv2(6, 2.0));
+
+        // Test #8.
+        fn f8<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(7)
+        }
+        get_sderivative2!(f8, d2f8);
+        assert_eq!(d2f8(2.0, &[]), test_utils::polyi_deriv2(7, 2.0));
+
+        // Test #9.
+        fn f9<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(-1)
+        }
+        get_sderivative2!(f9, d2f9);
+        assert_eq!(d2f9(2.0, &[]), test_utils::polyi_deriv2(-1, 2.0));
+
+        // Test #10.
+        fn f10<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(-2)
+        }
+        get_sderivative2!(f10, d2f10);
+        assert_eq!(d2f10(2.0, &[]), test_utils::polyi_deriv2(-2, 2.0));
+
+        // Test #11.
+        fn f11<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(-3)
+        }
+        get_sderivative2!(f11, d2f11);
+        assert_eq!(d2f11(2.0, &[]), test_utils::polyi_deriv2(-3, 2.0));
+
+        // Test #12.
+        fn f12<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powi(-7)
+        }
+        get_sderivative2!(f12, d2f12);
+        assert_eq!(d2f12(2.0, &[]), test_utils::polyi_deriv2(-7, 2.0));
+
+        // Test #13.
+        fn f13<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powf(S::new(1.0 / 3.0))
+        }
+        get_sderivative2!(f13, d2f13);
+        assert_equal_to_decimal!(
+            d2f13(2.0, &[]),
+            test_utils::polyf_deriv2(1.0 / 3.0, 2.0),
+            16
+        );
+
+        // Test #14.
+        fn f14<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powf(S::new(7.0 / 3.0))
+        }
+        get_sderivative2!(f14, d2f14);
+        assert_equal_to_decimal!(
+            d2f14(2.0, &[]),
+            test_utils::polyf_deriv2(7.0 / 3.0, 2.0),
+            14
+        );
+
+        // Test #15.
+        fn f15<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powf(S::new(-1.0 / 3.0))
+        }
+        get_sderivative2!(f15, d2f15);
+        assert_equal_to_decimal!(
+            d2f15(2.0, &[]),
+            test_utils::polyf_deriv2(-1.0 / 3.0, 2.0),
+            16
+        );
+
+        // Test #16.
+        fn f16<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.powf(S::new(-7.0 / 3.0))
+        }
+        get_sderivative2!(f16, d2f16);
+        assert_equal_to_decimal!(
+            d2f16(2.0, &[]),
+            test_utils::polyf_deriv2(-7.0 / 3.0, 2.0),
+            16
+        );
+    }
+
+    #[test]
+    fn test_sderivative2_square_root() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sqrt()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.5, &[]), test_utils::sqrt_deriv2(0.5));
+        assert_eq!(d2f(1.5, &[]), test_utils::sqrt_deriv2(1.5));
+    }
+
+    #[test]
+    fn test_sderivative2_exponential() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.exp()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.0, &[]), test_utils::exp_deriv2(-1.0));
+        assert_eq!(d2f(0.0, &[]), test_utils::exp_deriv2(0.0));
+        assert_eq!(d2f(1.0, &[]), test_utils::exp_deriv2(1.0));
+    }
+
+    #[test]
+    fn test_sderivative2_power() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            S::new(5.0).powf(x)
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.0, &[]), test_utils::power_deriv2(5.0, -1.0));
+        assert_eq!(d2f(0.0, &[]), test_utils::power_deriv2(5.0, 0.0));
+        assert_equal_to_decimal!(d2f(1.0, &[]), test_utils::power_deriv2(5.0, 1.0), 13);
+    }
+
+    #[test]
+    fn test_sderivative2_natural_logarithm() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.ln()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.5, &[]), test_utils::ln_deriv2(0.5));
+        assert_eq!(d2f(1.0, &[]), test_utils::ln_deriv2(1.0));
+        assert_eq!(d2f(1.5, &[]), test_utils::ln_deriv2(1.5));
+    }
+
+    #[test]
+    fn test_sderivative2_base_10_logarithm() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.log10()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.5, &[]), test_utils::log10_deriv2(0.5));
+        assert_eq!(d2f(1.0, &[]), test_utils::log10_deriv2(1.0));
+        assert_eq!(d2f(1.5, &[]), test_utils::log10_deriv2(1.5));
+    }
+
+    #[test]
+    fn test_sderivative2_sine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sin()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.0, &[]), test_utils::sin_deriv2(0.0));
+        assert_eq!(d2f(PI / 4.0, &[]), test_utils::sin_deriv2(PI / 4.0));
+        assert_eq!(d2f(PI / 2.0, &[]), test_utils::sin_deriv2(PI / 2.0));
+        assert_eq!(
+            d2f(3.0 * PI / 4.0, &[]),
+            test_utils::sin_deriv2(3.0 * PI / 4.0)
+        );
+        assert_eq!(d2f(PI, &[]), test_utils::sin_deriv2(PI));
+        assert_eq!(
+            d2f(5.0 * PI / 4.0, &[]),
+            test_utils::sin_deriv2(5.0 * PI / 4.0)
+        );
+        assert_eq!(
+            d2f(3.0 * PI / 2.0, &[]),
+            test_utils::sin_deriv2(3.0 * PI / 2.0)
+        );
+        assert_eq!(
+            d2f(7.0 * PI / 4.0, &[]),
+            test_utils::sin_deriv2(7.0 * PI / 4.0)
+        );
+        assert_eq!(d2f(2.0 * PI, &[]), test_utils::sin_deriv2(2.0 * PI));
+    }
+
+    #[test]
+    fn test_sderivative2_cosine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.cos()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.0, &[]), test_utils::cos_deriv2(0.0));
+        assert_eq!(d2f(PI / 4.0, &[]), test_utils::cos_deriv2(PI / 4.0));
+        assert_eq!(d2f(PI / 2.0, &[]), test_utils::cos_deriv2(PI / 2.0));
+        assert_eq!(
+            d2f(3.0 * PI / 4.0, &[]),
+            test_utils::cos_deriv2(3.0 * PI / 4.0)
+        );
+        assert_eq!(d2f(PI, &[]), test_utils::cos_deriv2(PI));
+        assert_eq!(
+            d2f(5.0 * PI / 4.0, &[]),
+            test_utils::cos_deriv2(5.0 * PI / 4.0)
+        );
+        assert_eq!(
+            d2f(3.0 * PI / 2.0, &[]),
+            test_utils::cos_deriv2(3.0 * PI / 2.0)
+        );
+        assert_eq!(
+            d2f(7.0 * PI / 4.0, &[]),
+            test_utils::cos_deriv2(7.0 * PI / 4.0)
+        );
+        assert_eq!(d2f(2.0 * PI, &[]), test_utils::cos_deriv2(2.0 * PI));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_tangent() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.tan()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.0, &[]), test_utils::tan_deriv2(0.0));
+        assert_equal_to_decimal!(d2f(PI / 4.0, &[]), test_utils::tan_deriv2(PI / 4.0), 15);
+        assert_equal_to_decimal!(
+            d2f(3.0 * PI / 4.0, &[]),
+            test_utils::tan_deriv2(3.0 * PI / 4.0),
+            15
+        );
+        assert_eq!(d2f(PI, &[]), test_utils::tan_deriv2(PI));
+        assert_equal_to_decimal!(
+            d2f(5.0 * PI / 4.0, &[]),
+            test_utils::tan_deriv2(5.0 * PI / 4.0),
+            15
+        );
+        assert_equal_to_decimal!(
+            d2f(7.0 * PI / 4.0, &[]),
+            test_utils::tan_deriv2(7.0 * PI / 4.0),
+            15
+        );
+        assert_eq!(d2f(2.0 * PI, &[]), test_utils::tan_deriv2(2.0 * PI));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_cosecant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.csc()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(PI / 4.0, &[]), test_utils::csc_deriv2(PI / 4.0), 14);
+        assert_equal_to_decimal!(
+            d2f(3.0 * PI / 4.0, &[]),
+            test_utils::csc_deriv2(3.0 * PI / 4.0),
+            14
+        );
+        assert_equal_to_decimal!(
+            d2f(5.0 * PI / 4.0, &[]),
+            test_utils::csc_deriv2(5.0 * PI / 4.0),
+            14
+        );
+        assert_equal_to_decimal!(
+            d2f(7.0 * PI / 4.0, &[]),
+            test_utils::csc_deriv2(7.0 * PI / 4.0),
+            14
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_secant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.sec()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.0, &[]), test_utils::sec_deriv2(0.0));
+        assert_equal_to_decimal!(d2f(PI / 4.0, &[]), test_utils::sec_deriv2(PI / 4.0), 15);
+        assert_equal_to_decimal!(
+            d2f(3.0 * PI / 4.0, &[]),
+            test_utils::sec_deriv2(3.0 * PI / 4.0),
+            15
+        );
+        assert_eq!(d2f(PI, &[]), test_utils::sec_deriv2(PI));
+        assert_equal_to_decimal!(
+            d2f(5.0 * PI / 4.0, &[]),
+            test_utils::sec_deriv2(5.0 * PI / 4.0),
+            15
+        );
+        assert_equal_to_decimal!(
+            d2f(7.0 * PI / 4.0, &[]),
+            test_utils::sec_deriv2(7.0 * PI / 4.0),
+            15
+        );
+        assert_eq!(d2f(2.0 * PI, &[]), test_utils::sec_deriv2(2.0 * PI));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_cotangent() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.cot()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(PI / 4.0, &[]), test_utils::cot_deriv2(PI / 4.0), 14);
+        assert_equal_to_decimal!(d2f(PI / 2.0, &[]), test_utils::cot_deriv2(PI / 2.0), 15);
+        assert_equal_to_decimal!(
+            d2f(3.0 * PI / 4.0, &[]),
+            test_utils::cot_deriv2(3.0 * PI / 4.0),
+            14
+        );
+        assert_equal_to_decimal!(
+            d2f(5.0 * PI / 4.0, &[]),
+            test_utils::cot_deriv2(5.0 * PI / 4.0),
+            14
+        );
+        assert_equal_to_decimal!(
+            d2f(3.0 * PI / 2.0, &[]),
+            test_utils::cot_deriv2(3.0 * PI / 2.0),
+            14
+        );
+        assert_equal_to_decimal!(
+            d2f(7.0 * PI / 4.0, &[]),
+            test_utils::cot_deriv2(7.0 * PI / 4.0),
+            14
+        );
+    }
+
+    #[test]
+    fn test_sderivative2_inverse_sine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.asin()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-0.5, &[]), test_utils::asin_deriv2(-0.5));
+        assert_eq!(d2f(0.0, &[]), test_utils::asin_deriv2(0.0));
+        assert_eq!(d2f(0.5, &[]), test_utils::asin_deriv2(0.5));
+    }
+
+    #[test]
+    fn test_sderivative2_inverse_cosine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.acos()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-0.5, &[]), test_utils::acos_deriv2(-0.5));
+        assert_eq!(d2f(0.0, &[]), test_utils::acos_deriv2(0.0));
+        assert_eq!(d2f(0.5, &[]), test_utils::acos_deriv2(0.5));
+    }
+
+    #[test]
+    fn test_sderivative2_inverse_tangent() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.atan()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.5, &[]), test_utils::atan_deriv2(-1.5));
+        assert_eq!(d2f(-1.0, &[]), test_utils::atan_deriv2(-1.0));
+        assert_eq!(d2f(-0.5, &[]), test_utils::atan_deriv2(-0.5));
+        assert_eq!(d2f(0.0, &[]), test_utils::atan_deriv2(0.0));
+        assert_eq!(d2f(0.5, &[]), test_utils::atan_deriv2(0.5));
+        assert_eq!(d2f(1.0, &[]), test_utils::atan_deriv2(1.0));
+        assert_eq!(d2f(1.5, &[]), test_utils::atan_deriv2(1.5));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_inverse_cosecant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.acsc()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.5, &[]), test_utils::acsc_deriv2(-1.5), 16);
+        assert_equal_to_decimal!(d2f(1.5, &[]), test_utils::acsc_deriv2(1.5), 16);
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_inverse_secant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.asec()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.5, &[]), test_utils::asec_deriv2(-1.5), 16);
+        assert_equal_to_decimal!(d2f(1.5, &[]), test_utils::asec_deriv2(1.5), 16);
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_inverse_cotangent() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.acot()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.5, &[]), test_utils::acot_deriv2(-1.5), 15);
+        assert_eq!(d2f(-1.0, &[]), test_utils::acot_deriv2(-1.0));
+        assert_eq!(d2f(-0.5, &[]), test_utils::acot_deriv2(-0.5));
+        assert_eq!(d2f(0.5, &[]), test_utils::acot_deriv2(0.5));
+        assert_eq!(d2f(1.0, &[]), test_utils::acot_deriv2(1.0));
+        assert_equal_to_decimal!(d2f(1.5, &[]), test_utils::acot_deriv2(1.5), 15);
+    }
+
+    #[test]
+    fn test_sderivative2_hyperbolic_sine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.sinh()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.0, &[]), test_utils::sinh_deriv2(-1.0));
+        assert_eq!(d2f(0.0, &[]), test_utils::sinh_deriv2(0.0));
+        assert_eq!(d2f(1.0, &[]), test_utils::sinh_deriv2(1.0));
+    }
+
+    #[test]
+    fn test_sderivative2_hyperbolic_cosine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.cosh()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.0, &[]), test_utils::cosh_deriv2(-1.0));
+        assert_eq!(d2f(0.0, &[]), test_utils::cosh_deriv2(0.0));
+        assert_eq!(d2f(1.0, &[]), test_utils::cosh_deriv2(1.0));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_hyperbolic_tangent() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.tanh()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.0, &[]), test_utils::tanh_deriv2(-1.0));
+        assert_eq!(d2f(0.0, &[]), test_utils::tanh_deriv2(0.0));
+        assert_eq!(d2f(1.0, &[]), test_utils::tanh_deriv2(1.0));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_hyperbolic_cosecant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.csch()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.0, &[]), test_utils::csch_deriv2(-1.0), 16);
+        assert_equal_to_decimal!(d2f(1.0, &[]), test_utils::csch_deriv2(1.0), 16);
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_hyperbolic_secant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.sech()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.0, &[]), test_utils::sech_deriv2(-1.0), 15);
+        assert_eq!(d2f(0.0, &[]), test_utils::sech_deriv2(0.0));
+        assert_equal_to_decimal!(d2f(1.0, &[]), test_utils::sech_deriv2(1.0), 15);
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_hyperbolic_cotangent() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.coth()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.0, &[]), test_utils::coth_deriv2(-1.0), 15);
+        assert_equal_to_decimal!(d2f(1.0, &[]), test_utils::coth_deriv2(1.0), 15);
+    }
+
+    #[test]
+    fn test_sderivative2_inverse_hyperbolic_sine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.asinh()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-1.5, &[]), test_utils::asinh_deriv2(-1.5));
+        assert_eq!(d2f(-1.0, &[]), test_utils::asinh_deriv2(-1.0));
+        assert_eq!(d2f(-0.5, &[]), test_utils::asinh_deriv2(-0.5));
+        assert_eq!(d2f(0.0, &[]), test_utils::asinh_deriv2(0.0));
+        assert_eq!(d2f(0.5, &[]), test_utils::asinh_deriv2(0.5));
+        assert_eq!(d2f(1.0, &[]), test_utils::asinh_deriv2(1.0));
+        assert_eq!(d2f(1.5, &[]), test_utils::asinh_deriv2(1.5));
+    }
+
+    #[test]
+    fn test_sderivative2_inverse_hyperbolic_cosine() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.acosh()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(1.5, &[]), test_utils::acosh_deriv2(1.5));
+    }
+
+    #[test]
+    fn test_sderivative2_inverse_hyperbolic_tangent() {
+        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+            x.atanh()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(-0.5, &[]), test_utils::atanh_deriv2(-0.5));
+        assert_eq!(d2f(0.0, &[]), test_utils::atanh_deriv2(0.0));
+        assert_eq!(d2f(0.5, &[]), test_utils::atanh_deriv2(0.5));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_inverse_hyperbolic_cosecant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.acsch()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.5, &[]), test_utils::acsch_deriv2(-1.5), 15);
+        assert_eq!(d2f(-1.0, &[]), test_utils::acsch_deriv2(-1.0));
+        assert_eq!(d2f(-0.5, &[]), test_utils::acsch_deriv2(-0.5));
+        assert_eq!(d2f(0.5, &[]), test_utils::acsch_deriv2(0.5));
+        assert_eq!(d2f(1.0, &[]), test_utils::acsch_deriv2(1.0));
+        assert_equal_to_decimal!(d2f(1.5, &[]), test_utils::acsch_deriv2(1.5), 15);
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_inverse_hyperbolic_secant() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.asech()
+        }
+        get_sderivative2!(f, d2f);
+        assert_eq!(d2f(0.5, &[]), test_utils::asech_deriv2(0.5));
+    }
+
+    #[test]
+    #[cfg(feature = "trig")]
+    fn test_sderivative2_inverse_hyperbolic_cotangent() {
+        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+            x.acoth()
+        }
+        get_sderivative2!(f, d2f);
+        assert_equal_to_decimal!(d2f(-1.5, &[]), test_utils::acoth_deriv2(-1.5), 15);
+        assert_equal_to_decimal!(d2f(1.5, &[]), test_utils::acoth_deriv2(1.5), 15);
+    }
+
+    #[test]
+    fn test_sderivative2_with_runtime_parameters() {
+        // Function to take the second derivative of.
+        fn f<S: Scalar>(x: S, p: &[f64]) -> S {
+            let alpha = S::new(p[0]);
+            let beta = S::new(p[1]);
+            (alpha * x).exp() * (beta * x).cos()
+        }
+
+        // True second derivative function.
+        fn d2f<S: Scalar>(x: S, p: &[f64]) -> S {
+            let alpha = S::new(p[0]);
+            let beta = S::new(p[1]);
+            let exp_term = (alpha * x).exp();
+            let cos_term = (beta * x).cos();
+            let sin_term = (beta * x).sin();
+            exp_term
+                * ((alpha.powi(2) - beta.powi(2)) * cos_term
+                    - S::new(2.0) * alpha * beta * sin_term)
+        }
+
+        // Evaluation point.
+        let x0 = 0.3;
+
+        // Parameter vector.
+        let p = [0.5, 2.0];
+
+        // Second derivative function obtained via forward-mode automatic differentation.
+        get_sderivative2!(f, d2f_autodiff);
+
+        // Evaluate the second derivative using both functions.
+        let d2f_eval_autodiff: f64 = d2f_autodiff(x0, &p);
+        let d2f_eval: f64 = d2f(x0, &p);
+
+        // Test autodiff second derivative against true second derivative.
+        assert_equal_to_decimal!(d2f_eval_autodiff, d2f_eval, 15);
+    }
+
+    #[test]
+    fn test_sderivative2_custom_params() {
+        struct Data {
+            a: f64,
+            b: f64,
+            c: f64,
+        }
+
+        // Function to take the second derivative of.
+        #[allow(clippy::many_single_char_names)]
+        fn f<S: Scalar>(x: S, p: &Data) -> S {
+            let a = S::new(p.a);
+            let b = S::new(p.b);
+            let c = S::new(p.c);
+            a * x.powi(2) + b * x + c
+        }
+
+        // Runtime parameter struct.
+        let p = Data {
+            a: 2.5,
+            b: -1.3,
+            c: 4.7,
+        };
+
+        // Second derivative function obtained via forward-mode automatic differentiation.
+        get_sderivative2!(f, d2f, Data);
+
+        // True second derivative function.
+        let d2f_true = |_x: f64| 2.0 * p.a;
+
+        // Evaluation point.
+        let x0 = 1.0;
+
+        // Evaluate the second derivative using both functions.
+        let d2f_eval: f64 = d2f(x0, &p);
+        let d2f_eval_true: f64 = d2f_true(x0);
+
+        // Test autodiff second derivative against true second derivative.
+        assert_equal_to_decimal!(d2f_eval, d2f_eval_true, 15);
+    }
+}

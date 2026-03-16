@@ -46,6 +46,8 @@
 //! | --------------- | ------------- | ------------------------------------- |
 //! | 2nd derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`get_sderivative2!`] |
 //! | 2nd derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`get_vderivative2!`] |
+//! | 2nd partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_spartial_derivative2!`] |
+//! | 2nd partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_vpartial_derivative2!`] |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_shessian!`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_vhessian!`] |
 //!

@@ -28,8 +28,10 @@
 //!
 //! # Automatic Differentiation (Forward-Mode)
 //!
+//! ## 1st-Order Derivatives
+//!
 //! | Derivative Type | Function Type | Macro to Generate Derivative Function |
-//! | --------------- | ------------- | ---------------------------------- |
+//! | --------------- | ------------- | ------------------------------------- |
 //! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`get_sderivative!`] |
 //! | derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`get_vderivative!`] |
 //! | partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_spartial_derivative!`] |
@@ -37,6 +39,13 @@
 //! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_gradient!`] |
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_directional_derivative!`] |
 //! | Jacobian| $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_jacobian!`] |
+//!
+//! ## 2nd-Order Derivatives
+//!
+//! | Derivative Type | Function Type | Macro to Generate Derivative Function |
+//! | --------------- | ------------- | ------------------------------------- |
+//! | 2nd derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`get_sderivative2!`] |
+//! | 2nd derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`get_vderivative2!`] |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`get_shessian!`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`get_vhessian!`] |
 //!
@@ -113,6 +122,8 @@
 //!
 //! ## Central Difference Approximations
 //!
+//! ### First-Order Derivatives
+//!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
 //! | --------------- | ------------- | ---------------------------------- |
 //! | derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`central_difference::sderivative()`] |
@@ -122,10 +133,17 @@
 //! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::gradient()`] |
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::directional_derivative()`] |
 //! | Jacobian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::jacobian()`] |
+//!
+//! ### Second-Order Derivatives
+//!
+//! | Derivative Type | Function Type | Function to Approximate Derivative |
+//! | --------------- | ------------- | ---------------------------------- |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::shessian()`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::vhessian()`] |
 //!
 //! ## Forward Difference Approximations
+//!
+//! ### First-Order Derivatives
 //!
 //! | Derivative Type | Function Type | Function to Approximate Derivative |
 //! | --------------- | ------------- | ---------------------------------- |
@@ -136,6 +154,11 @@
 //! | gradient | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::gradient()`] |
 //! | directional derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::directional_derivative()`] |
 //! | Jacobian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::jacobian()`] |
+//!
+//! ### Second-Order Derivatives
+//!
+//! | Derivative Type | Function Type | Function to Approximate Derivative |
+//! | --------------- | ------------- | ---------------------------------- |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::shessian()`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::vhessian()`] |
 //!

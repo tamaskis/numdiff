@@ -257,8 +257,9 @@ macro_rules! get_directional_derivative {
         ///
         /// * `x0` - Evaluation point, `x₀ ∈ ℝⁿ`.
         /// * `v` - Vector defining the direction of differentiation, `v ∈ ℝⁿ`.
-        /// * `p` - Parameter vector. This is a vector of additional runtime parameters that the
-        ///   function may depend on but is not differentiated with respect to.
+        /// * `p` - Extra runtime parameter. This is a parameter (can be of any arbitrary type)
+        ///   defined at runtime that the function may depend on but is not differentiated with
+        ///   respect to.
         ///
         /// # Returns
         ///

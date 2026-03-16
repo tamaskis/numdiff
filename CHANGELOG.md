@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.2
+
+1. Added `numdiff::get_sderivative2`.
+1. Added `numdiff::get_vderivative2`.
+
 ## 0.7.1
 
 1. Added `numdiff::get_shessian!`.

@@ -343,7 +343,7 @@ mod tests {
 
     #[test]
     fn test_spartial_derivative_3() {
-        /// Function to take the partial derivative of.
+        // Function to take the partial derivative of.
         #[allow(clippy::many_single_char_names)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {
             let a = S::new(p[0]);
@@ -358,7 +358,7 @@ mod tests {
         // Evaluation point.
         let x0: SVector<f64, 2> = SVector::from_slice(&[1.5, 2.0]);
 
-        // Function to take the partial derivative of.
+        // Element to differentiate with respect to.
         let k = 0;
 
         // True partial derivative function.

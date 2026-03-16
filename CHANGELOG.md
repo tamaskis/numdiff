@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.3
+
+1. Added `numdiff::get_spartial2`.
+1. Added `numdiff::get_vpartial2`.
+
 ## 0.7.2
 
 1. Added `numdiff::get_sderivative2`.

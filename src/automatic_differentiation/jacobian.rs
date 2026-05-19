@@ -15,7 +15,9 @@
 /// The multivariate, vector-valued function `f` must have the following function signature:
 ///
 /// ```ignore
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+/// // Note that `T` is a placeholder for the type of the extra runtime parameter `p`, which can be
+/// // any type.
+/// fn f<S: Scalar, V: Vector<S>, T>(x: &V, p: &T) -> V::DVectorT<S> {
 ///     // place function contents here
 /// }
 /// ```

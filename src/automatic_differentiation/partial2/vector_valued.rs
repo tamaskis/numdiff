@@ -26,13 +26,13 @@
 ///
 /// Compute the second-order partial derivative of
 ///
-/// $$\mathbf{f}(x,y) = \begin{bmatrix} x^{4}+2x^{2}y \\ y^{3}+xy^{2} \end{bmatrix}$$
+/// $$\mathbf{f}(x,y) = \begin{bmatrix} x^{4}+2x^{2}y \\\ y^{3}+xy^{2} \end{bmatrix}$$
 ///
 /// with respect to $x$ at $(x,y)=(2,1)$.
 ///
 /// First, note that we can rewrite this function as
 ///
-/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}x_{0}^{4}+2x_{0}^{2}x_{1}\\x_{1}^{3}+x_{0}x_{1}^{2}\end{bmatrix}$$
+/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}x_{0}^{4}+2x_{0}^{2}x_{1} \\\ x_{1}^{3}+x_{0}x_{1}^{2}\end{bmatrix}$$
 ///
 /// where $\mathbf{x}=(x_{0},x_{1})^{T}$ (note that we use 0-based indexing to aid with the
 /// computational implementation). We are then trying to find
@@ -80,7 +80,7 @@
 ///
 /// Compute the second-order partial derivative of a parameterized function
 ///
-/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}a x_{0}^{4}+b x_{0}^{2}x_{1}\\c x_{1}^{3}+d\sin(e x_{0})\end{bmatrix}$$
+/// $$\mathbf{f}(\mathbf{x})=\begin{bmatrix}a x_{0}^{4}+b x_{0}^{2}x_{1} \\\ c x_{1}^{3}+d\sin(e x_{0})\end{bmatrix}$$
 ///
 /// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters.
 ///

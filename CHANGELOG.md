@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+1. Updated `linalg-traits` dependency from `0.15.0` to `0.16.0`.
+1. Implemented `From<f64>` and `Into<f64>` for `Dual` (required with newer version of `linalg-traits`).
+1. Implemented `From<f64>` and `Into<f64>` for `HyperDual` (required with newer version of `linalg-traits`).
+
 ## 0.7.3
 
 1. Added `numdiff::get_spartial2`.

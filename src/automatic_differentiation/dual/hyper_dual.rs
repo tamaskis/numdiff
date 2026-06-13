@@ -962,6 +962,24 @@ impl Rem<HyperDual> for f64 {
 }
 
 // ------------------------
+// Conversions to/from f64.
+// ------------------------
+
+// f64 -> HyperDual.
+impl From<f64> for HyperDual {
+    fn from(value: f64) -> Self {
+        HyperDual::from_real(value)
+    }
+}
+
+// HyperDual -> f64.
+impl From<HyperDual> for f64 {
+    fn from(value: HyperDual) -> Self {
+        value.a
+    }
+}
+
+// ------------------------
 // Implementing trig::Trig.
 // ------------------------
 
@@ -2368,6 +2386,18 @@ mod tests {
             5.0 % HyperDual::new(2.0, -3.0, -4.0, -5.0),
             HyperDual::from_real(5.0) % HyperDual::new(2.0, -3.0, -4.0, -5.0)
         );
+    }
+
+    #[test]
+    fn test_from_f64_std() {
+        let hyper_dual: HyperDual = 3.0.into();
+        assert_eq!(hyper_dual, HyperDual::new(3.0, 0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_into_f64_std() {
+        let hyper_dual_f64: f64 = HyperDual::new(3.0, 2.0, 1.5, -0.75).into();
+        assert_eq!(hyper_dual_f64, 3.0);
     }
 
     #[cfg(feature = "trig")]

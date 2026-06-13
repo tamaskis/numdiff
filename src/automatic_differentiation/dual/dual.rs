@@ -755,6 +755,24 @@ impl Rem<Dual> for f64 {
 }
 
 // ------------------------
+// Conversions to/from f64.
+// ------------------------
+
+// f64 -> Dual.
+impl From<f64> for Dual {
+    fn from(value: f64) -> Self {
+        Dual::from_real(value)
+    }
+}
+
+// Dual -> f64.
+impl From<Dual> for f64 {
+    fn from(value: Dual) -> Self {
+        value.real
+    }
+}
+
+// ------------------------
 // Implementing trig::Trig.
 // ------------------------
 
@@ -1086,7 +1104,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_f64() {
+    fn test_from_f64_numcast() {
         assert_eq!(
             <Dual as NumCast>::from(1_f64).unwrap(),
             Dual::from_real(1.0)
@@ -1832,6 +1850,18 @@ mod tests {
             5.0 % Dual::new(2.0, -3.0),
             Dual::from_real(5.0) % Dual::new(2.0, -3.0)
         );
+    }
+
+    #[test]
+    fn test_from_f64_std() {
+        let dual: Dual = 3.0.into();
+        assert_eq!(dual, Dual::new(3.0, 0.0));
+    }
+
+    #[test]
+    fn test_into_f64_std() {
+        let dual_f64: f64 = Dual::new(3.0, 2.0).into();
+        assert_eq!(dual_f64, 3.0);
     }
 
     #[cfg(feature = "trig")]

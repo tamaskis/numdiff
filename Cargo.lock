@@ -642,9 +642,9 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "linalg-traits"
-version = "0.15.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cc8b63e4456f343ee930b711006f27e5437e61d6078273951ace0b20d043435"
+checksum = "ec4b7ac946c17beaa870bebeb90712a6c2bdc5c1dc5481ae35638ee753083b2d"
 dependencies = [
  "faer",
  "faer-traits",
@@ -908,7 +908,7 @@ dependencies = [
 
 [[package]]
 name = "numdiff"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "faer",
  "linalg-traits",

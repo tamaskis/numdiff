@@ -50,8 +50,8 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-///     let f0 = x.vget(0).powi(4) + S::new(2.0) * x.vget(0).powi(2) * x.vget(1);
-///     let f1 = x.vget(1).powi(3) + x.vget(0) * x.vget(1).powi(2);
+///     let f0 = x[0].powi(4) + S::new(2.0) * x[0].powi(2) * x[1];
+///     let f1 = x[1].powi(3) + x[0] * x[1].powi(2);
 ///     vec![f0, f1]
 /// }
 ///
@@ -97,8 +97,8 @@
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
 ///     let e = S::new(p[4]);
-///     let f0 = a * x.vget(0).powi(4) + b * x.vget(0).powi(2) * x.vget(1);
-///     let f1 = c * x.vget(1).powi(3) + d * (e * x.vget(0)).sin();
+///     let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
+///     let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
 ///     vec![f0, f1]
 /// }
 ///
@@ -164,8 +164,8 @@
 ///     let c = S::new(p.c);
 ///     let d = S::new(p.d);
 ///     let e = S::new(p.e);
-///     let f0 = a * x.vget(0).powi(4) + b * x.vget(0).powi(2) * x.vget(1);
-///     let f1 = c * x.vget(1).powi(3) + d * (e * x.vget(0)).sin();
+///     let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
+///     let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
 ///     vec![f0, f1]
 /// }
 ///
@@ -235,10 +235,8 @@ macro_rules! get_vpartial_derivative2 {
             let mut x0_hyperdual = x0.clone().to_hyper_dual_vector();
 
             // Take a unit step forward in both hyper-dual directions for the kth component.
-            x0_hyperdual.vset(
-                k,
-                HyperDual::new(x0_hyperdual.vget(k).get_a(), 1.0, 1.0, 0.0),
-            );
+            let original = x0_hyperdual[k];
+            x0_hyperdual[k] = HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
 
             // Evaluate the function at the hyper-dual number.
             let f_x0 = $f(&x0_hyperdual, p);
@@ -262,8 +260,8 @@ mod tests {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [x₀⁴ + 2x₀²x₁, x₁³ + x₀x₁²]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            let f0 = x.vget(0).powi(4) + S::new(2.0) * x.vget(0).powi(2) * x.vget(1);
-            let f1 = x.vget(1).powi(3) + x.vget(0) * x.vget(1).powi(2);
+            let f0 = x[0].powi(4) + S::new(2.0) * x[0].powi(2) * x[1];
+            let f1 = x[1].powi(3) + x[0] * x[1].powi(2);
             vec![f0, f1]
         }
 
@@ -293,7 +291,7 @@ mod tests {
         // Function to test various polynomial orders:
         // f(x₀) = [x₀², x₀³, x₀⁴]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            vec![x.vget(0).powi(2), x.vget(0).powi(3), x.vget(0).powi(4)]
+            vec![x[0].powi(2), x[0].powi(3), x[0].powi(4)]
         }
 
         // Define the evaluation point x₀ = 2.0.
@@ -317,7 +315,7 @@ mod tests {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁, x₂) = [x₀³, x₁⁴, x₂²]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            vec![x.vget(0).powi(3), x.vget(1).powi(4), x.vget(2).powi(2)]
+            vec![x[0].powi(3), x[1].powi(4), x[2].powi(2)]
         }
 
         // Define the evaluation point (x₀, x₁, x₂) = (1.0, 2.0, 3.0).
@@ -359,7 +357,7 @@ mod tests {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [sin(x₀), cos(x₁)]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            vec![x.vget(0).sin(), x.vget(1).cos()]
+            vec![x[0].sin(), x[1].cos()]
         }
 
         // Define the evaluation point (x₀, x₁) = (π/2, π/4).
@@ -389,7 +387,7 @@ mod tests {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [exp(x₀), x₁²]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            vec![x.vget(0).exp(), x.vget(1).powi(2)]
+            vec![x[0].exp(), x[1].powi(2)]
         }
 
         // Define the evaluation point (x₀, x₁) = (1.0, 2.0).
@@ -424,8 +422,8 @@ mod tests {
             let c = S::new(p[2]);
             let d = S::new(p[3]);
             let e = S::new(p[4]);
-            let f0 = a * x.vget(0).powi(4) + b * x.vget(0).powi(2) * x.vget(1);
-            let f1 = c * x.vget(1).powi(3) + d * (e * x.vget(0)).sin();
+            let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
+            let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
             vec![f0, f1]
         }
 
@@ -480,8 +478,8 @@ mod tests {
             let c = S::new(p.c);
             let d = S::new(p.d);
             let e = S::new(p.e);
-            let f0 = a * x.vget(0).powi(4) + b * x.vget(0).powi(2) * x.vget(1);
-            let f1 = c * x.vget(1).powi(3) + d * (e * x.vget(0)).sin();
+            let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
+            let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
             vec![f0, f1]
         }
 
@@ -525,7 +523,7 @@ mod tests {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [x₀³, x₁²]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            vec![x.vget(0).powi(3), x.vget(1).powi(2)]
+            vec![x[0].powi(3), x[1].powi(2)]
         }
 
         // Define the evaluation point (x₀, x₁) = (2.0, 3.0).
@@ -554,7 +552,7 @@ mod tests {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [x₀⁴ + x₁²]
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            vec![x.vget(0).powi(4) + x.vget(1).powi(2)]
+            vec![x[0].powi(4) + x[1].powi(2)]
         }
 
         // Define the evaluation point (x₀, x₁) = (2.0, 1.0).

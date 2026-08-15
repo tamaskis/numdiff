@@ -24,10 +24,7 @@ where
     fn to_hyper_dual_vector(self) -> V::VectorT<HyperDual> {
         let mut vec_hyper_dual = V::VectorT::new_with_length(self.len());
         for i in 0..self.len() {
-            vec_hyper_dual.vset(
-                i,
-                HyperDual::new(self.vget(i).to_f64().unwrap(), 0.0, 0.0, 0.0),
-            );
+            vec_hyper_dual[i] = HyperDual::new(self[i].to_f64().unwrap(), 0.0, 0.0, 0.0);
         }
         vec_hyper_dual
     }

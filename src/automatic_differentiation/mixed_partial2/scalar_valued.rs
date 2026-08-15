@@ -44,7 +44,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-///     x.vget(0).powi(4) + S::new(2.0) * x.vget(0).powi(2) * x.vget(1) + x.vget(1).powi(3)
+///     x[0].powi(4) + S::new(2.0) * x[0].powi(2) * x[1] + x[1].powi(3)
 /// }
 ///
 /// // Define the evaluation point.
@@ -80,8 +80,8 @@
 ///     let b = S::new(p[1]);
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
-///     a * x.vget(0).powi(2) * x.vget(1) + b * x.vget(0) * x.vget(1).powi(2)
-///         + c * (d * x.vget(0) * x.vget(1)).sin()
+///     a * x[0].powi(2) * x[1] + b * x[0] * x[1].powi(2)
+///         + c * (d * x[0] * x[1]).sin()
 /// }
 ///
 /// // Runtime parameters.
@@ -132,8 +132,8 @@
 ///     let b = S::new(p.b);
 ///     let c = S::new(p.c);
 ///     let d = S::new(p.d);
-///     a * x.vget(0).powi(2) * x.vget(1) + b * x.vget(0) * x.vget(1).powi(2)
-///         + c * (d * x.vget(0) * x.vget(1)).sin()
+///     a * x[0].powi(2) * x[1] + b * x[0] * x[1].powi(2)
+///         + c * (d * x[0] * x[1]).sin()
 /// }
 ///
 /// // Runtime parameter struct.
@@ -202,20 +202,14 @@ macro_rules! get_mixed_spartial_derivative2 {
 
             if i == j {
                 // For i == j, seed both hyper-dual directions on the same variable.
-                x0_hyperdual.vset(
-                    i,
-                    HyperDual::new(x0_hyperdual.vget(i).get_a(), 1.0, 1.0, 0.0),
-                );
+                let original = x0_hyperdual[i];
+                x0_hyperdual[i] = HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
             } else {
                 // Seed separate hyper-dual directions for each variable.
-                x0_hyperdual.vset(
-                    i,
-                    HyperDual::new(x0_hyperdual.vget(i).get_a(), 1.0, 0.0, 0.0),
-                );
-                x0_hyperdual.vset(
-                    j,
-                    HyperDual::new(x0_hyperdual.vget(j).get_a(), 0.0, 1.0, 0.0),
-                );
+                let original_i = x0_hyperdual[i];
+                let original_j = x0_hyperdual[j];
+                x0_hyperdual[i] = HyperDual::new(original_i.get_a(), 1.0, 0.0, 0.0);
+                x0_hyperdual[j] = HyperDual::new(original_j.get_a(), 0.0, 1.0, 0.0);
             }
 
             // Evaluate the function at the hyper-dual point.
@@ -240,7 +234,7 @@ mod tests {
         // Function to take the mixed second-order partial derivative of:
         // f(x₀, x₁) = x₀⁴ + 2x₀²x₁ + x₁³
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(4) + S::new(2.0) * x.vget(0).powi(2) * x.vget(1) + x.vget(1).powi(3)
+            x[0].powi(4) + S::new(2.0) * x[0].powi(2) * x[1] + x[1].powi(3)
         }
 
         // Define the evaluation point (x₀, x₁) = (2.0, 1.0).
@@ -270,7 +264,7 @@ mod tests {
         // Function to test polynomial terms with mixed coupling:
         // f(x₀, x₁) = x₀³x₁² + x₀²x₁³
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(3) * x.vget(1).powi(2) + x.vget(0).powi(2) * x.vget(1).powi(3)
+            x[0].powi(3) * x[1].powi(2) + x[0].powi(2) * x[1].powi(3)
         }
 
         // Define the evaluation point (x₀, x₁) = (2.0, 1.0).
@@ -290,9 +284,7 @@ mod tests {
         // Function to take mixed second-order partial derivatives of:
         // f(x₀, x₁, x₂) = x₀x₁x₂ + x₀²x₁ + x₁²x₂
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0) * x.vget(1) * x.vget(2)
-                + x.vget(0).powi(2) * x.vget(1)
-                + x.vget(1).powi(2) * x.vget(2)
+            x[0] * x[1] * x[2] + x[0].powi(2) * x[1] + x[1].powi(2) * x[2]
         }
 
         // Define the evaluation point (x₀, x₁, x₂) = (1.0, 2.0, 3.0).
@@ -322,7 +314,7 @@ mod tests {
         // Function to take mixed second-order partial derivatives of:
         // f(x₀, x₁) = sin(x₀x₁) + cos(x₁)
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            (x.vget(0) * x.vget(1)).sin() + x.vget(1).cos()
+            (x[0] * x[1]).sin() + x[1].cos()
         }
 
         // Define the evaluation point (x₀, x₁) = (π/2, π/4).
@@ -343,7 +335,7 @@ mod tests {
         // Function to take mixed second-order partial derivatives of:
         // f(x₀, x₁) = exp(x₀x₁) + x₀²
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            (x.vget(0) * x.vget(1)).exp() + x.vget(0).powi(2)
+            (x[0] * x[1]).exp() + x[0].powi(2)
         }
 
         // Define the evaluation point (x₀, x₁) = (1.0, 2.0).
@@ -370,10 +362,10 @@ mod tests {
             let c = S::new(p[2]);
             let d = S::new(p[3]);
             let e = S::new(p[4]);
-            a * x.vget(0).powi(2) * x.vget(1)
-                + b * x.vget(0) * x.vget(1).powi(2)
-                + c * x.vget(0).powi(3)
-                + d * (e * x.vget(0) * x.vget(1)).sin()
+            a * x[0].powi(2) * x[1]
+                + b * x[0] * x[1].powi(2)
+                + c * x[0].powi(3)
+                + d * (e * x[0] * x[1]).sin()
         }
 
         // Runtime parameters.
@@ -418,10 +410,10 @@ mod tests {
             let c = S::new(p.c);
             let d = S::new(p.d);
             let e = S::new(p.e);
-            a * x.vget(0).powi(2) * x.vget(1)
-                + b * x.vget(0) * x.vget(1).powi(2)
-                + c * x.vget(0).powi(3)
-                + d * (e * x.vget(0) * x.vget(1)).sin()
+            a * x[0].powi(2) * x[1]
+                + b * x[0] * x[1].powi(2)
+                + c * x[0].powi(3)
+                + d * (e * x[0] * x[1]).sin()
         }
 
         // Runtime parameter struct.
@@ -457,7 +449,7 @@ mod tests {
         // Function to take the mixed second-order partial derivative of:
         // f(x₀, x₁) = x₀²x₁ + x₁³
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(2) * x.vget(1) + x.vget(1).powi(3)
+            x[0].powi(2) * x[1] + x[1].powi(3)
         }
 
         // Mixed second-order partial derivative function obtained via forward-mode automatic

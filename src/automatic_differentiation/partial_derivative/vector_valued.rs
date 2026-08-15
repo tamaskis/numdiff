@@ -67,8 +67,8 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x.vget(0).sin() * x.vget(1).sin(),
-///         x.vget(0).cos() * x.vget(1).cos(),
+///         x[0].sin() * x[1].sin(),
+///         x[0].cos() * x[1].cos(),
 ///     ])
 /// }
 ///
@@ -97,7 +97,7 @@
 /// it implements the `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat;
+/// use faer::Col;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -107,8 +107,8 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x.vget(0).sin() * x.vget(1).sin(),
-///         x.vget(0).cos() * x.vget(1).cos(),
+///         x[0].sin() * x[1].sin(),
+///         x[0].cos() * x[1].cos(),
 ///     ])
 /// }
 ///
@@ -132,9 +132,9 @@
 /// let x0: Array1<f64> = array![5.0, 1.0];
 /// let dfk_eval: Array1<f64> = dfk(&x0, k, &[]);
 ///
-/// // faer::Mat
-/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 1.0]);
-/// let dfk_eval: Mat<f64> = dfk(&x0, k, &[]);
+/// // faer::Col
+/// let x0: Col<f64> = Col::from_slice(&[5.0, 1.0]);
+/// let dfk_eval: Col<f64> = dfk(&x0, k, &[]);
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -162,8 +162,8 @@
 ///     let d = S::new(p[3]);
 ///     let e = S::new(p[4]);
 ///     V::DVectorT::from_slice(&[
-///         a * x.vget(0).powi(2) + b * x.vget(1),
-///         c * (d * x.vget(0)).sin() + e * x.vget(1).powi(2)
+///         a * x[0].powi(2) + b * x[1],
+///         c * (d * x[0]).sin() + e * x[1].powi(2)
 ///     ])
 /// }
 ///
@@ -230,8 +230,8 @@
 ///     let d = S::new(p.d);
 ///     let e = S::new(p.e);
 ///     V::DVectorT::from_slice(&[
-///         a * x.vget(0).powi(2) + b * x.vget(1),
-///         c * (d * x.vget(0)).sin() + e * x.vget(1).powi(2)
+///         a * x[0].powi(2) + b * x[1],
+///         c * (d * x[0]).sin() + e * x[1].powi(2)
 ///     ])
 /// }
 ///
@@ -302,7 +302,8 @@ macro_rules! get_vpartial_derivative {
             let mut x0_dual = x0.clone().to_dual_vector();
 
             // Take a unit step forward in the kth dual direction.
-            x0_dual.vset(k, Dual::new(x0_dual.vget(k).get_real(), 1.0));
+            let original = x0_dual[k];
+            x0_dual[k] = Dual::new(original.get_real(), 1.0);
 
             // Evaluate the function at the dual number.
             let f_x0 = $f(&x0_dual, p);
@@ -310,7 +311,7 @@ macro_rules! get_vpartial_derivative {
             // Partial derivative of f with respect to xₖ.
             let mut dfk_x0 = V::DVectorf64::new_with_length(f_x0.len());
             for i in 0..dfk_x0.len() {
-                dfk_x0.vset(i, f_x0.vget(i).get_dual());
+                dfk_x0[i] = f_x0[i].get_dual();
             }
             dfk_x0
         }
@@ -329,7 +330,7 @@ mod tests {
     fn test_vpartial_derivative_1() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(2)])
+            V::DVectorT::from_slice(&[x[0].powi(2)])
         }
 
         // Evaluation point.
@@ -356,7 +357,7 @@ mod tests {
     fn test_vpartial_derivative_2() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(4), x.vget(1).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(4), x[1].powi(3)])
         }
 
         // Evaluation point.
@@ -383,7 +384,7 @@ mod tests {
     fn test_vpartial_derivative_3() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(3) * x.vget(1).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(3) * x[1].powi(3)])
         }
 
         // Evaluation point.
@@ -410,7 +411,7 @@ mod tests {
     fn test_vpartial_derivative_4() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(4), x.vget(1).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(4), x[1].powi(3)])
         }
 
         // Evaluation point.
@@ -438,10 +439,10 @@ mod tests {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
-                x.vget(0),
-                x.vget(2) * 5.0,
-                x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
-                x.vget(2) * x.vget(0).sin(),
+                x[0],
+                x[2] * 5.0,
+                x[1].powi(2) * 4.0 - x[2] * 2.0,
+                x[2] * x[0].sin(),
             ])
         }
 
@@ -476,10 +477,7 @@ mod tests {
             let c = S::new(p[2]);
             let d = S::new(p[3]);
             let e = S::new(p[4]);
-            V::DVectorT::from_slice(&[
-                a * (b * x.vget(0)).exp() * (c * x.vget(1)).cos(),
-                d * x.vget(0) * x.vget(1) + e,
-            ])
+            V::DVectorT::from_slice(&[a * (b * x[0]).exp() * (c * x[1]).cos(), d * x[0] * x[1] + e])
         }
 
         // Parameter vector.
@@ -529,8 +527,8 @@ mod tests {
             let d = S::new(p.d);
             let e = S::new(p.e);
             V::DVectorT::from_slice(&[
-                a * x.vget(0).powi(2) + b * x.vget(1),
-                c * (d * x.vget(0)).sin() + e * x.vget(1).powi(2),
+                a * x[0].powi(2) + b * x[1],
+                c * (d * x[0]).sin() + e * x[1].powi(2),
             ])
         }
 

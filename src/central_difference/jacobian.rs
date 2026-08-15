@@ -105,11 +105,11 @@ use linalg_traits::Vector;
 /// #### Using other vector types
 ///
 /// We can also use other types of vectors, such as `nalgebra::SVector`, `nalgebra::DVector`,
-/// `ndarray::Array1`, `faer::Mat`, or any other type of vector that implements the
+/// `ndarray::Array1`, `faer::Col`, or any other type of vector that implements the
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat as FMat;
+/// use faer::{Col, Mat as FMat};
 /// use linalg_traits::{Mat, Matrix, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SVector};
 /// use ndarray::{array, Array1, Array2};
@@ -193,20 +193,20 @@ use linalg_traits::Vector;
 /// let jac_array1: Array2<f64> = jacobian(&f_array1, &x0_array1, None);
 /// assert_arrays_equal_to_decimal!(jac_array1, jac_true_row_major, 9);
 ///
-/// // faer::Mat
-/// let f_mat = |x: &FMat<f64>| {
-///     FMat::from_slice(
+/// // faer::Col
+/// let f_col = |x: &Col<f64>| {
+///     Col::from_slice(
 ///         &[
-///             x[(0, 0)],
-///             5.0 * x[(2, 0)],
-///             4.0 * x[(1, 0)].powi(2) - 2.0 * x[(2, 0)],
-///             x[(2, 0)] * x[(0, 0)].sin(),
+///             x[0],
+///             5.0 * x[2],
+///             4.0 * x[1].powi(2) - 2.0 * x[2],
+///             x[2] * x[0].sin(),
 ///         ]
 ///     )
 /// };
-/// let x0_mat: FMat<f64> = FMat::from_slice(&[5.0, 6.0, 7.0]);
-/// let jac_mat: FMat<f64> = jacobian(&f_mat, &x0_mat, None);
-/// assert_arrays_equal_to_decimal!(jac_mat.as_row_slice(), jac_true_row_major, 9);
+/// let x0_col: Col<f64> = Col::from_slice(&[5.0, 6.0, 7.0]);
+/// let jac_col: FMat<f64> = jacobian(&f_col, &x0_col, None);
+/// assert_arrays_equal_to_decimal!(jac_col.as_row_slice(), jac_true_row_major, 9);
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -339,21 +339,21 @@ where
     let mut f2;
 
     // Original value of the evaluation point in the 0th direction.
-    x0k = x0.vget(0);
+    x0k = x0[0];
 
     // Absolute step size in the 0th direction.
-    dxk = h * (1.0 + x0.vget(0).abs());
+    dxk = h * (1.0 + x0[0].abs());
 
     // Step forward in the 0th direction.
-    x0.vset(0, x0.vget(0) + dxk);
+    x0[0] += dxk;
     f1 = f(&x0);
 
     // Step backward in the 0th direction.
-    x0.vset(0, x0k - dxk);
+    x0[0] = x0k - dxk;
     f2 = f(&x0);
 
     // Reset the evaluation point.
-    x0.vset(0, x0k);
+    x0[0] = x0k;
 
     // Partial derivative of f with respect to x₀ (0th column of the Jacobian).
     dfk = f1.sub(&f2).div(2.0 * dxk);
@@ -367,34 +367,34 @@ where
 
     // Store the partial derivative of f with respect to x₀ in the 0th column of the Jacobian.
     for i in 0..m {
-        jac[(i, 0)] = dfk.vget(i);
+        jac[(i, 0)] = dfk[i];
     }
 
     // Evaluate the remaining columns of the Jacobian.
     for k in 1..n {
         // Original value of the evaluation point in the kth direction.
-        x0k = x0.vget(k);
+        x0k = x0[k];
 
         // Absolute step size in the kth direction.
         dxk = h * (1.0 + x0k.abs());
 
         // Step forward in the kth direction.
-        x0.vset(k, x0k + dxk);
+        x0[k] = x0k + dxk;
         f1 = f(&x0);
 
         // Step backward in the kth direction.
-        x0.vset(k, x0k - dxk);
+        x0[k] = x0k - dxk;
         f2 = f(&x0);
 
         // Reset the evaluation point.
-        x0.vset(k, x0k);
+        x0[k] = x0k;
 
         // Partial derivative of f with respect to xₖ.
         dfk = f1.sub(&f2).div(2.0 * dxk);
 
         // Store the partial derivative of f with respect to xₖ in the kth column of the Jacobian.
         for i in 0..m {
-            jac[(i, k)] = dfk.vget(i);
+            jac[(i, k)] = dfk[i];
         }
     }
 

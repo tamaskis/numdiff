@@ -65,7 +65,7 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat;
+/// use faer::Col;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -97,9 +97,9 @@
 /// let d2f_at_1_array1: Array1<f64> = d2f::<f64, Array1<f64>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(d2f_at_1_array1, d2f_at_1_true, 16);
 ///
-/// // faer::Mat
-/// let d2f_at_1_mat: Mat<f64> = d2f::<f64, Mat<f64>>(1.0, &[]);
-/// assert_arrays_equal_to_decimal!(d2f_at_1_mat.as_slice(), d2f_at_1_true, 16);
+/// // faer::Col
+/// let d2f_at_1_col: Col<f64> = d2f::<f64, Col<f64>>(1.0, &[]);
+/// assert_arrays_equal_to_decimal!(d2f_at_1_col.as_slice(), d2f_at_1_true, 16);
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -228,7 +228,7 @@ macro_rules! get_vderivative2 {
             // Extract second derivatives from each component of the result.
             let mut d2f = V::Vectorf64::new_with_length(f_x0.len());
             for i in 0..d2f.len() {
-                d2f.vset(i, f_x0.vget(i).get_d());
+                d2f[i] = f_x0[i].get_d();
             }
 
             // Second derivative of f with respect to x evaluated at x = x₀.

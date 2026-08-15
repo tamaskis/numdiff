@@ -47,7 +47,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
+///     x[0].powi(5) + x[1].sin().powi(3)
 /// }
 ///
 /// // Define the evaluation point.
@@ -77,7 +77,7 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat;
+/// use faer::Col;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -86,7 +86,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
+///     x[0].powi(5) + x[1].sin().powi(3)
 /// }
 ///
 /// // Parameter vector (empty for this example).
@@ -108,9 +108,9 @@
 /// let x0: Array1<f64> = array![5.0, 8.0];
 /// let g_eval: Array1<f64> = g(&x0, &p);
 ///
-/// // faer::Mat
-/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
-/// let g_eval: Mat<f64> = g(&x0, &p);
+/// // faer::Col
+/// let x0: Col<f64> = Col::from_slice(&[5.0, 8.0]);
+/// let g_eval: Col<f64> = g(&x0, &p);
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -136,7 +136,7 @@
 ///     let b = S::new(p[1]);
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
-///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d
+///     a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d
 /// }
 ///
 /// // Parameter vector.
@@ -185,7 +185,7 @@
 ///     let b = S::new(p.b);
 ///     let c = S::new(p.c);
 ///     let d = S::new(p.d);
-///     a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d
+///     a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d
 /// }
 ///
 /// // Runtime parameter struct.
@@ -256,16 +256,16 @@ macro_rules! get_gradient {
             // Evaluate the gradient.
             for k in 0..x0_dual.len() {
                 // Original value of the evaluation point in the kth dual direction.
-                x0k = x0_dual.vget(k);
+                x0k = x0_dual[k];
 
                 // Take a unit step forward in the kth dual direction.
-                x0_dual.vset(k, Dual::new(x0k.get_real(), 1.0));
+                x0_dual[k] = Dual::new(x0k.get_real(), 1.0);
 
                 // Partial derivative of f with respect to xₖ.
-                g.vset(k, $f(&x0_dual, p).get_dual());
+                g[k] = $f(&x0_dual, p).get_dual();
 
                 // Reset the evaluation point.
-                x0_dual.vset(k, x0k);
+                x0_dual[k] = x0k;
             }
 
             // Return the result.
@@ -286,7 +286,7 @@ mod tests {
     fn test_gradient_1() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(2)
+            x[0].powi(2)
         }
 
         // Evaluation point.
@@ -313,7 +313,7 @@ mod tests {
     fn test_gradient_2() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(2) + x.vget(1).powi(3)
+            x[0].powi(2) + x[1].powi(3)
         }
 
         // Evaluation point.
@@ -340,7 +340,7 @@ mod tests {
     fn test_gradient_3() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(5) + x.vget(1).sin().powi(3)
+            x[0].powi(5) + x[1].sin().powi(3)
         }
 
         // Evaluation point.
@@ -370,7 +370,7 @@ mod tests {
             let alpha = S::new(p[0]);
             let beta = S::new(p[1]);
             let gamma = S::new(p[2]);
-            (alpha * x.vget(0)).exp() * (beta * x.vget(1)).sin() + gamma * x.vget(0) * x.vget(1)
+            (alpha * x[0]).exp() * (beta * x[1]).sin() + gamma * x[0] * x[1]
         }
 
         // Parameter vector.
@@ -417,7 +417,7 @@ mod tests {
             let b = S::new(p.b);
             let c = S::new(p.c);
             let d = S::new(p.d);
-            a * x.vget(0).powi(2) + b * x.vget(1).powi(2) + c * x.vget(0) * x.vget(1) + d
+            a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d
         }
 
         // Runtime parameter struct.

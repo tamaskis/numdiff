@@ -278,7 +278,9 @@ macro_rules! get_gradient {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::DVector;
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -310,6 +312,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_gradient_2() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -337,6 +340,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_gradient_3() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -364,6 +368,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_gradient_4() {
         // Function to find the gradient of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> S {

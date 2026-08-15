@@ -337,7 +337,9 @@ macro_rules! get_shessian {
 mod tests {
     use crate::{HyperDual, HyperDualVector};
     use linalg_traits::{Mat, Matrix, Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SMatrix, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2, array};
     use numtest::*;
 
@@ -369,6 +371,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_shessian_2() {
         // Function to take the Hessian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -398,6 +401,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_shessian_3() {
         // Function to take the Hessian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -436,6 +440,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_shessian_4() {
         // Function to take the Hessian of.
         #[allow(clippy::many_single_char_names)]

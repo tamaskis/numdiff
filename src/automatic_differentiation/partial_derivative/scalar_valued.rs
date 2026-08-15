@@ -285,6 +285,7 @@ macro_rules! get_spartial_derivative {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
     use numtest::*;
 
@@ -316,6 +317,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_spartial_derivative_2() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -343,6 +345,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_spartial_derivative_3() {
         // Function to take the partial derivative of.
         #[allow(clippy::many_single_char_names)]

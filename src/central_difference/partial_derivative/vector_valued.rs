@@ -229,7 +229,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DVector, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -243,6 +245,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_2() {
         let f = |x: &DVector<f64>| dvector![x[0].powi(4), x[1].powi(3)];
         let x0 = dvector![1.0, 2.0];
@@ -261,6 +264,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_vpartial_derivative_4() {
         let f = |x: &Array1<f64>| array![x[0].powi(4), x[1].powi(3)];
         let x0 = array![1.0, 2.0];
@@ -270,6 +274,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_5() {
         let f = |x: &SVector<f64, 3>| {
             SVector::<f64, 4>::from_row_slice(&[

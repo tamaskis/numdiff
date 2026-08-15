@@ -33,7 +33,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::array;
 
     #[test]
@@ -50,6 +52,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_nalgebra_dvector() {
         let vec = dvector![1.0, 2.0, 3.0];
         assert_eq!(
@@ -63,6 +66,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_nalgebra_svector() {
         let vec = SVector::<f64, 3>::from_row_slice(&[1.0, 2.0, 3.0]);
         assert_eq!(
@@ -76,11 +80,12 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_ndarray_array1() {
         let vec = array![1.0, 2.0, 3.0];
         assert_eq!(
             vec.to_hyper_dual_vector(),
-            vec![
+            array![
                 HyperDual::new(1.0, 0.0, 0.0, 0.0),
                 HyperDual::new(2.0, 0.0, 0.0, 0.0),
                 HyperDual::new(3.0, 0.0, 0.0, 0.0)

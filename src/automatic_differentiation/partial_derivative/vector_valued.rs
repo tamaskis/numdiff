@@ -322,7 +322,9 @@ macro_rules! get_vpartial_derivative {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DVector, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -354,6 +356,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_2() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -408,6 +411,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_vpartial_derivative_4() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -435,6 +439,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_5() {
         // Function to take the partial derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -468,6 +473,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_6() {
         // Function to take the partial derivative of.
         #[allow(clippy::many_single_char_names)]

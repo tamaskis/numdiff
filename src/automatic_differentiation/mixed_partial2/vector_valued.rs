@@ -237,6 +237,7 @@ macro_rules! get_mixed_vpartial_derivative2 {
 mod tests {
     use crate::{HyperDual, HyperDualVector};
     use linalg_traits::{Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
     use numtest::*;
     use std::f64::consts::PI;
@@ -277,6 +278,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_mixed_vpartial_derivative2_polynomial() {
         // Function to test various polynomial couplings:
         // f(x₀, x₁) = [x₀³x₁², x₀²x₁³, x₀x₁]
@@ -495,6 +497,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_mixed_vpartial_derivative2_vector_types() {
         // Function to take the mixed second-order partial derivative of:
         // f(x₀, x₁) = [x₀²x₁, x₀x₁²]

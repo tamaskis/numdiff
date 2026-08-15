@@ -7,6 +7,7 @@ pub(crate) mod directional_derivative;
 pub(crate) mod dual;
 pub(crate) mod gradient;
 pub(crate) mod hessian;
+pub(crate) mod hyper_dual;
 pub(crate) mod jacobian;
 pub(crate) mod mixed_partial2;
 pub(crate) mod partial2;

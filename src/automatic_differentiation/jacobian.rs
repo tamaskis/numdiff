@@ -395,7 +395,9 @@ macro_rules! get_jacobian {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Mat, Matrix, Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2, array};
 
     #[test]
@@ -426,6 +428,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_jacobian_2() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -455,6 +458,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_3() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -484,6 +488,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_4() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -513,6 +518,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_5() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
@@ -564,6 +570,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_6() {
         // Function to take the Jacobian of.
         #[allow(clippy::many_single_char_names)]

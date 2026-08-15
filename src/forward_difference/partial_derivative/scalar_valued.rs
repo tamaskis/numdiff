@@ -210,6 +210,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
     use numtest::*;
 
@@ -223,6 +224,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_spartial_derivative_2() {
         let f = |x: &SVector<f64, 2>| x[0].powi(3) * x[1].powi(3);
         let x0: SVector<f64, 2> = SVector::from_slice(&[3.0, 2.0]);

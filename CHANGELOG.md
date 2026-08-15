@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.0
+
+1. Updated `linalg-traits` dependency from `0.18.0` to `0.19.0`.
+
 ## 0.10.0
 
 1. Updated `linalg-traits` dependency from `0.17.0` to `0.18.0`.

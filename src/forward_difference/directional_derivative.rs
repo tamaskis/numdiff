@@ -191,7 +191,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -205,6 +207,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_directional_derivative_2() {
         let f = |x: &SVector<f64, 2>| x[0].powi(2) + x[1].powi(3);
         let x0: SVector<f64, 2> = SVector::from_slice(&[1.0, 2.0]);
@@ -216,6 +219,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_directional_derivative_3() {
         let f = |x: &Array1<f64>| x[0].powi(5) + x[1].sin().powi(3);
         let x0 = array![5.0, 8.0];

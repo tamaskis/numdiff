@@ -288,7 +288,9 @@ macro_rules! get_directional_derivative {
 mod tests {
     use crate::{Dual, DualVector};
     use linalg_traits::{Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -323,6 +325,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_directional_derivative_2() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -355,6 +358,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_directional_derivative_3() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
@@ -387,6 +391,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_directional_derivative_4() {
         // Function to find the directional derivative of.
         #[allow(clippy::many_single_char_names)]

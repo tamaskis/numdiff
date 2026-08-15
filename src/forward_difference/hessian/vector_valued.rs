@@ -377,7 +377,9 @@ where
 mod tests {
     use super::*;
     use linalg_traits::{Mat, Matrix};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SMatrix, SVector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2};
     use numtest::*;
 
@@ -390,6 +392,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vhessian_2() {
         let f =
             |x: &SVector<f64, 2>| SVector::<f64, 1>::from_row_slice(&[x[0].powi(2) + x[1].powi(3)]);
@@ -406,6 +409,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_vhessian_3() {
         let f = |x: &Array1<f64>| {
             Array1::<f64>::from_slice(&[x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3)])
@@ -427,6 +431,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vhessian_4() {
         let f = |x: &DVector<f64>| {
             DVector::<f64>::from_slice(&[

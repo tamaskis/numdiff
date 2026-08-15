@@ -244,6 +244,7 @@ macro_rules! get_spartial_derivative2 {
 mod tests {
     use crate::{HyperDual, HyperDualVector};
     use linalg_traits::{Scalar, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
     use numtest::*;
     use std::f64::consts::PI;
@@ -467,6 +468,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_spartial_derivative2_vector_types() {
         // Test with nalgebra SVector.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {

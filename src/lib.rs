@@ -195,5 +195,5 @@ pub(crate) mod test_utils;
 // Re-exports.
 pub use automatic_differentiation::dual::dual::Dual;
 pub use automatic_differentiation::dual::dual_vector::DualVector;
-pub use automatic_differentiation::dual::hyper_dual::HyperDual;
-pub use automatic_differentiation::dual::hyper_dual_vector::HyperDualVector;
+pub use automatic_differentiation::hyper_dual::hyper_dual::HyperDual;
+pub use automatic_differentiation::hyper_dual::hyper_dual_vector::HyperDualVector;

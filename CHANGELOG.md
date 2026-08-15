@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+1. Added `numdiff::get_mixed_spartial_derivative2`.
+1. Added `numdiff::get_mixed_vpartial_derivative2`.
+1. Minor documentation fixes.
+
 ## 0.9.0
 
 1. Updated `linalg-traits` dependency from `0.16.0` to `0.17.0`.

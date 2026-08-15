@@ -777,7 +777,7 @@ dependencies = [
 
 [[package]]
 name = "numdiff"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "faer",
  "linalg-traits",

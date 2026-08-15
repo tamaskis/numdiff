@@ -90,6 +90,8 @@ use linalg_traits::Vector;
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::{Col, Mat as FMat};
 /// use linalg_traits::{Mat, Matrix, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SMatrix, SVector};
@@ -132,6 +134,7 @@ use linalg_traits::Vector;
 /// let x0_col: Col<f64> = Col::from_slice(&[5.0, 8.0]);
 /// let hess_col: FMat<f64> = shessian(&f_col, &x0_col, None);
 /// assert_arrays_equal_to_decimal!(hess_col.as_row_slice(), hess_true, 3);
+/// # }
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -304,7 +307,9 @@ where
 mod tests {
     use super::*;
     use linalg_traits::{Mat, Matrix};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{SMatrix, SVector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2};
     use numtest::*;
 
@@ -317,6 +322,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_shessian_2() {
         let f = |x: &SVector<f64, 2>| x[0].powi(2) + x[1].powi(3);
         let x0 = SVector::from_row_slice(&[1.0, 2.0]);
@@ -327,6 +333,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_shessian_3() {
         let f = |x: &Array1<f64>| x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3);
         let x0 = Array1::from_slice(&[1.0, 2.0]);

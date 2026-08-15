@@ -109,6 +109,8 @@ use linalg_traits::Vector;
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::{Col, Mat as FMat};
 /// use linalg_traits::{Mat, Matrix, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SVector};
@@ -205,6 +207,7 @@ use linalg_traits::Vector;
 /// let x0_col: Col<f64> = Col::from_slice(&[5.0, 6.0, 7.0]);
 /// let jac_col: FMat<f64> = jacobian(&f_col, &x0_col, None);
 /// assert_arrays_equal_to_decimal!(jac_col.as_col_slice(), jac_true_col_major, 6);
+/// # }
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -371,7 +374,9 @@ where
 mod tests {
     use super::*;
     use linalg_traits::{Mat, Matrix};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SMatrix, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2, array};
     use numtest::*;
 
@@ -384,6 +389,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_jacobian_2() {
         let f = |x: &Array1<f64>| array![x[0].powi(2), x[0].powi(3)];
         let x0 = array![2.0];
@@ -394,6 +400,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_3() {
         let f = |x: &DVector<f64>| dvector![x[0].powi(2) + x[1].powi(3)];
         let x0 = dvector![1.0, 2.0];
@@ -404,6 +411,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_4() {
         let f =
             |x: &SVector<f64, 2>| SVector::<f64, 2>::from_row_slice(&[x[0].powi(2), x[1].powi(3)]);
@@ -415,6 +423,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_5() {
         let f = |x: &SVector<f64, 3>| {
             SVector::<f64, 4>::from_row_slice(&[

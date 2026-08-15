@@ -76,6 +76,8 @@ use linalg_traits::Vector;
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::Col;
 /// use linalg_traits::Vector;  // to provide from_slice method for faer::Col
 /// use nalgebra::{dvector, DVector, SVector};
@@ -118,6 +120,7 @@ use linalg_traits::Vector;
 /// let x0_col: Col<f64> = Col::from_slice(&[1.0, 2.0]);
 /// let pf_col: Col<f64> = vpartial_derivative(&f_col, &x0_col, k, None);
 /// assert_arrays_equal_to_decimal!(pf_col.as_slice(), pf_true, 8);
+/// # }
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -227,7 +230,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DVector, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -241,6 +246,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_2() {
         let f = |x: &DVector<f64>| dvector![x[0].powi(4), x[1].powi(3)];
         let x0 = dvector![1.0, 2.0];
@@ -259,6 +265,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_vpartial_derivative_4() {
         let f = |x: &Array1<f64>| array![x[0].powi(4), x[1].powi(3)];
         let x0 = array![1.0, 2.0];
@@ -268,6 +275,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative_5() {
         let f = |x: &SVector<f64, 3>| {
             SVector::<f64, 4>::from_row_slice(&[

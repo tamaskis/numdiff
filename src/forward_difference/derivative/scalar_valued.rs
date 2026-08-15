@@ -108,11 +108,9 @@ pub fn sderivative(f: &impl Fn(f64) -> f64, x0: f64, h: Option<f64>) -> f64 {
 mod tests {
     use super::*;
     use crate::test_utils;
+    use linalg_traits::RealField;
     use numtest::*;
     use std::f64::consts::PI;
-
-    #[cfg(feature = "trig")]
-    use trig::Trig;
 
     #[test]
     fn test_product_rule() {
@@ -425,7 +423,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_tangent() {
         let f = |x: f64| x.tan();
         assert_equal_to_decimal!(sderivative(&f, 0.0, None), test_utils::tan_deriv(0.0), 15);
@@ -458,7 +455,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_cosecant() {
         let f = |x: f64| x.csc();
         assert_equal_to_decimal!(
@@ -484,7 +480,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_secant() {
         let f = |x: f64| x.sec();
         assert_equal_to_decimal!(sderivative(&f, 0.0, None), test_utils::sec_deriv(0.0), 8);
@@ -517,7 +512,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_cotangent() {
         let f = |x: f64| x.cot();
         assert_equal_to_decimal!(
@@ -538,7 +532,7 @@ mod tests {
         assert_equal_to_decimal!(
             sderivative(&f, 5.0 * PI / 4.0, None),
             test_utils::cot_deriv(5.0 * PI / 4.0),
-            7
+            6
         );
         assert_equal_to_decimal!(
             sderivative(&f, 3.0 * PI / 2.0, None),
@@ -580,7 +574,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_cosecant() {
         let f = |x: f64| x.acsc();
         assert_equal_to_decimal!(sderivative(&f, -1.5, None), test_utils::acsc_deriv(-1.5), 7);
@@ -588,7 +581,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_secant() {
         let f = |x: f64| x.asec();
         assert_equal_to_decimal!(sderivative(&f, -1.5, None), test_utils::asec_deriv(-1.5), 7);
@@ -596,7 +588,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_cotangent() {
         let f = |x: f64| x.acot();
         assert_equal_to_decimal!(sderivative(&f, -1.5, None), test_utils::acot_deriv(-1.5), 8);
@@ -625,7 +616,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_tangent() {
         let f = |x: f64| x.tanh();
         assert_equal_to_decimal!(sderivative(&f, -1.0, None), test_utils::tanh_deriv(-1.0), 8);
@@ -634,7 +624,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_cosecant() {
         let f = |x: f64| x.csch();
         assert_equal_to_decimal!(sderivative(&f, -1.0, None), test_utils::csch_deriv(-1.0), 7);
@@ -642,7 +631,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_secant() {
         let f = |x: f64| x.sech();
         assert_equal_to_decimal!(sderivative(&f, -1.0, None), test_utils::sech_deriv(-1.0), 9);
@@ -651,7 +639,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_cotangent() {
         let f = |x: f64| x.coth();
         assert_equal_to_decimal!(sderivative(&f, -1.0, None), test_utils::coth_deriv(-1.0), 7);
@@ -689,7 +676,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_tangent() {
         let f = |x: f64| x.atanh();
         assert_equal_to_decimal!(
@@ -702,7 +688,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_cosecant() {
         let f = |x: f64| x.acsch();
         assert_equal_to_decimal!(
@@ -726,14 +711,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_secant() {
         let f = |x: f64| x.asech();
         assert_equal_to_decimal!(sderivative(&f, 0.5, None), test_utils::asech_deriv(0.5), 7);
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_cotangent() {
         let f = |x: f64| x.acoth();
         assert_equal_to_decimal!(

@@ -34,13 +34,13 @@
 /// #### Using standard vectors
 ///
 /// ```
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vderivative, Dual};
 ///
 /// // Define the function, f(t).
-/// fn f<S: Scalar, V: Vector<S>>(t: S, _p: &[f64]) -> V {
+/// fn f<R: RealField, V: Vector<R>>(t: R, _p: &[f64]) -> V {
 ///     V::from_slice(&[t.sin(), t.cos()])
 /// }
 ///
@@ -64,8 +64,10 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::Col;
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 /// use numtest::*;
@@ -73,7 +75,7 @@
 ///  use numdiff::{get_vderivative, Dual};
 ///
 /// // Define the function, f(t).
-/// fn f<S: Scalar, V: Vector<S>>(t: S, _p: &[f64]) -> V {
+/// fn f<R: RealField, V: Vector<R>>(t: R, _p: &[f64]) -> V {
 ///     V::from_slice(&[t.sin(), t.cos()])
 /// }
 ///
@@ -99,6 +101,7 @@
 /// // faer::Col
 /// let df_at_1_col: Col<f64> = df::<f64, Col<f64>>(1.0, &[]);
 /// assert_arrays_equal_to_decimal!(df_at_1_col.as_slice(), df_at_1_true, 16);
+/// # }
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -113,17 +116,17 @@
 /// $$f'(t)=\begin{bmatrix}2at\\\\ce^{t}\end{bmatrix}$$
 ///
 /// ```
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vderivative, Dual};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(t: S, p: &[f64]) -> V {
-///     let a = S::new(p[0]);
-///     let b = S::new(p[1]);
-///     let c = S::new(p[2]);
-///     let d = S::new(p[3]);
+/// fn f<R: RealField, V: Vector<R>>(t: R, p: &[f64]) -> V {
+///     let a = R::from(p[0]);
+///     let b = R::from(p[1]);
+///     let c = R::from(p[2]);
+///     let d = R::from(p[3]);
 ///     V::from_slice(&[a * t.powi(2) + b, c * t.exp() + d])
 /// }
 ///
@@ -152,7 +155,7 @@
 /// Use a custom parameter struct instead of `f64` values.
 ///
 /// ```
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vderivative, Dual};
@@ -165,11 +168,11 @@
 /// }
 ///
 /// // Define the function, f(t).
-/// fn f<S: Scalar, V: Vector<S>>(t: S, p: &Data) -> V {
-///     let a = S::new(p.a);
-///     let b = S::new(p.b);
-///     let c = S::new(p.c);
-///     let d = S::new(p.d);
+/// fn f<R: RealField, V: Vector<R>>(t: R, p: &Data) -> V {
+///     let a = R::from(p.a);
+///     let b = R::from(p.b);
+///     let c = R::from(p.c);
+///     let d = R::from(p.d);
 ///     V::from_slice(&[a * t.powi(2) + b, c * t.exp() + d])
 /// }
 ///
@@ -217,8 +220,8 @@ macro_rules! get_vderivative {
         /// Derivative of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝᵐ`
-        fn $func_name<S: Scalar, V: Vector<S>>(value: S, p: &$param_type) -> V::Vectorf64 {
-            let temp_value = Dual::new(value.to_f64().unwrap(), 1.0);
+        fn $func_name<R: RealField, V: Vector<R>>(value: R, p: &$param_type) -> V::Vectorf64 {
+            let temp_value = Dual::new(value.into(), 1.0);
 
             let f_x0: V::VectorT<Dual> = $f(temp_value, p);
 
@@ -234,12 +237,12 @@ macro_rules! get_vderivative {
 #[cfg(test)]
 mod tests {
     use crate::Dual;
-    use linalg_traits::{Scalar, Vector};
+    use linalg_traits::{RealField, Vector};
     use numtest::*;
 
     #[test]
     fn test_vderivative_1() {
-        fn f<S: Scalar, V: Vector<S>>(x: S, _p: &[f64]) -> V {
+        fn f<R: RealField, V: Vector<R>>(x: R, _p: &[f64]) -> V {
             V::from_slice(&[x.sin(), x.cos()])
         }
         let x0 = 2.0;
@@ -252,11 +255,11 @@ mod tests {
     fn test_vderivative_2() {
         // Function to take the derivative of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(x: S, p: &[f64]) -> V {
-            let a = S::new(p[0]);
-            let b = S::new(p[1]);
-            let c = S::new(p[2]);
-            let d = S::new(p[3]);
+        fn f<R: RealField, V: Vector<R>>(x: R, p: &[f64]) -> V {
+            let a = R::from(p[0]);
+            let b = R::from(p[1]);
+            let c = R::from(p[2]);
+            let d = R::from(p[3]);
             V::from_slice(&[a * (b * x).sin(), c * (d * x).cos()])
         }
 
@@ -298,11 +301,11 @@ mod tests {
 
         // Function to take the derivative of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(t: S, p: &Data) -> V {
-            let a = S::new(p.a);
-            let b = S::new(p.b);
-            let c = S::new(p.c);
-            let d = S::new(p.d);
+        fn f<R: RealField, V: Vector<R>>(t: R, p: &Data) -> V {
+            let a = R::from(p.a);
+            let b = R::from(p.b);
+            let c = R::from(p.c);
+            let d = R::from(p.d);
             V::from_slice(&[a * t.powi(2) + b, c * t.exp() + d])
         }
 

@@ -15,7 +15,7 @@
 /// The multivariate, vector-valued function `f` must have the following function signature:
 ///
 /// ```ignore
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
 ///     // place function contents here
 /// }
 /// ```
@@ -73,16 +73,16 @@
 /// #### Using standard vectors
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+/// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
 ///     V::DVectorT::from_slice(&[
 ///         x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3),
-///         x[0].powi(3) + x[1].powi(4) - S::new(3.0) * x[0].powi(2) * x[1].powi(2),
+///         x[0].powi(3) + x[1].powi(4) - 3.0 * x[0].powi(2) * x[1].powi(2),
 ///     ])
 /// }
 ///
@@ -124,18 +124,20 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::{Col, Mat as FMat};
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SMatrix, SVector};
 /// use ndarray::{array, Array1, Array2};
 ///
 /// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+/// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
 ///     V::DVectorT::from_slice(&[
 ///         x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3),
-///         x[0].powi(3) + x[1].powi(4) - S::new(3.0) * x[0].powi(2) * x[1].powi(2),
+///         x[0].powi(3) + x[1].powi(4) - 3.0 * x[0].powi(2) * x[1].powi(2),
 ///     ])
 /// }
 ///
@@ -161,6 +163,7 @@
 /// // faer::Col
 /// let x0: Col<f64> = Col::from_slice(&[5.0, 8.0]);
 /// let hess_eval: Vec<FMat<f64>> = hess(&x0, &p);
+/// # }
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -172,17 +175,17 @@
 /// where $a$, $b$, $c$, and $d$ are runtime parameters.
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
-///     let a = S::new(p[0]);
-///     let b = S::new(p[1]);
-///     let c = S::new(p[2]);
-///     let d = S::new(p[3]);
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
+///     let a = R::from(p[0]);
+///     let b = R::from(p[1]);
+///     let c = R::from(p[2]);
+///     let d = R::from(p[3]);
 ///     V::DVectorT::from_slice(&[
 ///         a * x[0].powi(2) * x[1] + b * x[1].powi(2),
 ///         c * x[0] * x[1] + d * x[0].powi(2),
@@ -224,7 +227,7 @@
 /// Use a custom parameter struct instead of `f64` values.
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
@@ -237,11 +240,11 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
-///     let a = S::new(p.a);
-///     let b = S::new(p.b);
-///     let c = S::new(p.c);
-///     let d = S::new(p.d);
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &Data) -> V::DVectorT<R> {
+///     let a = R::from(p.a);
+///     let b = R::from(p.b);
+///     let c = R::from(p.c);
+///     let d = R::from(p.d);
 ///     V::DVectorT::from_slice(&[
 ///         a * x[0].powi(2) * x[1] + b * x[1].powi(2),
 ///         c * x[0] * x[1] + d * x[0].powi(2),
@@ -303,10 +306,10 @@ macro_rules! get_vhessian {
         ///
         /// Returns a vector of length `m`, where each element is the Hessian matrix
         /// `Hᵢ(x₀) = (∂²fᵢ/∂x²)|ₓ₌ₓ₀ ∈ ℝⁿˣⁿ` for the i-th component of `f`.
-        fn $func_name<S, V>(x0: &V, p: &$param_type) -> Vec<V::DMatrixMxNf64>
+        fn $func_name<R, V>(x0: &V, p: &$param_type) -> Vec<V::DMatrixMxNf64>
         where
-            S: Scalar,
-            V: Vector<S>,
+            R: RealField,
+            V: Vector<R>,
         {
             // Promote the evaluation point to a vector of hyper-dual numbers.
             let x0_hyper_dual = x0.clone().to_hyper_dual_vector();
@@ -373,15 +376,17 @@ macro_rules! get_vhessian {
 #[cfg(test)]
 mod tests {
     use crate::{HyperDual, HyperDualVector};
-    use linalg_traits::{Mat, Matrix, Scalar, Vector};
+    use linalg_traits::{Mat, Matrix, RealField, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SMatrix, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2, array};
     use numtest::*;
 
     #[test]
     fn test_vhessian_1() {
         // Function to take the Hessian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(3)])
         }
 
@@ -406,9 +411,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vhessian_2() {
         // Function to take the Hessian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(2) + x[1].powi(3)])
         }
 
@@ -440,9 +446,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_vhessian_3() {
         // Function to take the Hessian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3)])
         }
 
@@ -478,12 +485,13 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vhessian_4() {
         // Function to take the Hessian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[
                 x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3),
-                x[0].powi(3) + x[1].powi(4) - S::new(3.0) * x[0].powi(2) * x[1].powi(2),
+                x[0].powi(3) + x[1].powi(4) - 3.0 * x[0].powi(2) * x[1].powi(2),
             ])
         }
 
@@ -533,14 +541,15 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vhessian_5() {
         // Function to take the Hessian of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
-            let a = S::new(p[0]);
-            let b = S::new(p[1]);
-            let c = S::new(p[2]);
-            let d = S::new(p[3]);
+        fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
+            let a = R::from(p[0]);
+            let b = R::from(p[1]);
+            let c = R::from(p[2]);
+            let d = R::from(p[3]);
             V::DVectorT::from_slice(&[
                 a * x[0].powi(2) * x[1] + b * x[1].powi(2),
                 c * x[0] * x[1] + d * x[0].powi(2),
@@ -593,11 +602,11 @@ mod tests {
 
         // Function to take the Hessian of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
-            let a = S::new(p.a);
-            let b = S::new(p.b);
-            let c = S::new(p.c);
-            let d = S::new(p.d);
+        fn f<R: RealField, V: Vector<R>>(x: &V, p: &Data) -> V::DVectorT<R> {
+            let a = R::from(p.a);
+            let b = R::from(p.b);
+            let c = R::from(p.c);
+            let d = R::from(p.d);
             V::DVectorT::from_slice(&[
                 a * x[0].powi(2) * x[1] + b * x[1].powi(2),
                 c * x[0] * x[1] + d * x[0].powi(2),

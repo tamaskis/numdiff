@@ -58,6 +58,8 @@ use linalg_traits::Vector;
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::Col;
 /// use linalg_traits::Vector;  // to provide from_slice method for faer::Col
 /// use nalgebra::{dvector, DVector, SVector};
@@ -87,6 +89,7 @@ use linalg_traits::Vector;
 /// let f_col = |t: f64| Col::from_slice(&[t.sin(), t.cos()]);
 /// let df_col: Col<f64> = vderivative(&f_col, 1.0, None);
 /// assert_arrays_equal_to_decimal!(df_col.as_slice(), df_true, 8);
+/// # }
 /// ```
 ///
 /// #### Modifying the relative step size

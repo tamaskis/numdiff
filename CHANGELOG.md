@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0
+
+1. Updated `linalg-traits` dependency from `0.16.0` to `0.17.0`.
+1. Updated `faer` dev dependency from `0.24.0` to `0.24.4`.
+1. Updated `nalgebra` dev dependency from `0.34.1` to `0.35.0`.
+
 ## 0.8.0
 
 1. Updated `linalg-traits` dependency from `0.15.0` to `0.16.0`.

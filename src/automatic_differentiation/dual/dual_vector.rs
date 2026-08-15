@@ -23,7 +23,7 @@ where
     fn to_dual_vector(self) -> V::VectorT<Dual> {
         let mut vec_dual = V::VectorT::new_with_length(self.len());
         for i in 0..self.len() {
-            vec_dual.vset(i, Dual::from_real(self.vget(i).to_f64().unwrap()));
+            vec_dual[i] = Dual::from_real(self[i].to_f64().unwrap());
         }
         vec_dual
     }

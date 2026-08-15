@@ -81,8 +81,8 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x.vget(0).powi(5) * x.vget(1) + x.vget(0) * x.vget(1).sin().powi(3),
-///         x.vget(0).powi(3) + x.vget(1).powi(4) - S::new(3.0) * x.vget(0).powi(2) * x.vget(1).powi(2),
+///         x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3),
+///         x[0].powi(3) + x[1].powi(4) - S::new(3.0) * x[0].powi(2) * x[1].powi(2),
 ///     ])
 /// }
 ///
@@ -124,7 +124,7 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat;
+/// use faer::{Col, Mat as FMat};
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SMatrix, SVector};
 /// use ndarray::{array, Array1, Array2};
@@ -134,8 +134,8 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x.vget(0).powi(5) * x.vget(1) + x.vget(0) * x.vget(1).sin().powi(3),
-///         x.vget(0).powi(3) + x.vget(1).powi(4) - S::new(3.0) * x.vget(0).powi(2) * x.vget(1).powi(2),
+///         x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3),
+///         x[0].powi(3) + x[1].powi(4) - S::new(3.0) * x[0].powi(2) * x[1].powi(2),
 ///     ])
 /// }
 ///
@@ -158,9 +158,9 @@
 /// let x0: Array1<f64> = array![5.0, 8.0];
 /// let hess_eval: Vec<Array2<f64>> = hess(&x0, &p);
 ///
-/// // faer::Mat
-/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
-/// let hess_eval: Vec<Mat<f64>> = hess(&x0, &p);
+/// // faer::Col
+/// let x0: Col<f64> = Col::from_slice(&[5.0, 8.0]);
+/// let hess_eval: Vec<FMat<f64>> = hess(&x0, &p);
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -184,8 +184,8 @@
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
 ///     V::DVectorT::from_slice(&[
-///         a * x.vget(0).powi(2) * x.vget(1) + b * x.vget(1).powi(2),
-///         c * x.vget(0) * x.vget(1) + d * x.vget(0).powi(2),
+///         a * x[0].powi(2) * x[1] + b * x[1].powi(2),
+///         c * x[0] * x[1] + d * x[0].powi(2),
 ///     ])
 /// }
 ///
@@ -243,8 +243,8 @@
 ///     let c = S::new(p.c);
 ///     let d = S::new(p.d);
 ///     V::DVectorT::from_slice(&[
-///         a * x.vget(0).powi(2) * x.vget(1) + b * x.vget(1).powi(2),
-///         c * x.vget(0) * x.vget(1) + d * x.vget(0).powi(2),
+///         a * x[0].powi(2) * x[1] + b * x[1].powi(2),
+///         c * x[0] * x[1] + d * x[0].powi(2),
 ///     ])
 /// }
 ///
@@ -334,17 +334,17 @@ macro_rules! get_vhessian {
                     // Diagonal element (∂²f/∂xᵢ²).
                     if i == j {
                         // Set both ε₁ and ε₂ coefficients for variable i to 1.0.
-                        let original = x_perturbed.vget(i);
-                        x_perturbed.vset(i, HyperDual::new(original.get_a(), 1.0, 1.0, 0.0));
+                        let original = x_perturbed[i];
+                        x_perturbed[i] = HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
                     }
                     // Off-diagonal element (∂²f/∂xᵢ∂xⱼ).
                     else {
                         // Set ε₁ coefficient for variable i and ε₂ coefficient for variable j to
                         // 1.0.
-                        let original_i = x_perturbed.vget(i);
-                        let original_j = x_perturbed.vget(j);
-                        x_perturbed.vset(i, HyperDual::new(original_i.get_a(), 1.0, 0.0, 0.0));
-                        x_perturbed.vset(j, HyperDual::new(original_j.get_a(), 0.0, 1.0, 0.0));
+                        let original_i = x_perturbed[i];
+                        let original_j = x_perturbed[j];
+                        x_perturbed[i] = HyperDual::new(original_i.get_a(), 1.0, 0.0, 0.0);
+                        x_perturbed[j] = HyperDual::new(original_j.get_a(), 0.0, 1.0, 0.0);
                     }
 
                     // Evaluate the function at the perturbed point.
@@ -352,7 +352,7 @@ macro_rules! get_vhessian {
 
                     // Extract the second-order derivatives for each component and store them.
                     for k in 0..m {
-                        let f_k = f_result.vget(k);
+                        let f_k = f_result[k];
 
                         // Extract the second-order derivative from the hyper-dual result.
                         let second_derivative = f_k.get_d();
@@ -382,7 +382,7 @@ mod tests {
     fn test_vhessian_1() {
         // Function to take the Hessian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(3)])
         }
 
         // Evaluation point.
@@ -409,7 +409,7 @@ mod tests {
     fn test_vhessian_2() {
         // Function to take the Hessian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(2) + x.vget(1).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(2) + x[1].powi(3)])
         }
 
         // Evaluation point.
@@ -443,9 +443,7 @@ mod tests {
     fn test_vhessian_3() {
         // Function to take the Hessian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[
-                x.vget(0).powi(5) * x.vget(1) + x.vget(0) * x.vget(1).sin().powi(3)
-            ])
+            V::DVectorT::from_slice(&[x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3)])
         }
 
         // Evaluation point.
@@ -484,9 +482,8 @@ mod tests {
         // Function to take the Hessian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
-                x.vget(0).powi(5) * x.vget(1) + x.vget(0) * x.vget(1).sin().powi(3),
-                x.vget(0).powi(3) + x.vget(1).powi(4)
-                    - S::new(3.0) * x.vget(0).powi(2) * x.vget(1).powi(2),
+                x[0].powi(5) * x[1] + x[0] * x[1].sin().powi(3),
+                x[0].powi(3) + x[1].powi(4) - S::new(3.0) * x[0].powi(2) * x[1].powi(2),
             ])
         }
 
@@ -545,8 +542,8 @@ mod tests {
             let c = S::new(p[2]);
             let d = S::new(p[3]);
             V::DVectorT::from_slice(&[
-                a * x.vget(0).powi(2) * x.vget(1) + b * x.vget(1).powi(2),
-                c * x.vget(0) * x.vget(1) + d * x.vget(0).powi(2),
+                a * x[0].powi(2) * x[1] + b * x[1].powi(2),
+                c * x[0] * x[1] + d * x[0].powi(2),
             ])
         }
 
@@ -602,8 +599,8 @@ mod tests {
             let c = S::new(p.c);
             let d = S::new(p.d);
             V::DVectorT::from_slice(&[
-                a * x.vget(0).powi(2) * x.vget(1) + b * x.vget(1).powi(2),
-                c * x.vget(0) * x.vget(1) + d * x.vget(0).powi(2),
+                a * x[0].powi(2) * x[1] + b * x[1].powi(2),
+                c * x[0] * x[1] + d * x[0].powi(2),
             ])
         }
 

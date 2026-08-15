@@ -44,7 +44,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
+///     x[0].powi(5) + x[1].sin().powi(3)
 /// }
 ///
 /// // Define the evaluation point.
@@ -80,7 +80,7 @@
 /// as long as they implement the `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat;
+/// use faer::Col;
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
@@ -90,7 +90,7 @@
 ///
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-///     x.vget(0).powi(5) + x.vget(1).sin().powi(3)
+///     x[0].powi(5) + x[1].sin().powi(3)
 /// }
 ///
 /// // Parameter vector (empty for this example).
@@ -115,9 +115,9 @@
 /// let v: Array1<f64> = array![10.0, 20.0];
 /// let df_v_eval: f64 = df_v(&x0, &v, &p);
 ///
-/// // faer::Mat
-/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 8.0]);
-/// let v: Mat<f64> = Mat::from_slice(&[10.0, 20.0]);
+/// // faer::Col
+/// let x0: Col<f64> = Col::from_slice(&[5.0, 8.0]);
+/// let v: Col<f64> = Col::from_slice(&[10.0, 20.0]);
 /// let df_v_eval: f64 = df_v(&x0, &v, &p);
 /// ```
 ///
@@ -145,10 +145,10 @@
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
 ///     let e = S::new(p[4]);
-///     a * x.vget(0).powi(2)
-///         + b * x.vget(1).powi(2)
-///         + c * x.vget(0) * x.vget(1)
-///         + d * (e * x.vget(0)).exp()
+///     a * x[0].powi(2)
+///         + b * x[1].powi(2)
+///         + c * x[0] * x[1]
+///         + d * (e * x[0]).exp()
 /// }
 ///
 /// // Parameter vector.
@@ -205,10 +205,10 @@
 ///     let c = S::new(p.c);
 ///     let d = S::new(p.d);
 ///     let e = S::new(p.e);
-///     a * x.vget(0).powi(2)
-///         + b * x.vget(1).powi(2)
-///         + c * x.vget(0) * x.vget(1)
-///         + d * (e * x.vget(0)).exp()
+///     a * x[0].powi(2)
+///         + b * x[1].powi(2)
+///         + c * x[0] * x[1]
+///         + d * (e * x[0]).exp()
 /// }
 ///
 /// // Runtime parameter struct.
@@ -296,7 +296,7 @@ mod tests {
     fn test_directional_derivative_1() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(2)
+            x[0].powi(2)
         }
 
         // Evaluation point.
@@ -326,7 +326,7 @@ mod tests {
     fn test_directional_derivative_2() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(2) + x.vget(1).powi(3)
+            x[0].powi(2) + x[1].powi(3)
         }
 
         // Evaluation point.
@@ -358,7 +358,7 @@ mod tests {
     fn test_directional_derivative_3() {
         // Function to find the directional derivative of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> S {
-            x.vget(0).powi(5) + x.vget(1).sin().powi(3)
+            x[0].powi(5) + x[1].sin().powi(3)
         }
 
         // Evaluation point.
@@ -395,7 +395,7 @@ mod tests {
             let b = S::new(p[1]);
             let c = S::new(p[2]);
             let d = S::new(p[3]);
-            a * (b * x.vget(0)).sin() + c * (d * x.vget(1)).cos()
+            a * (b * x[0]).sin() + c * (d * x[1]).cos()
         }
 
         // Parameter vector.
@@ -443,10 +443,7 @@ mod tests {
             let c = S::new(p.c);
             let d = S::new(p.d);
             let e = S::new(p.e);
-            a * x.vget(0).powi(2)
-                + b * x.vget(1).powi(2)
-                + c * x.vget(0) * x.vget(1)
-                + d * (e * x.vget(0)).exp()
+            a * x[0].powi(2) + b * x[1].powi(2) + c * x[0] * x[1] + d * (e * x[0]).exp()
         }
 
         // Runtime parameter struct.

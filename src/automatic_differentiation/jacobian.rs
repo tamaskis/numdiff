@@ -85,10 +85,10 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x.vget(0),
-///         x.vget(2) * S::new(5.0),
-///         x.vget(1).powi(2) * S::new(4.0) - x.vget(2) * S::new(2.0),
-///         x.vget(2) * x.vget(0).sin(),
+///         x[0],
+///         x[2] * S::new(5.0),
+///         x[1].powi(2) * S::new(4.0) - x[2] * S::new(2.0),
+///         x[2] * x[0].sin(),
 ///     ])
 /// }
 ///
@@ -136,7 +136,7 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
-/// use faer::Mat;
+/// use faer::{Col, Mat as FMat};
 /// use linalg_traits::{Scalar, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SVector};
 /// use ndarray::{array, Array1, Array2};
@@ -146,10 +146,10 @@
 /// // Define the function, f(x).
 /// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
 ///     V::DVectorT::from_slice(&[
-///         x.vget(0),
-///         x.vget(2) * 5.0,
-///         x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
-///         x.vget(2) * x.vget(0).sin(),
+///         x[0],
+///         x[2] * 5.0,
+///         x[1].powi(2) * 4.0 - x[2] * 2.0,
+///         x[2] * x[0].sin(),
 ///     ])
 /// }
 ///
@@ -172,9 +172,9 @@
 /// let x0: Array1<f64> = array![5.0, 6.0, 7.0];
 /// let jac_eval: Array2<f64> = jac(&x0, &p);
 ///
-/// // faer::Mat
-/// let x0: Mat<f64> = Mat::from_slice(&[5.0, 6.0, 7.0]);
-/// let jac_eval: Mat<f64> = jac(&x0, &p);
+/// // faer::Col
+/// let x0: Col<f64> = Col::from_slice(&[5.0, 6.0, 7.0]);
+/// let jac_eval: FMat<f64> = jac(&x0, &p);
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -213,8 +213,8 @@
 ///     let c = S::new(p[2]);
 ///     let d = S::new(p[3]);
 ///     V::DVectorT::from_slice(&[
-///         a * x.vget(0).powi(2) + b * x.vget(1),
-///         c * x.vget(0) + d * x.vget(1).powi(2)
+///         a * x[0].powi(2) + b * x[1],
+///         c * x[0] + d * x[1].powi(2)
 ///     ])
 /// }
 ///
@@ -268,8 +268,8 @@
 ///     let c = S::new(p.c);
 ///     let d = S::new(p.d);
 ///     V::DVectorT::from_slice(&[
-///         a * x.vget(0).powi(2) + b * x.vget(1),
-///         c * x.vget(0) + d * x.vget(1).powi(2)
+///         a * x[0].powi(2) + b * x[1],
+///         c * x[0] + d * x[1].powi(2)
 ///     ])
 /// }
 ///
@@ -340,16 +340,16 @@ macro_rules! get_jacobian {
             let mut f_x0k;
 
             // Original value of the evaluation point in the 0th dual direction.
-            x0k = x0_dual.vget(0);
+            x0k = x0_dual[0];
 
             // Take a unit step forward in the 0th dual direction.
-            x0_dual.vset(0, Dual::new(x0k.get_real(), 1.0));
+            x0_dual[0] = Dual::new(x0k.get_real(), 1.0);
 
             // Evaluate the function at the evaluation point perturbed in the 0th dual direction.
             f_x0k = $f(&x0_dual, p);
 
             // Reset the evaluation point.
-            x0_dual.vset(0, x0k);
+            x0_dual[0] = x0k;
 
             // Determine the size of the Jacobian.
             let m = f_x0k.len();
@@ -361,28 +361,28 @@ macro_rules! get_jacobian {
             // Store the partial derivative of f with respect to x₀ in the 0th column of the
             // Jacobian.
             for i in 0..m {
-                jac[(i, 0)] = f_x0k.vget(i).get_dual();
+                jac[(i, 0)] = f_x0k[i].get_dual();
             }
 
             // Evaluate the remaining columns of the Jacobian.
             for k in 1..n {
                 // Original value of the evaluation point in the kth dual direction.
-                x0k = x0_dual.vget(k);
+                x0k = x0_dual[k];
 
                 // Take a unit step forward in the kth dual direction.
-                x0_dual.vset(k, Dual::new(x0k.get_real(), 1.0));
+                x0_dual[k] = Dual::new(x0k.get_real(), 1.0);
 
                 // Evaluate the function at the evaluation point perturbed in the kth dual
                 // direction.
                 f_x0k = $f(&x0_dual, p);
 
                 // Reset the evaluation point.
-                x0_dual.vset(k, x0k);
+                x0_dual[k] = x0k;
 
                 // Store the partial derivative of f with respect to xₖ in the kth column of the
                 // Jacobian.
                 for i in 0..m {
-                    jac[(i, k)] = f_x0k.vget(i).get_dual();
+                    jac[(i, k)] = f_x0k[i].get_dual();
                 }
             }
 
@@ -402,7 +402,7 @@ mod tests {
     fn test_jacobian_1() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(2)])
+            V::DVectorT::from_slice(&[x[0].powi(2)])
         }
 
         // Evaluation point.
@@ -429,7 +429,7 @@ mod tests {
     fn test_jacobian_2() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(2), x.vget(0).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(2), x[0].powi(3)])
         }
 
         // Evaluation point.
@@ -458,7 +458,7 @@ mod tests {
     fn test_jacobian_3() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(2) + x.vget(1).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(2) + x[1].powi(3)])
         }
 
         // Evaluation point.
@@ -487,7 +487,7 @@ mod tests {
     fn test_jacobian_4() {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
-            V::DVectorT::from_slice(&[x.vget(0).powi(2), x.vget(1).powi(3)])
+            V::DVectorT::from_slice(&[x[0].powi(2), x[1].powi(3)])
         }
 
         // Evaluation point.
@@ -517,10 +517,10 @@ mod tests {
         // Function to take the Jacobian of.
         fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
             V::DVectorT::from_slice(&[
-                x.vget(0),
-                x.vget(2) * 5.0,
-                x.vget(1).powi(2) * 4.0 - x.vget(2) * 2.0,
-                x.vget(2) * x.vget(0).sin(),
+                x[0],
+                x[2] * 5.0,
+                x[1].powi(2) * 4.0 - x[2] * 2.0,
+                x[2] * x[0].sin(),
             ])
         }
 
@@ -572,10 +572,7 @@ mod tests {
             let b = S::new(p[1]);
             let c = S::new(p[2]);
             let d = S::new(p[3]);
-            V::DVectorT::from_slice(&[
-                a * (b * x.vget(0)).sin(),
-                c * x.vget(0) * x.vget(1) + d * x.vget(1).cos(),
-            ])
+            V::DVectorT::from_slice(&[a * (b * x[0]).sin(), c * x[0] * x[1] + d * x[1].cos()])
         }
 
         // Parameter vector.
@@ -625,10 +622,7 @@ mod tests {
             let b = S::new(p.b);
             let c = S::new(p.c);
             let d = S::new(p.d);
-            V::DVectorT::from_slice(&[
-                a * x.vget(0).powi(2) + b * x.vget(1),
-                c * x.vget(0) + d * x.vget(1).powi(2),
-            ])
+            V::DVectorT::from_slice(&[a * x[0].powi(2) + b * x[1], c * x[0] + d * x[1].powi(2)])
         }
 
         // Runtime parameter struct.

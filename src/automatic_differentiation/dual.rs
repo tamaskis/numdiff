@@ -12,5 +12,7 @@ pub(crate) mod num_ops_impl;
 pub(crate) mod real_field_impl;
 #[cfg(feature = "faer")]
 pub(crate) mod ref_ops_impl;
+#[cfg(feature = "ndarray")]
+pub(crate) mod scalar_operand_impl;
 #[cfg(feature = "trig")]
 pub(crate) mod trig_impl;

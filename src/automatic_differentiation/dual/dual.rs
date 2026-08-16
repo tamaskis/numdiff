@@ -1,5 +1,3 @@
-#[cfg(feature = "ndarray")]
-use ndarray::ScalarOperand;
 use num_traits::ToPrimitive;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign};
 
@@ -329,22 +327,6 @@ impl Rem<Dual> for f64 {
         Dual::new(self % rhs.real, -(self / rhs.real).floor() * rhs.dual)
     }
 }
-
-// ---------------------------------------------
-// Implementing ndarray::ScalarOperand for Dual.
-// ---------------------------------------------
-// NOTE: This is required for implementing linalg_traits::Scalar.
-
-#[cfg(feature = "ndarray")]
-impl ScalarOperand for Dual {}
-
-// // ---------------------------------------------
-// // Implementing ndarray::LinalgScalar for Dual.
-// // ---------------------------------------------
-// // NOTE: This is required for implementing linalg_traits::Scalar.
-
-// #[cfg(feature = "ndarray")]
-// impl ndarray::LinalgScalar for Dual {}
 
 // ------------------------
 // Conversions to/from f64.

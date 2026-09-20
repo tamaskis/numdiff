@@ -1,5 +1,5 @@
 // Module declarations.
-pub(crate) mod base;
+pub(super) mod base;
 #[allow(clippy::module_inception)]
 pub(crate) mod hyper_dual;
 pub(crate) mod hyper_dual_vector;

@@ -146,8 +146,9 @@
 //!   `DualNum` trait instead of a more generic-sounding `RealField`, and is only compatible with
 //!   `nalgebra` types.
 //! * [`autodiff`](https://github.com/elrnv/autodiff) — a solid forward-mode AD crate, but centered
-//!   on custom types such as [`FT<T>`](https://docs.rs/autodiff/latest/autodiff/forward_autodiff/type.FT.html)
-//!   instead of a generic scalar interface.
+//!   on custom types such as
+//!   [`FT<T>`](https://docs.rs/autodiff/latest/autodiff/forward_autodiff/type.FT.html) instead of a
+//!   generic scalar interface.
 //! * [`autodj`](https://docs.rs/autodj/latest/autodj/) — works through custom AD types, but writing
 //!   autodifferentiable mathematical functions is more cumbersome, especially for multivariate
 //!   cases.
@@ -244,7 +245,7 @@
 )]
 
 // Module declarations.
-pub(crate) mod automatic_differentiation;
+mod automatic_differentiation;
 pub mod central_difference;
 pub mod constants;
 pub mod forward_difference;

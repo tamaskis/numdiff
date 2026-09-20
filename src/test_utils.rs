@@ -1,4 +1,4 @@
-use crate::automatic_differentiation::hyper_dual::hyper_dual::HyperDual;
+use crate::HyperDual;
 use linalg_traits::RealField;
 use numtest::*;
 

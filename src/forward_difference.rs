@@ -1,15 +1,15 @@
 //! Forward difference approximations.
 
 // Module declarations.
-pub(crate) mod derivative;
-pub(crate) mod derivative2;
-pub(crate) mod directional_derivative;
-pub(crate) mod gradient;
-pub(crate) mod hessian;
-pub(crate) mod jacobian;
-pub(crate) mod mixed_partial_derivative2;
-pub(crate) mod partial_derivative;
-pub(crate) mod partial_derivative2;
+mod derivative;
+mod derivative2;
+mod directional_derivative;
+mod gradient;
+mod hessian;
+mod jacobian;
+mod mixed_partial_derivative2;
+mod partial_derivative;
+mod partial_derivative2;
 
 // Re-exports.
 pub use derivative::scalar_valued::sderivative;

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.2
+
+1. Tweaked some crate configurations.
+
 ## 0.11.1
 
 1. Importing `numdiff::Dual`, `numdiff:HyperDual`, `numdiff:DualVector`, and `numdiff:HyperDualVector` is no longer required when using the automatic differentiation macros.

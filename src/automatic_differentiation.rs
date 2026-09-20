@@ -1,14 +1,14 @@
 //! Forward-mode automatic differentiation.
 
 // Module declarations.
-pub(crate) mod derivative;
-pub(crate) mod derivative2;
-pub(crate) mod directional_derivative;
+pub(super) mod derivative;
+pub(super) mod derivative2;
+pub(super) mod directional_derivative;
 pub(crate) mod dual;
-pub(crate) mod gradient;
-pub(crate) mod hessian;
+pub(super) mod gradient;
+pub(super) mod hessian;
 pub(crate) mod hyper_dual;
-pub(crate) mod jacobian;
-pub(crate) mod mixed_partial2;
-pub(crate) mod partial2;
-pub(crate) mod partial_derivative;
+pub(super) mod jacobian;
+pub(super) mod mixed_partial2;
+pub(super) mod partial2;
+pub(super) mod partial_derivative;

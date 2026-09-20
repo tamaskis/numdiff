@@ -1,6 +1,6 @@
 [package]
 name = "numdiff"
-version = "0.11.1"
+version = "0.11.2"
 authors = ["Tamas Kis"]
 edition = "2024"
 description = "Numerical differentiation via forward-mode automatic differentiation and finite difference approximations."
@@ -14,7 +14,7 @@ exclude = [".gitignore", ".github/", ".vscode/", "Cargo.lock", "book/"]
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "src/docs-header.html" ]
-features = ["faer", "nalgebra", "ndarray"]
+all-features = true
 
 [features]
 faer = [

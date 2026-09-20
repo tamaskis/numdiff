@@ -43,7 +43,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_gradient, Dual, DualVector};
+/// use numdiff::get_gradient;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -84,7 +84,7 @@
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 ///
-/// use numdiff::{get_gradient, Dual, DualVector};
+/// use numdiff::get_gradient;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -131,7 +131,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_gradient, Dual, DualVector};
+/// use numdiff::get_gradient;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> R {
@@ -173,7 +173,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_gradient, Dual, DualVector};
+/// use numdiff::get_gradient;
 ///
 /// struct Data {
 ///     a: f64,
@@ -250,11 +250,11 @@ macro_rules! get_gradient {
             let mut g: V::Vectorf64 = x0.new_vector_f64();
 
             // Promote the evaluation point to a vector of dual numbers.
-            let mut x0_dual = x0.clone().to_dual_vector();
+            let mut x0_dual = $crate::DualVector::to_dual_vector(x0.clone());
 
             // Variable to store the original value of the evaluation point in the kth dual
             // direction.
-            let mut x0k: Dual;
+            let mut x0k: $crate::Dual;
 
             // Evaluate the gradient.
             for k in 0..x0_dual.len() {
@@ -262,7 +262,7 @@ macro_rules! get_gradient {
                 x0k = x0_dual[k];
 
                 // Take a unit step forward in the kth dual direction.
-                x0_dual[k] = Dual::new(x0k.get_real(), 1.0);
+                x0_dual[k] = $crate::Dual::new(x0k.get_real(), 1.0);
 
                 // Partial derivative of f with respect to xₖ.
                 g[k] = $f(&x0_dual, p).get_dual();
@@ -279,7 +279,6 @@ macro_rules! get_gradient {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Dual, DualVector};
     use linalg_traits::{RealField, Vector};
     #[cfg(feature = "nalgebra")]
     use nalgebra::DVector;

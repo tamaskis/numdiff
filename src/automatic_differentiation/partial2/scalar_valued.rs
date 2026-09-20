@@ -48,7 +48,7 @@
 /// ```
 /// use linalg_traits::{RealField, Vector};
 ///
-/// use numdiff::{get_spartial_derivative2, HyperDual, HyperDualVector};
+/// use numdiff::get_spartial_derivative2;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -85,7 +85,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_spartial_derivative2, HyperDual, HyperDualVector};
+/// use numdiff::get_spartial_derivative2;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> R {
@@ -141,7 +141,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_spartial_derivative2, HyperDual, HyperDualVector};
+/// use numdiff::get_spartial_derivative2;
 ///
 /// struct Data {
 ///     a: f64,
@@ -225,11 +225,11 @@ macro_rules! get_spartial_derivative2 {
             V: Vector<R>,
         {
             // Promote the evaluation point to a vector of hyper-dual numbers.
-            let mut x0_hyperdual = x0.clone().to_hyper_dual_vector();
+            let mut x0_hyperdual = $crate::HyperDualVector::to_hyper_dual_vector(x0.clone());
 
             // Take a unit step forward in both hyper-dual directions for the kth component.
             let original = x0_hyperdual[k];
-            x0_hyperdual[k] = HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
+            x0_hyperdual[k] = $crate::HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
 
             // Evaluate the function at the hyper-dual number.
             let f_x0 = $f(&x0_hyperdual, p);
@@ -242,7 +242,6 @@ macro_rules! get_spartial_derivative2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{HyperDual, HyperDualVector};
     use linalg_traits::{RealField, Vector};
     #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1
+
+1. Importing `numdiff::Dual`, `numdiff:HyperDual`, `numdiff:DualVector`, and `numdiff:HyperDualVector` is no longer required when using the automatic differentiation macros.
+
 ## 0.11.0
 
 1. Updated `linalg-traits` dependency from `0.18.0` to `0.20.0`. This required completely overhauling the `Dual` and `HyperDual` struct implementations (to implement `linalg_traits::RealField`).

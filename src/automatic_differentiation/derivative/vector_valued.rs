@@ -37,7 +37,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vderivative, Dual};
+/// use numdiff::get_vderivative;
 ///
 /// // Define the function, f(t).
 /// fn f<R: RealField, V: Vector<R>>(t: R, _p: &[f64]) -> V {
@@ -72,7 +72,7 @@
 /// use ndarray::{array, Array1};
 /// use numtest::*;
 ///
-///  use numdiff::{get_vderivative, Dual};
+///  use numdiff::get_vderivative;
 ///
 /// // Define the function, f(t).
 /// fn f<R: RealField, V: Vector<R>>(t: R, _p: &[f64]) -> V {
@@ -119,7 +119,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vderivative, Dual};
+/// use numdiff::get_vderivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(t: R, p: &[f64]) -> V {
@@ -158,7 +158,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vderivative, Dual};
+/// use numdiff::get_vderivative;
 ///
 /// struct Data {
 ///     a: f64,
@@ -221,9 +221,9 @@ macro_rules! get_vderivative {
         ///
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝᵐ`
         fn $func_name<R: RealField, V: Vector<R>>(value: R, p: &$param_type) -> V::Vectorf64 {
-            let temp_value = Dual::new(value.into(), 1.0);
+            let temp_value = $crate::Dual::new(value.into(), 1.0);
 
-            let f_x0: V::VectorT<Dual> = $f(temp_value, p);
+            let f_x0: V::VectorT<$crate::Dual> = $f(temp_value, p);
 
             let mut df = V::Vectorf64::new_with_length(f_x0.len());
             for i in 0..df.len() {
@@ -236,7 +236,6 @@ macro_rules! get_vderivative {
 
 #[cfg(test)]
 mod tests {
-    use crate::Dual;
     use linalg_traits::{RealField, Vector};
     use numtest::*;
 

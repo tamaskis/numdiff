@@ -33,7 +33,7 @@
 /// use linalg_traits::RealField;
 /// use numtest::*;
 ///
-/// use numdiff::{get_sderivative, Dual};
+/// use numdiff::get_sderivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField>(x: R, _p: &[f64]) -> R {
@@ -69,7 +69,7 @@
 /// use linalg_traits::RealField;
 /// use numtest::*;
 ///
-/// use numdiff::{get_sderivative, Dual};
+/// use numdiff::get_sderivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField>(x: R, p: &[f64]) -> R {
@@ -106,7 +106,7 @@
 /// use linalg_traits::RealField;
 /// use numtest::*;
 ///
-/// use numdiff::{get_sderivative, Dual};
+/// use numdiff::get_sderivative;
 ///
 /// struct Data {
 ///     a: f64,
@@ -168,7 +168,7 @@ macro_rules! get_sderivative {
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝ`
         fn $func_name<R: RealField>(x0: R, p: &$param_type) -> f64 {
             // Step forward in the dual direction.
-            let x0 = Dual::new(x0.into(), 1.0);
+            let x0 = $crate::Dual::new(x0.into(), 1.0);
 
             // Evaluate the function at the dual number.
             let f_x0 = $f(x0, p);
@@ -181,7 +181,7 @@ macro_rules! get_sderivative {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Dual, test_utils};
+    use crate::test_utils;
     use linalg_traits::RealField;
     use numtest::*;
     use std::f64::consts::PI;

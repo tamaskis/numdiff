@@ -76,7 +76,7 @@
 /// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
+/// use numdiff::get_vhessian;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
@@ -131,7 +131,7 @@
 /// use nalgebra::{dvector, DMatrix, DVector, SMatrix, SVector};
 /// use ndarray::{array, Array1, Array2};
 ///
-/// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
+/// use numdiff::get_vhessian;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
@@ -178,7 +178,7 @@
 /// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
+/// use numdiff::get_vhessian;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
@@ -230,7 +230,7 @@
 /// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vhessian, HyperDual, HyperDualVector};
+/// use numdiff::get_vhessian;
 ///
 /// struct Data {
 ///     a: f64,
@@ -312,7 +312,7 @@ macro_rules! get_vhessian {
             V: Vector<R>,
         {
             // Promote the evaluation point to a vector of hyper-dual numbers.
-            let x0_hyper_dual = x0.clone().to_hyper_dual_vector();
+            let x0_hyper_dual = $crate::HyperDualVector::to_hyper_dual_vector(x0.clone());
 
             // Determine the dimensions.
             let n = x0.len();
@@ -338,7 +338,7 @@ macro_rules! get_vhessian {
                     if i == j {
                         // Set both ε₁ and ε₂ coefficients for variable i to 1.0.
                         let original = x_perturbed[i];
-                        x_perturbed[i] = HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
+                        x_perturbed[i] = $crate::HyperDual::new(original.get_a(), 1.0, 1.0, 0.0);
                     }
                     // Off-diagonal element (∂²f/∂xᵢ∂xⱼ).
                     else {
@@ -346,8 +346,8 @@ macro_rules! get_vhessian {
                         // 1.0.
                         let original_i = x_perturbed[i];
                         let original_j = x_perturbed[j];
-                        x_perturbed[i] = HyperDual::new(original_i.get_a(), 1.0, 0.0, 0.0);
-                        x_perturbed[j] = HyperDual::new(original_j.get_a(), 0.0, 1.0, 0.0);
+                        x_perturbed[i] = $crate::HyperDual::new(original_i.get_a(), 1.0, 0.0, 0.0);
+                        x_perturbed[j] = $crate::HyperDual::new(original_j.get_a(), 0.0, 1.0, 0.0);
                     }
 
                     // Evaluate the function at the perturbed point.
@@ -375,7 +375,6 @@ macro_rules! get_vhessian {
 
 #[cfg(test)]
 mod tests {
-    use crate::{HyperDual, HyperDualVector};
     use linalg_traits::{Mat, Matrix, RealField, Vector};
     #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SMatrix, SVector, dvector};

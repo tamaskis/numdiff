@@ -40,7 +40,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_directional_derivative, Dual, DualVector};
+/// use numdiff::get_directional_derivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -88,7 +88,7 @@
 /// use ndarray::{array, Array1};
 /// use numtest::*;
 ///
-/// use numdiff::{get_directional_derivative, Dual, DualVector};
+/// use numdiff::get_directional_derivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -139,7 +139,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_directional_derivative, Dual, DualVector};
+/// use numdiff::get_directional_derivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> R {
@@ -191,7 +191,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_directional_derivative, Dual, DualVector};
+/// use numdiff::get_directional_derivative;
 ///
 /// struct Data {
 ///     a: f64,
@@ -276,20 +276,19 @@ macro_rules! get_directional_derivative {
             V: Vector<R>,
         {
             // Promote the evaluation point to a vector of dual numbers.
-            let x0_dual = x0.clone().to_dual_vector();
+            let x0_dual = $crate::DualVector::to_dual_vector(x0.clone());
 
             // Promote the direction of differentiation to a vector of dual numbers.
-            let v_dual = v.clone().to_dual_vector();
+            let v_dual = $crate::DualVector::to_dual_vector(v.clone());
 
             // Evaluate the directional derivative.
-            $f(&x0_dual.add(&v_dual.mul(Dual::new(0.0, 1.0))), p).get_dual()
+            $f(&x0_dual.add(&v_dual.mul($crate::Dual::new(0.0, 1.0))), p).get_dual()
         }
     };
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Dual, DualVector};
     use linalg_traits::{RealField, Vector};
     #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;

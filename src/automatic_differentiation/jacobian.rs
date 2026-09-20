@@ -80,7 +80,7 @@
 /// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_jacobian, Dual, DualVector};
+/// use numdiff::get_jacobian;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
@@ -143,7 +143,7 @@
 /// use nalgebra::{dvector, DMatrix, DVector, SVector};
 /// use ndarray::{array, Array1, Array2};
 ///
-/// use numdiff::{get_jacobian, Dual, DualVector};
+/// use numdiff::get_jacobian;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
@@ -207,7 +207,7 @@
 /// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_jacobian, Dual, DualVector};
+/// use numdiff::get_jacobian;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
@@ -255,7 +255,7 @@
 /// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_jacobian, Dual, DualVector};
+/// use numdiff::get_jacobian;
 ///
 /// struct Data {
 ///     a: f64,
@@ -332,11 +332,11 @@ macro_rules! get_jacobian {
             V: Vector<R>,
         {
             // Promote the evaluation point to a vector of dual numbers.
-            let mut x0_dual = x0.clone().to_dual_vector();
+            let mut x0_dual = $crate::DualVector::to_dual_vector(x0.clone());
 
             // Variable to store the original value of the evaluation point in the kth dual
             // direction.
-            let mut x0k: Dual;
+            let mut x0k: $crate::Dual;
 
             // Variable to store the function evaluation at the evaluation point perturbed in the
             // kth dual direction.
@@ -346,7 +346,7 @@ macro_rules! get_jacobian {
             x0k = x0_dual[0];
 
             // Take a unit step forward in the 0th dual direction.
-            x0_dual[0] = Dual::new(x0k.get_real(), 1.0);
+            x0_dual[0] = $crate::Dual::new(x0k.get_real(), 1.0);
 
             // Evaluate the function at the evaluation point perturbed in the 0th dual direction.
             f_x0k = $f(&x0_dual, p);
@@ -373,7 +373,7 @@ macro_rules! get_jacobian {
                 x0k = x0_dual[k];
 
                 // Take a unit step forward in the kth dual direction.
-                x0_dual[k] = Dual::new(x0k.get_real(), 1.0);
+                x0_dual[k] = $crate::Dual::new(x0k.get_real(), 1.0);
 
                 // Evaluate the function at the evaluation point perturbed in the kth dual
                 // direction.
@@ -396,7 +396,6 @@ macro_rules! get_jacobian {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Dual, DualVector};
     use linalg_traits::{Mat, Matrix, RealField, Vector};
     #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SVector, dvector};

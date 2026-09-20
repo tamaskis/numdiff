@@ -48,7 +48,7 @@
 /// ```
 /// use linalg_traits::{RealField, Vector};
 ///
-/// use numdiff::{get_spartial_derivative, Dual, DualVector};
+/// use numdiff::get_spartial_derivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -84,7 +84,7 @@
 /// use nalgebra::{dvector, DVector, SVector};
 /// use ndarray::{array, Array1};
 ///
-/// use numdiff::{get_spartial_derivative, Dual, DualVector};
+/// use numdiff::get_spartial_derivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> R {
@@ -132,7 +132,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_spartial_derivative, Dual, DualVector};
+/// use numdiff::get_spartial_derivative;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> R {
@@ -186,7 +186,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_spartial_derivative, Dual, DualVector};
+/// use numdiff::get_spartial_derivative;
 ///
 /// struct Data {
 ///     a: f64,
@@ -269,11 +269,11 @@ macro_rules! get_spartial_derivative {
             V: Vector<R>,
         {
             // Promote the evaluation point to a vector of dual numbers.
-            let mut x0_dual = x0.clone().to_dual_vector();
+            let mut x0_dual = $crate::DualVector::to_dual_vector(x0.clone());
 
             // Take a unit step forward in the kth dual direction.
             let original = x0_dual[k];
-            x0_dual[k] = Dual::new(original.get_real(), 1.0);
+            x0_dual[k] = $crate::Dual::new(original.get_real(), 1.0);
 
             // Evaluate the function at the dual number.
             let f_x0 = $f(&x0_dual, p);
@@ -286,7 +286,6 @@ macro_rules! get_spartial_derivative {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Dual, DualVector};
     use linalg_traits::{RealField, Vector};
     #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;

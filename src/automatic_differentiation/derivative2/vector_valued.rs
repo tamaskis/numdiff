@@ -38,7 +38,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vderivative2, HyperDual};
+/// use numdiff::get_vderivative2;
 ///
 /// // Define the function, f(t).
 /// fn f<R: RealField, V: Vector<R>>(t: R, _p: &[f64]) -> V {
@@ -73,7 +73,7 @@
 /// use ndarray::{array, Array1};
 /// use numtest::*;
 ///
-///  use numdiff::{get_vderivative2, HyperDual};
+///  use numdiff::get_vderivative2;
 ///
 /// // Define the function, f(t).
 /// fn f<R: RealField, V: Vector<R>>(t: R, _p: &[f64]) -> V {
@@ -120,7 +120,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vderivative2, HyperDual};
+/// use numdiff::get_vderivative2;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField, V: Vector<R>>(t: R, p: &[f64]) -> V {
@@ -159,7 +159,7 @@
 /// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
-/// use numdiff::{get_vderivative2, HyperDual};
+/// use numdiff::get_vderivative2;
 ///
 /// struct Data {
 ///     a: f64,
@@ -223,10 +223,10 @@ macro_rules! get_vderivative2 {
         /// `(d²f/dx²)|ₓ₌ₓ₀ ∈ ℝᵐ`
         fn $func_name<R: RealField, V: Vector<R>>(value: R, p: &$param_type) -> V::Vectorf64 {
             // Step forward in both hyper-dual directions.
-            let temp_value = HyperDual::new(value.into(), 1.0, 1.0, 0.0);
+            let temp_value = $crate::HyperDual::new(value.into(), 1.0, 1.0, 0.0);
 
             // Evaluate the function at the hyper-dual number.
-            let f_x0: V::VectorT<HyperDual> = $f(temp_value, p);
+            let f_x0: V::VectorT<$crate::HyperDual> = $f(temp_value, p);
 
             // Extract second derivatives from each component of the result.
             let mut d2f = V::Vectorf64::new_with_length(f_x0.len());
@@ -242,7 +242,6 @@ macro_rules! get_vderivative2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::HyperDual;
     use linalg_traits::{RealField, Vector};
     use numtest::*;
 

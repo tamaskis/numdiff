@@ -34,7 +34,7 @@
 /// use linalg_traits::RealField;
 /// use numtest::*;
 ///
-/// use numdiff::{get_sderivative2, HyperDual};
+/// use numdiff::get_sderivative2;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField>(x: R, _p: &[f64]) -> R {
@@ -70,7 +70,7 @@
 /// use linalg_traits::RealField;
 /// use numtest::*;
 ///
-/// use numdiff::{get_sderivative2, HyperDual};
+/// use numdiff::get_sderivative2;
 ///
 /// // Define the function, f(x).
 /// fn f<R: RealField>(x: R, p: &[f64]) -> R {
@@ -107,7 +107,7 @@
 /// use linalg_traits::RealField;
 /// use numtest::*;
 ///
-/// use numdiff::{get_sderivative2, HyperDual};
+/// use numdiff::get_sderivative2;
 ///
 /// struct Data {
 ///     a: f64,
@@ -169,7 +169,7 @@ macro_rules! get_sderivative2 {
         /// `(d²f/dx²)|ₓ₌ₓ₀ ∈ ℝ`
         fn $func_name<R: RealField>(x0: R, p: &$param_type) -> f64 {
             // Step forward in both hyper-dual directions.
-            let x0 = HyperDual::new(x0.into(), 1.0, 1.0, 0.0);
+            let x0 = $crate::HyperDual::new(x0.into(), 1.0, 1.0, 0.0);
 
             // Evaluate the function at the hyper-dual number.
             let f_x0 = $f(x0, p);
@@ -182,7 +182,7 @@ macro_rules! get_sderivative2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{HyperDual, test_utils};
+    use crate::test_utils;
     use linalg_traits::RealField;
     use numtest::*;
     use std::f64::consts::PI;

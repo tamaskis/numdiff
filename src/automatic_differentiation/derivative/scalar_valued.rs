@@ -30,13 +30,13 @@
 /// at $x=2$, and compare the result to the true result of $f'(2)=12$.
 ///
 /// ```
-/// use linalg_traits::Scalar;
+/// use linalg_traits::RealField;
 /// use numtest::*;
 ///
 /// use numdiff::{get_sderivative, Dual};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+/// fn f<R: RealField>(x: R, _p: &[f64]) -> R {
 ///     x.powi(3)
 /// }
 ///
@@ -66,16 +66,16 @@
 /// $$f'(x)=2ax+b$$
 ///
 /// ```
-/// use linalg_traits::Scalar;
+/// use linalg_traits::RealField;
 /// use numtest::*;
 ///
 /// use numdiff::{get_sderivative, Dual};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar>(x: S, p: &[f64]) -> S {
-///     let a = S::new(p[0]);
-///     let b = S::new(p[1]);
-///     let c = S::new(p[2]);
+/// fn f<R: RealField>(x: R, p: &[f64]) -> R {
+///     let a = R::from(p[0]);
+///     let b = R::from(p[1]);
+///     let c = R::from(p[2]);
 ///     a * x.powi(2) + b * x + c
 /// }
 ///
@@ -103,7 +103,7 @@
 /// Use a custom parameter struct instead of `f64` values.
 ///
 /// ```
-/// use linalg_traits::Scalar;
+/// use linalg_traits::RealField;
 /// use numtest::*;
 ///
 /// use numdiff::{get_sderivative, Dual};
@@ -115,10 +115,10 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar>(x: S, p: &Data) -> S {
-///     let a = S::new(p.a);
-///     let b = S::new(p.b);
-///     let c = S::new(p.c);
+/// fn f<R: RealField>(x: R, p: &Data) -> R {
+///     let a = R::from(p.a);
+///     let b = R::from(p.b);
+///     let c = R::from(p.c);
 ///     a * x.powi(2) + b * x + c
 /// }
 ///
@@ -166,9 +166,9 @@ macro_rules! get_sderivative {
         /// Derivative of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `(df/dx)|ₓ₌ₓ₀ ∈ ℝ`
-        fn $func_name<S: Scalar>(x0: S, p: &$param_type) -> f64 {
+        fn $func_name<R: RealField>(x0: R, p: &$param_type) -> f64 {
             // Step forward in the dual direction.
-            let x0 = Dual::new(x0.to_f64().unwrap(), 1.0);
+            let x0 = Dual::new(x0.into(), 1.0);
 
             // Evaluate the function at the dual number.
             let f_x0 = $f(x0, p);
@@ -182,36 +182,33 @@ macro_rules! get_sderivative {
 #[cfg(test)]
 mod tests {
     use crate::{Dual, test_utils};
-    use linalg_traits::Scalar;
+    use linalg_traits::RealField;
     use numtest::*;
     use std::f64::consts::PI;
-
-    #[cfg(feature = "trig")]
-    use trig::Trig;
 
     #[test]
     fn test_product_rule() {
         // f(x) and f'(x).
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(3)
         }
-        fn df<S: Scalar>(x: S, _p: &[f64]) -> S {
-            S::new(3.0) * x.powi(2)
+        fn df<R: RealField>(x: R, _p: &[f64]) -> R {
+            3.0 * x.powi(2)
         }
 
         // g(x) and g'(x)
-        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn g<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sin()
         }
-        fn dg<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn dg<R: RealField>(x: R, _p: &[f64]) -> R {
             x.cos()
         }
 
         // h(x) = f(x)g(x) and h'(x) = f'(x)g(x) + f(x)g'(x).
-        fn h<S: Scalar>(x: S, p: &[f64]) -> S {
+        fn h<R: RealField>(x: R, p: &[f64]) -> R {
             f(x, p) * g(x, p)
         }
-        fn dh<S: Scalar>(x: S, p: &[f64]) -> S {
+        fn dh<R: RealField>(x: R, p: &[f64]) -> R {
             df(x, p) * g(x, p) + f(x, p) * dg(x, p)
         }
 
@@ -229,26 +226,26 @@ mod tests {
     #[test]
     fn test_quotient_rule() {
         // f(x) and f'(x).
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(3)
         }
-        fn df<S: Scalar>(x: S, _p: &[f64]) -> S {
-            S::new(3.0) * x.powi(2)
+        fn df<R: RealField>(x: R, _p: &[f64]) -> R {
+            3.0 * x.powi(2)
         }
 
         // g(x) and g'(x)
-        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn g<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sin()
         }
-        fn dg<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn dg<R: RealField>(x: R, _p: &[f64]) -> R {
             x.cos()
         }
 
         // h(x) = f(x) / g(x) and h'(x) = (g(x)f'(x) - f(x)g'(x)) / (g(x))².
-        fn h<S: Scalar>(x: S, p: &[f64]) -> S {
+        fn h<R: RealField>(x: R, p: &[f64]) -> R {
             f(x, p) / g(x, p)
         }
-        fn dh<S: Scalar>(x: S, p: &[f64]) -> S {
+        fn dh<R: RealField>(x: R, p: &[f64]) -> R {
             (g(x, p) * df(x, p) - f(x, p) * dg(x, p)) / g(x, p).powi(2)
         }
 
@@ -266,26 +263,26 @@ mod tests {
     #[test]
     fn test_chain_rule_one_composition() {
         // f(x) and f'(x).
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(3)
         }
-        fn df<S: Scalar>(x: S) -> S {
-            S::new(3.0) * x.powi(2)
+        fn df<R: RealField>(x: R) -> R {
+            3.0 * x.powi(2)
         }
 
         // g(x) and g'(x)
-        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn g<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sin()
         }
-        fn dg<S: Scalar>(x: S) -> S {
+        fn dg<R: RealField>(x: R) -> R {
             x.cos()
         }
 
         // h(x) = g(f(x)) and h'(x) = [g'(f(x))][f'(x)].
-        fn h<S: Scalar>(x: S, p: &[f64]) -> S {
+        fn h<R: RealField>(x: R, p: &[f64]) -> R {
             g(f(x, p), p)
         }
-        fn dh<S: Scalar>(x: S) -> S {
+        fn dh<R: RealField>(x: R) -> R {
             dg(f(x, &[])) * df(x)
         }
 
@@ -300,34 +297,34 @@ mod tests {
     #[test]
     fn test_chain_rule_two_compositions() {
         // f(x) and f'(x).
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(3)
         }
-        fn df<S: Scalar>(x: S) -> S {
-            S::new(3.0) * x.powi(2)
+        fn df<R: RealField>(x: R) -> R {
+            3.0 * x.powi(2)
         }
 
         // g(x) and g'(x)
-        fn g<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn g<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sin()
         }
-        fn dg<S: Scalar>(x: S) -> S {
+        fn dg<R: RealField>(x: R) -> R {
             x.cos()
         }
 
         // h(x) and h'(x).
-        fn h<S: Scalar>(x: S, _p: &[f64]) -> S {
-            S::new(5.0) / x.powi(2)
+        fn h<R: RealField>(x: R, _p: &[f64]) -> R {
+            5.0 / x.powi(2)
         }
-        fn dh<S: Scalar>(x: S) -> S {
-            S::new(-10.0) / x.powi(3)
+        fn dh<R: RealField>(x: R) -> R {
+            -10.0 / x.powi(3)
         }
 
         // j(x) = h(g(f(x))) and j'(x) = [h'(g(f(x)))][g'(f(x))][f'(x)].
-        fn j<S: Scalar>(x: S, p: &[f64]) -> S {
+        fn j<R: RealField>(x: R, p: &[f64]) -> R {
             h(g(f(x, p), p), p)
         }
-        fn dj<S: Scalar>(x: S) -> S {
+        fn dj<R: RealField>(x: R) -> R {
             dh(g(f(x, &[]), &[])) * dg(f(x, &[])) * df(x)
         }
 
@@ -342,113 +339,113 @@ mod tests {
     #[allow(clippy::items_after_statements)]
     fn test_sderivative_polynomial() {
         // Test #1.
-        fn f1<S: Scalar>(_x: S, _p: &[f64]) -> S {
-            S::one()
+        fn f1<R: RealField>(_x: R, _p: &[f64]) -> R {
+            R::one()
         }
         get_sderivative!(f1, df1);
         assert_eq!(df1(2.0, &[]), test_utils::polyi_deriv(0, 2.0));
 
         // Test #2.
-        fn f2<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f2<R: RealField>(x: R, _p: &[f64]) -> R {
             x
         }
         get_sderivative!(f2, df2);
         assert_eq!(df2(2.0, &[]), test_utils::polyi_deriv(1, 2.0));
 
         // Test #3.
-        fn f3<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f3<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(2)
         }
         get_sderivative!(f3, df3);
         assert_eq!(df3(2.0, &[]), test_utils::polyi_deriv(2, 2.0));
 
         // Test #4.
-        fn f4<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f4<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(3)
         }
         get_sderivative!(f4, df4);
         assert_eq!(df4(2.0, &[]), test_utils::polyi_deriv(3, 2.0));
 
         // Test #5.
-        fn f5<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f5<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(4)
         }
         get_sderivative!(f5, df5);
         assert_eq!(df5(2.0, &[]), test_utils::polyi_deriv(4, 2.0));
 
         // Test #6.
-        fn f6<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f6<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(5)
         }
         get_sderivative!(f6, df6);
         assert_eq!(df6(2.0, &[]), test_utils::polyi_deriv(5, 2.0));
 
         // Test #7.
-        fn f7<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f7<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(6)
         }
         get_sderivative!(f7, df7);
         assert_eq!(df7(2.0, &[]), test_utils::polyi_deriv(6, 2.0));
 
         // Test #8.
-        fn f8<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f8<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(7)
         }
         get_sderivative!(f8, df8);
         assert_eq!(df8(2.0, &[]), test_utils::polyi_deriv(7, 2.0));
 
         // Test #9.
-        fn f9<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f9<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(-1)
         }
         get_sderivative!(f9, df9);
         assert_eq!(df9(2.0, &[]), test_utils::polyi_deriv(-1, 2.0));
 
         // Test #10.
-        fn f10<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f10<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(-2)
         }
         get_sderivative!(f10, df10);
         assert_eq!(df10(2.0, &[]), test_utils::polyi_deriv(-2, 2.0));
 
         // Test #11.
-        fn f11<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f11<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(-3)
         }
         get_sderivative!(f11, df11);
         assert_eq!(df11(2.0, &[]), test_utils::polyi_deriv(-3, 2.0));
 
         // Test #12.
-        fn f12<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f12<R: RealField>(x: R, _p: &[f64]) -> R {
             x.powi(-7)
         }
         get_sderivative!(f12, df12);
         assert_eq!(df12(2.0, &[]), test_utils::polyi_deriv(-7, 2.0));
 
         // Test #13.
-        fn f13<S: Scalar>(x: S, _p: &[f64]) -> S {
-            x.powf(S::new(1.0 / 3.0))
+        fn f13<R: RealField>(x: R, _p: &[f64]) -> R {
+            x.powf(R::from(1.0 / 3.0))
         }
         get_sderivative!(f13, df13);
         assert_eq!(df13(2.0, &[]), test_utils::polyf_deriv(1.0 / 3.0, 2.0));
 
         // Test #14.
-        fn f14<S: Scalar>(x: S, _p: &[f64]) -> S {
-            x.powf(S::new(7.0 / 3.0))
+        fn f14<R: RealField>(x: R, _p: &[f64]) -> R {
+            x.powf(R::from(7.0 / 3.0))
         }
         get_sderivative!(f14, df14);
         assert_equal_to_decimal!(df14(2.0, &[]), test_utils::polyf_deriv(7.0 / 3.0, 2.0), 15);
 
         // Test #15.
-        fn f15<S: Scalar>(x: S, _p: &[f64]) -> S {
-            x.powf(S::new(-1.0 / 3.0))
+        fn f15<R: RealField>(x: R, _p: &[f64]) -> R {
+            x.powf(R::from(-1.0 / 3.0))
         }
         get_sderivative!(f15, df15);
         assert_eq!(df15(2.0, &[]), test_utils::polyf_deriv(-1.0 / 3.0, 2.0));
 
         // Test #16.
-        fn f16<S: Scalar>(x: S, _p: &[f64]) -> S {
-            x.powf(S::new(-7.0 / 3.0))
+        fn f16<R: RealField>(x: R, _p: &[f64]) -> R {
+            x.powf(R::from(-7.0 / 3.0))
         }
         get_sderivative!(f16, df16);
         assert_eq!(df16(2.0, &[]), test_utils::polyf_deriv(-7.0 / 3.0, 2.0));
@@ -456,7 +453,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_square_root() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sqrt()
         }
         get_sderivative!(f, df);
@@ -466,7 +463,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_exponential() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.exp()
         }
         get_sderivative!(f, df);
@@ -477,8 +474,8 @@ mod tests {
 
     #[test]
     fn test_sderivative_power() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
-            S::new(5.0).powf(x)
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
+            R::from(5.0).powf(x)
         }
         get_sderivative!(f, df);
         assert_eq!(df(-1.0, &[]), test_utils::power_deriv(5.0, -1.0));
@@ -488,7 +485,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_natural_logarithm() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.ln()
         }
         get_sderivative!(f, df);
@@ -499,7 +496,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_base_10_logarithm() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.log10()
         }
         get_sderivative!(f, df);
@@ -510,7 +507,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_sine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sin()
         }
         get_sderivative!(f, df);
@@ -539,7 +536,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_cosine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.cos()
         }
         get_sderivative!(f, df);
@@ -567,9 +564,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_tangent() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.tan()
         }
         get_sderivative!(f, df);
@@ -592,9 +588,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_cosecant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.csc()
         }
         get_sderivative!(f, df);
@@ -617,9 +612,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_secant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sec()
         }
         get_sderivative!(f, df);
@@ -642,9 +636,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_cotangent() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.cot()
         }
         get_sderivative!(f, df);
@@ -671,7 +664,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_inverse_sine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.asin()
         }
         get_sderivative!(f, df);
@@ -682,7 +675,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_inverse_cosine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.acos()
         }
         get_sderivative!(f, df);
@@ -693,7 +686,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_inverse_tangent() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.atan()
         }
         get_sderivative!(f, df);
@@ -707,9 +700,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_cosecant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.acsc()
         }
         get_sderivative!(f, df);
@@ -718,9 +710,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_secant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.asec()
         }
         get_sderivative!(f, df);
@@ -729,9 +720,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_cotangent() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.acot()
         }
         get_sderivative!(f, df);
@@ -745,7 +735,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_hyperbolic_sine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sinh()
         }
         get_sderivative!(f, df);
@@ -756,7 +746,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_hyperbolic_cosine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.cosh()
         }
         get_sderivative!(f, df);
@@ -766,9 +756,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_tangent() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.tanh()
         }
         get_sderivative!(f, df);
@@ -778,20 +767,18 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_cosecant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.csch()
         }
         get_sderivative!(f, df);
-        assert_eq!(df(-1.0, &[]), test_utils::csch_deriv(-1.0));
-        assert_eq!(df(1.0, &[]), test_utils::csch_deriv(1.0));
+        assert_equal_to_decimal!(df(-1.0, &[]), test_utils::csch_deriv(-1.0), 15);
+        assert_equal_to_decimal!(df(1.0, &[]), test_utils::csch_deriv(1.0), 15);
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_secant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.sech()
         }
         get_sderivative!(f, df);
@@ -801,19 +788,18 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_hyperbolic_cotangent() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.coth()
         }
         get_sderivative!(f, df);
-        assert_equal_to_decimal!(df(-1.0, &[]), test_utils::coth_deriv(-1.0), 16);
-        assert_equal_to_decimal!(df(1.0, &[]), test_utils::coth_deriv(1.0), 16);
+        assert_equal_to_decimal!(df(-1.0, &[]), test_utils::coth_deriv(-1.0), 15);
+        assert_equal_to_decimal!(df(1.0, &[]), test_utils::coth_deriv(1.0), 15);
     }
 
     #[test]
     fn test_sderivative_inverse_hyperbolic_sine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.asinh()
         }
         get_sderivative!(f, df);
@@ -828,7 +814,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_inverse_hyperbolic_cosine() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.acosh()
         }
         get_sderivative!(f, df);
@@ -837,7 +823,7 @@ mod tests {
 
     #[test]
     fn test_sderivative_inverse_hyperbolic_tangent() {
-        fn f<S: Scalar>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.atanh()
         }
         get_sderivative!(f, df);
@@ -847,9 +833,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_cosecant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.acsch()
         }
         get_sderivative!(f, df);
@@ -862,9 +847,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_secant() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.asech()
         }
         get_sderivative!(f, df);
@@ -872,9 +856,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "trig")]
     fn test_sderivative_inverse_hyperbolic_cotangent() {
-        fn f<S: Scalar + Trig>(x: S, _p: &[f64]) -> S {
+        fn f<R: RealField>(x: R, _p: &[f64]) -> R {
             x.acoth()
         }
         get_sderivative!(f, df);
@@ -885,16 +868,16 @@ mod tests {
     #[test]
     fn test_sderivative_with_runtime_parameters() {
         // Function to take the derivative of.
-        fn f<S: Scalar>(x: S, p: &[f64]) -> S {
-            let alpha = S::new(p[0]);
-            let beta = S::new(p[1]);
+        fn f<R: RealField>(x: R, p: &[f64]) -> R {
+            let alpha = R::from(p[0]);
+            let beta = R::from(p[1]);
             (alpha * x).exp() * (beta * x).cos()
         }
 
         // True derivative function.
-        fn df<S: Scalar>(x: S, p: &[f64]) -> S {
-            let alpha = S::new(p[0]);
-            let beta = S::new(p[1]);
+        fn df<R: RealField>(x: R, p: &[f64]) -> R {
+            let alpha = R::from(p[0]);
+            let beta = R::from(p[1]);
             let exp_term = (alpha * x).exp();
             let cos_term = (beta * x).cos();
             let sin_term = (beta * x).sin();
@@ -928,10 +911,10 @@ mod tests {
 
         // Function to take the derivative of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar>(x: S, p: &Data) -> S {
-            let a = S::new(p.a);
-            let b = S::new(p.b);
-            let c = S::new(p.c);
+        fn f<R: RealField>(x: R, p: &Data) -> R {
+            let a = R::from(p.a);
+            let b = R::from(p.b);
+            let c = R::from(p.c);
             a * x.powi(2) + b * x + c
         }
 

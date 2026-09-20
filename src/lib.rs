@@ -28,6 +28,46 @@
 //!
 //! # Automatic Differentiation (Forward-Mode)
 //!
+//! This crate provides forward-mode automatic differentiation of functions that are generic over
+//! their vector and scalar types.
+//!
+//! Typing `R: linalg_traits::RealField` allows the automatic differentiation macros to substitute
+//! this crate's [`Dual`] and [`HyperDual`] types, which allow propagating 1st and 2nd-order
+//! derivative information through the computation. The resulting way functions have to be written
+//! differs mainly from a more "standard" numerical computing by requiring concrete types such as
+//! `f64` and `SVector<f64>` to be written in terms of generic types such as
+//! `R: linalg_traits::RealField` and `V: linalg_traits::Vector<R>`. It is, however, a close
+//! approximation to the standard Rust numeric style: the
+//! [`linalg_traits::RealField`](https://docs.rs/linalg-traits/latest/linalg_traits/trait.RealField.html)
+//! requires a superset of the functionality provided by common traits such as `num_traits::Float`
+//! and `nalgebra::RealField`, while additionally requiring a high degree of interoperability with
+//! `f64`. In that sense, this crate aims to stay near the ergonomics of normal Rust code without
+//! forcing a custom AD type at every call site.
+//!
+//! A major benefit of this approach is that the same function can be evaluated with an `f64`,
+//! allowing it to be used both in ordinary numerical computations and in automatic differentiation
+//! contexts. As an example, consider a function operating with conrete `f64`'s:
+//!
+//! ```rust
+//! fn f_f64(x: f64) -> f64 {
+//!     x * x.sin() + 1.0
+//! }
+//! ```
+//!
+//! To write this function in a generic way suitable for automatic differentiation:
+//!
+//! ```
+//! use linalg_traits::RealField;
+//!
+//! fn f_generic<R: RealField>(x: R) -> R {
+//!     x * x.sin() + 1.0
+//! }
+//! ```
+//!
+//! `f_generic` can be called with an `f64` just like `f_f64`, but it can also be called with a
+//! [`Dual`] or [`HyperDual`] type, which is the special sauce that allows this function to be
+//! automatically differentiated with one of the derivative macros provided by this crate.
+//!
 //! ## 1st-Order Derivatives
 //!
 //! | Derivative Type | Function Type | Macro to Generate Derivative Function |
@@ -71,56 +111,65 @@
 //! * These macros only work on functions that are generic both over the type of scalar and the type
 //!   of vector.
 //!     - Consequently, these macros do _not_ work on closures.
-//! * Constants (e.g. `5.0_f64`) need to be defined using `linalg_traits::Scalar::new` (e.g. if a
-//!   function has the generic parameter `S: Scalar`, then instead of defining a constant number
-//!   such as `5.0_f64`, we need to do `S::new(5.0)`).
-//!     - This is also the case for some functions that can take constants are arguments, such as
-//!       [`num_traits::Float::powf`].
-//! * When defining functions that operate on generic scalars (to make them compatible with
-//!   automatic differentiation), we cannot do an assignment operation such as `1.0 += x` if
-//!   `x: S` where `S: Scalar`.
+//! * Occasionally, constants (e.g. `5.0_f64`) need to be defined using `R::from` (e.g. if a
+//!   function has the generic parameter `R: RealField`, then instead of defining a constant number
+//!   such as `5.0_f64`, we need to do `5.0`).
+//!     - However, this is not always required, for example if you are doing something like
+//!       `5.0 * x` where `x: R` and `R: RealField`, then you don't have to do `5.0 * x`
+//!       because `RealField` requires that a type is interoperable with `f64`.
+//! * We cannot do assignment operations on `f64` where right hand side is an `x: R` where
+//!   `R: RealField` (e.g. `let y = 1.0; y += x;`).
+//!     - In cases like this you should do `let y = 1.0; y += x;`.
 //!
 //! ## Alternatives
 //!
-//! There are already some alternative crates in the Rust ecosystem that already implement dual
-//! numbers. Originally, I intended to implement the autodifferentiation functions in this crate
-//! using one of those other dual number implementations in the backend. However, each crate had
-//! certain shortcomings that ultimately led to me providing a custom implementation of dual numbers
-//! in this crate. The alternative crates implementing dual numbers are described below.
+//! The Rust ecosystem has many different crates and approaches for automatic differentiation. Here
+//! we summarize some of the alternatives.
 //!
-//! ##### [`num-dual`](https://docs.rs/num-dual/latest/num_dual/)
+//! ### Standard Library
 //!
-//! * This crate _can_ be used to differentiate functions of generic types that implement the
-//!   [`DualNum`](https://docs.rs/num-dual/latest/num_dual/trait.DualNum.html) trait. Since this
-//!   trait is implemented for [`f32`] and [`f64`], it would allow us to write generic functions
-//!   that can be simply evaluated using [`f64`]s, but can also be automatically differentiated if
-//!   needed.
-//! * However, there are some notable shortcomings that are described below.
-//! * The [`Dual`](https://github.com/itt-ustutt/num-dual/blob/master/src/dual.rs) struct panics in
-//!   its implementations of the following standard functions which are quite common in engineering:
-//!     - [`num_traits::Float::floor`]
-//!     - [`num_traits::Float::ceil`]
-//!     - [`num_traits::Float::round`]
-//!     - [`num_traits::Float::trunc`]
-//!     - [`num_traits::Float::fract`]
-//! * `num-dual` has a required dependency on
-//!   [`nalgebra`](https://docs.rs/nalgebra/latest/nalgebra/), which is quite a heavy dependency for
-//!   those who do not need it.
+//! The most prominent alternative nowadays is the standard library's
+//! [`std::autodiff`](https://doc.rust-lang.org/std/autodiff/index.html) module which is in
+//! `nightly` Rust.
 //!
-//! ##### [`autodj`](https://docs.rs/autodj/latest/autodj/)
+//! This module provides low-level AD capabilities, but is not yet available in stable Rust. If it
+//! were, this crate perhaps would have been written as a convenience wrapper around that
+//! lower-level API.
 //!
-//! * Can only differentiate functions written using custom types, such as
-//!   [`DualF64`](https://docs.rs/autodj/latest/autodj/solid/single/type.DualF64.html).
-//! * Multivariate functions, especially those with a dynamic number of variables, can be extremely
-//!   clunky (see
-//!   [this example](https://docs.rs/autodj/latest/autodj/index.html#dynamic-number-of-variables)).
+//! ### Forward-mode implementations
 //!
-//! ##### [`autodiff`](https://docs.rs/autodiff/latest/autodiff/)
+//! These crates are broadly similar in computational model to this one, but they tend to require a
+//! custom numeric type or library-specific expression style rather than a more generic,
+//! backend-agnostic (i.e. not tied to a specific linear algebra library such as `nalgebra`).
 //!
-//! * Can only differentiate functions written using the custom type
-//!   [`FT<T>`](https://docs.rs/autodiff/latest/autodiff/forward_autodiff/type.FT.html).
-//! * Incorrect implementation of certain functions, such as [`num_traits::Float::floor`] (see the
-//!   [source code](https://github.com/elrnv/autodiff/blob/master/src/forward_autodiff.rs)).
+//! * [`num-dual`](https://docs.rs/num-dual/latest/num_dual/) — similar to this approach, but uses a
+//!   `DualNum` trait instead of a more generic-sounding `RealField`, and is only compatible with
+//!   `nalgebra` types.
+//! * [`autodiff`](https://github.com/elrnv/autodiff) — a solid forward-mode AD crate, but centered
+//!   on custom types such as [`FT<T>`](https://docs.rs/autodiff/latest/autodiff/forward_autodiff/type.FT.html)
+//!   instead of a generic scalar interface.
+//! * [`autodj`](https://docs.rs/autodj/latest/autodj/) — works through custom AD types, but writing
+//!   autodifferentiable mathematical functions is more cumbersome, especially for multivariate
+//!   cases.
+//! * [`fwd_ad`](https://crates.io/crates/fwd_ad) — another crate using forward-mode AD, but
+//!   requires significant changes to make functions autodifferentiable.
+//! * [`kophy/autodiff`](https://github.com/kophy/autodiff) — only provides a very minimal `Dual`
+//!   number implementation, and is unpublished.
+//!
+//! ### Reverse-mode implementations
+//!
+//! All three of these libraries implement reverse-mode AD, but require users to use a significantly
+//! different syntax when writing autodifferentiable functions:
+//!
+//! * [`gad`](https://github.com/facebookresearch/gad)
+//! * [`reverse`](https://github.com/al-jshen/reverse)
+//! * [`revad`](https://github.com/Rufflewind/revad)
+//! * [`rustydiff`](https://github.com/Janko-dev/rustydiff)
+//! * [`rust-autograd`](https://github.com/raskr/rust-autograd)
+//!
+//! Note that the first four crates listed here also have not been maintained for 3+ years (some
+//! much longer), with at least one of them ([`gad`](https://github.com/facebookresearch/gad))
+//! having already been archived.
 //!
 //! # Finite Difference Methods
 //!
@@ -144,6 +193,12 @@
 //! | --------------- | ------------- | ---------------------------------- |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::shessian()`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::vhessian()`] |
+//! | 2nd derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`central_difference::sderivative2()`] |
+//! | 2nd derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`central_difference::vderivative2()`] |
+//! | 2nd partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::spartial_derivative2()`] |
+//! | 2nd partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::vpartial_derivative2()`] |
+//! | mixed 2nd partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`central_difference::mixed_spartial_derivative2()`] |
+//! | mixed 2nd partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`central_difference::mixed_vpartial_derivative2()`] |
 //!
 //! ## Forward Difference Approximations
 //!
@@ -165,6 +220,12 @@
 //! | --------------- | ------------- | ---------------------------------- |
 //! | Hessian | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::shessian()`] |
 //! | Hessian | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::vhessian()`] |
+//! | 2nd derivative | $f:\mathbb{R}\to\mathbb{R}$ | [`forward_difference::sderivative2()`] |
+//! | 2nd derivative | $\mathbf{f}:\mathbb{R}\to\mathbb{R}^{m}$ | [`forward_difference::vderivative2()`] |
+//! | 2nd partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::spartial_derivative2()`] |
+//! | 2nd partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::vpartial_derivative2()`] |
+//! | mixed 2nd partial derivative | $f:\mathbb{R}^{n}\to\mathbb{R}$ | [`forward_difference::mixed_spartial_derivative2()`] |
+//! | mixed 2nd partial derivative | $\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$ | [`forward_difference::mixed_vpartial_derivative2()`] |
 //!
 //! ## Passing Runtime Parameters
 //!
@@ -195,5 +256,5 @@ pub(crate) mod test_utils;
 // Re-exports.
 pub use automatic_differentiation::dual::dual::Dual;
 pub use automatic_differentiation::dual::dual_vector::DualVector;
-pub use automatic_differentiation::dual::hyper_dual::HyperDual;
-pub use automatic_differentiation::dual::hyper_dual_vector::HyperDualVector;
+pub use automatic_differentiation::hyper_dual::hyper_dual::HyperDual;
+pub use automatic_differentiation::hyper_dual::hyper_dual_vector::HyperDualVector;

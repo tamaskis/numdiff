@@ -44,13 +44,13 @@
 /// #### Using standard vectors
 ///
 /// ```
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 ///
 /// use numdiff::{get_vpartial_derivative2, HyperDual, HyperDualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-///     let f0 = x[0].powi(4) + S::new(2.0) * x[0].powi(2) * x[1];
+/// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
+///     let f0 = x[0].powi(4) + 2.0 * x[0].powi(2) * x[1];
 ///     let f1 = x[1].powi(3) + x[0] * x[1].powi(2);
 ///     vec![f0, f1]
 /// }
@@ -85,18 +85,18 @@
 /// where $a$, $b$, $c$, $d$, and $e$ are runtime parameters.
 ///
 /// ```
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vpartial_derivative2, HyperDual, HyperDualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> Vec<S> {
-///     let a = S::new(p[0]);
-///     let b = S::new(p[1]);
-///     let c = S::new(p[2]);
-///     let d = S::new(p[3]);
-///     let e = S::new(p[4]);
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> Vec<R> {
+///     let a = R::from(p[0]);
+///     let b = R::from(p[1]);
+///     let c = R::from(p[2]);
+///     let d = R::from(p[3]);
+///     let e = R::from(p[4]);
 ///     let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
 ///     let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
 ///     vec![f0, f1]
@@ -144,7 +144,7 @@
 /// Use a custom parameter struct instead of `f64` values.
 ///
 /// ```
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_vpartial_derivative2, HyperDual, HyperDualVector};
@@ -158,12 +158,12 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> Vec<S> {
-///     let a = S::new(p.a);
-///     let b = S::new(p.b);
-///     let c = S::new(p.c);
-///     let d = S::new(p.d);
-///     let e = S::new(p.e);
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &Data) -> Vec<R> {
+///     let a = R::from(p.a);
+///     let b = R::from(p.b);
+///     let c = R::from(p.c);
+///     let d = R::from(p.d);
+///     let e = R::from(p.e);
 ///     let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
 ///     let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
 ///     vec![f0, f1]
@@ -226,10 +226,10 @@ macro_rules! get_vpartial_derivative2 {
         /// Second-order partial derivative of `f` with respect to `xₖ`, evaluated at `x = x₀`.
         ///
         /// `(∂²f/∂xₖ²)|ₓ₌ₓ₀ ∈ ℝᵐ`
-        fn $func_name<S, V>(x0: &V, k: usize, p: &$param_type) -> V::DVectorf64
+        fn $func_name<R, V>(x0: &V, k: usize, p: &$param_type) -> V::DVectorf64
         where
-            S: Scalar,
-            V: Vector<S>,
+            R: RealField,
+            V: Vector<R>,
         {
             // Promote the evaluation point to a vector of hyper-dual numbers.
             let mut x0_hyperdual = x0.clone().to_hyper_dual_vector();
@@ -250,7 +250,8 @@ macro_rules! get_vpartial_derivative2 {
 #[cfg(test)]
 mod tests {
     use crate::{HyperDual, HyperDualVector};
-    use linalg_traits::{Scalar, Vector};
+    use linalg_traits::{RealField, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
     use numtest::*;
     use std::f64::consts::PI;
@@ -259,8 +260,8 @@ mod tests {
     fn test_vpartial_derivative2_basic() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [x₀⁴ + 2x₀²x₁, x₁³ + x₀x₁²]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
-            let f0 = x[0].powi(4) + S::new(2.0) * x[0].powi(2) * x[1];
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
+            let f0 = x[0].powi(4) + 2.0 * x[0].powi(2) * x[1];
             let f1 = x[1].powi(3) + x[0] * x[1].powi(2);
             vec![f0, f1]
         }
@@ -290,7 +291,7 @@ mod tests {
     fn test_vpartial_derivative2_polynomial() {
         // Function to test various polynomial orders:
         // f(x₀) = [x₀², x₀³, x₀⁴]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
             vec![x[0].powi(2), x[0].powi(3), x[0].powi(4)]
         }
 
@@ -314,7 +315,7 @@ mod tests {
     fn test_vpartial_derivative2_multivariate() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁, x₂) = [x₀³, x₁⁴, x₂²]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
             vec![x[0].powi(3), x[1].powi(4), x[2].powi(2)]
         }
 
@@ -356,7 +357,7 @@ mod tests {
     fn test_vpartial_derivative2_trig() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [sin(x₀), cos(x₁)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
             vec![x[0].sin(), x[1].cos()]
         }
 
@@ -386,7 +387,7 @@ mod tests {
     fn test_vpartial_derivative2_exponential() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [exp(x₀), x₁²]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
             vec![x[0].exp(), x[1].powi(2)]
         }
 
@@ -416,12 +417,12 @@ mod tests {
     fn test_vpartial_derivative2_with_runtime_parameters() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [ax₀⁴ + bx₀²x₁, cx₁³ + d sin(ex₀)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> Vec<S> {
-            let a = S::new(p[0]);
-            let b = S::new(p[1]);
-            let c = S::new(p[2]);
-            let d = S::new(p[3]);
-            let e = S::new(p[4]);
+        fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> Vec<R> {
+            let a = R::from(p[0]);
+            let b = R::from(p[1]);
+            let c = R::from(p[2]);
+            let d = R::from(p[3]);
+            let e = R::from(p[4]);
             let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
             let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
             vec![f0, f1]
@@ -472,12 +473,12 @@ mod tests {
 
         // Function to take the second-order partial derivative of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> Vec<S> {
-            let a = S::new(p.a);
-            let b = S::new(p.b);
-            let c = S::new(p.c);
-            let d = S::new(p.d);
-            let e = S::new(p.e);
+        fn f<R: RealField, V: Vector<R>>(x: &V, p: &Data) -> Vec<R> {
+            let a = R::from(p.a);
+            let b = R::from(p.b);
+            let c = R::from(p.c);
+            let d = R::from(p.d);
+            let e = R::from(p.e);
             let f0 = a * x[0].powi(4) + b * x[0].powi(2) * x[1];
             let f1 = c * x[1].powi(3) + d * (e * x[0]).sin();
             vec![f0, f1]
@@ -519,10 +520,11 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_vpartial_derivative2_vector_types() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [x₀³, x₁²]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
             vec![x[0].powi(3), x[1].powi(2)]
         }
 
@@ -551,7 +553,7 @@ mod tests {
     fn test_vpartial_derivative2_single_component() {
         // Function to take the second-order partial derivative of:
         // f(x₀, x₁) = [x₀⁴ + x₁²]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> Vec<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> Vec<R> {
             vec![x[0].powi(4) + x[1].powi(2)]
         }
 

@@ -76,6 +76,8 @@ use linalg_traits::Vector;
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::Col;
 /// use linalg_traits::Vector;  // to provide from_slice method for faer::Col
 /// use nalgebra::{dvector, DVector, SVector};
@@ -111,6 +113,7 @@ use linalg_traits::Vector;
 /// let x0_col: Col<f64> = Col::from_slice(&[5.0, 1.0]);
 /// let pf_col: f64 = spartial_derivative(&f_col, &x0_col, k, None);
 /// assert_equal_to_decimal!(pf_col, pf_true, 8);
+/// # }
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -212,6 +215,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
     use numtest::*;
 
@@ -225,6 +229,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_spartial_derivative_2() {
         let f = |x: &SVector<f64, 2>| x[0].powi(3) * x[1].powi(3);
         let x0: SVector<f64, 2> = SVector::from_slice(&[3.0, 2.0]);

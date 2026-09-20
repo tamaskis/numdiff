@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.0
+
+1. Updated `linalg-traits` dependency from `0.18.0` to `0.20.0`. This required completely overhauling the `Dual` and `HyperDual` struct implementations (to implement `linalg_traits::RealField`).
+1. Replaced all usage of the generic `S: linalg_traits::Scalar` with `R: linalg_traits::RealField`.
+1. Added central and forward difference approximations of 2nd derivative (including mixed partial derivatives).
+1. Remove `num-traits` dependency.
+1. Updated `numtest` dev dependency from `0.5.0` to `0.7.0`.
+
 ## 0.10.0
 
 1. Updated `linalg-traits` dependency from `0.17.0` to `0.18.0`.

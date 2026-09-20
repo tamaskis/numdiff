@@ -67,6 +67,8 @@ use linalg_traits::Vector;
 /// `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::Col;
 /// use linalg_traits::Vector;  // to provide from_slice method for faer::Col
 /// use nalgebra::{dvector, DVector, SVector};
@@ -100,6 +102,7 @@ use linalg_traits::Vector;
 /// let x0_col: Col<f64> = Col::from_slice(&[5.0, 8.0]);
 /// let grad_col: Col<f64> = gradient(&f_col, &x0_col, None);
 /// assert_arrays_equal_to_decimal!(grad_col.as_slice(), grad_true, 6);
+/// # }
 /// ```
 ///
 /// #### Modifying the relative step size
@@ -214,7 +217,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::SVector;
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, array};
     use numtest::*;
 
@@ -227,6 +232,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_gradient_2() {
         let f = |x: &SVector<f64, 2>| x[0].powi(2) + x[1].powi(3);
         let x0: SVector<f64, 2> = SVector::from_slice(&[1.0, 2.0]);
@@ -236,6 +242,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_gradient_3() {
         let f = |x: &Array1<f64>| x[0].powi(5) + x[1].sin().powi(3);
         let x0 = array![5.0, 8.0];

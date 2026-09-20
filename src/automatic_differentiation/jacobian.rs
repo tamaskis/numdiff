@@ -17,7 +17,7 @@
 /// ```ignore
 /// // Note that `T` is a placeholder for the type of the extra runtime parameter `p`, which can be
 /// // any type.
-/// fn f<S: Scalar, V: Vector<S>, T>(x: &V, p: &T) -> V::DVectorT<S> {
+/// fn f<R: RealField, V: Vector<R>, T>(x: &V, p: &T) -> V::DVectorT<R> {
 ///     // place function contents here
 /// }
 /// ```
@@ -77,17 +77,17 @@
 /// #### Using standard vectors
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_jacobian, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+/// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
 ///     V::DVectorT::from_slice(&[
 ///         x[0],
-///         x[2] * S::new(5.0),
-///         x[1].powi(2) * S::new(4.0) - x[2] * S::new(2.0),
+///         x[2] * 5.0,
+///         x[1].powi(2) * 4.0 - x[2] * 2.0,
 ///         x[2] * x[0].sin(),
 ///     ])
 /// }
@@ -136,15 +136,17 @@
 /// implements the `linalg_traits::Vector` trait.
 ///
 /// ```
+/// # #[cfg(all(feature = "nalgebra", feature = "ndarray", feature = "faer"))]
+/// # {
 /// use faer::{Col, Mat as FMat};
-/// use linalg_traits::{Scalar, Vector};
+/// use linalg_traits::{RealField, Vector};
 /// use nalgebra::{dvector, DMatrix, DVector, SVector};
 /// use ndarray::{array, Array1, Array2};
 ///
 /// use numdiff::{get_jacobian, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+/// fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
 ///     V::DVectorT::from_slice(&[
 ///         x[0],
 ///         x[2] * 5.0,
@@ -175,6 +177,7 @@
 /// // faer::Col
 /// let x0: Col<f64> = Col::from_slice(&[5.0, 6.0, 7.0]);
 /// let jac_eval: FMat<f64> = jac(&x0, &p);
+/// # }
 /// ```
 ///
 /// ## Example Passing Runtime Parameters
@@ -201,17 +204,17 @@
 /// $$
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_jacobian, Dual, DualVector};
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
-///     let a = S::new(p[0]);
-///     let b = S::new(p[1]);
-///     let c = S::new(p[2]);
-///     let d = S::new(p[3]);
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
+///     let a = R::from(p[0]);
+///     let b = R::from(p[1]);
+///     let c = R::from(p[2]);
+///     let d = R::from(p[3]);
 ///     V::DVectorT::from_slice(&[
 ///         a * x[0].powi(2) + b * x[1],
 ///         c * x[0] + d * x[1].powi(2)
@@ -249,7 +252,7 @@
 /// Use a custom parameter struct instead of `f64` values.
 ///
 /// ```
-/// use linalg_traits::{Mat, Matrix, Scalar, Vector};
+/// use linalg_traits::{Mat, Matrix, RealField, Vector};
 /// use numtest::*;
 ///
 /// use numdiff::{get_jacobian, Dual, DualVector};
@@ -262,11 +265,11 @@
 /// }
 ///
 /// // Define the function, f(x).
-/// fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
-///     let a = S::new(p.a);
-///     let b = S::new(p.b);
-///     let c = S::new(p.c);
-///     let d = S::new(p.d);
+/// fn f<R: RealField, V: Vector<R>>(x: &V, p: &Data) -> V::DVectorT<R> {
+///     let a = R::from(p.a);
+///     let b = R::from(p.b);
+///     let c = R::from(p.c);
+///     let d = R::from(p.d);
 ///     V::DVectorT::from_slice(&[
 ///         a * x[0].powi(2) + b * x[1],
 ///         c * x[0] + d * x[1].powi(2)
@@ -323,10 +326,10 @@ macro_rules! get_jacobian {
         /// Jacobian of `f` with respect to `x`, evaluated at `x = x₀`.
         ///
         /// `J(x₀) = (∂f/∂x)|ₓ₌ₓ₀ ∈ ℝᵐˣⁿ`
-        fn $func_name<S, V>(x0: &V, p: &$param_type) -> V::DMatrixMxNf64
+        fn $func_name<R, V>(x0: &V, p: &$param_type) -> V::DMatrixMxNf64
         where
-            S: Scalar,
-            V: Vector<S>,
+            R: RealField,
+            V: Vector<R>,
         {
             // Promote the evaluation point to a vector of dual numbers.
             let mut x0_dual = x0.clone().to_dual_vector();
@@ -394,14 +397,16 @@ macro_rules! get_jacobian {
 #[cfg(test)]
 mod tests {
     use crate::{Dual, DualVector};
-    use linalg_traits::{Mat, Matrix, Scalar, Vector};
+    use linalg_traits::{Mat, Matrix, RealField, Vector};
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{DMatrix, DVector, SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::{Array1, Array2, array};
 
     #[test]
     fn test_jacobian_1() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(2)])
         }
 
@@ -426,9 +431,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_jacobian_2() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(2), x[0].powi(3)])
         }
 
@@ -455,9 +461,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_3() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(2) + x[1].powi(3)])
         }
 
@@ -484,9 +491,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_4() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[x[0].powi(2), x[1].powi(3)])
         }
 
@@ -513,9 +521,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_5() {
         // Function to take the Jacobian of.
-        fn f<S: Scalar, V: Vector<S>>(x: &V, _p: &[f64]) -> V::DVectorT<S> {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
             V::DVectorT::from_slice(&[
                 x[0],
                 x[2] * 5.0,
@@ -564,14 +573,15 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_6() {
         // Function to take the Jacobian of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &[f64]) -> V::DVectorT<S> {
-            let a = S::new(p[0]);
-            let b = S::new(p[1]);
-            let c = S::new(p[2]);
-            let d = S::new(p[3]);
+        fn f<R: RealField, V: Vector<R>>(x: &V, p: &[f64]) -> V::DVectorT<R> {
+            let a = R::from(p[0]);
+            let b = R::from(p[1]);
+            let c = R::from(p[2]);
+            let d = R::from(p[3]);
             V::DVectorT::from_slice(&[a * (b * x[0]).sin(), c * x[0] * x[1] + d * x[1].cos()])
         }
 
@@ -617,11 +627,11 @@ mod tests {
 
         // Function to take the Jacobian of.
         #[allow(clippy::many_single_char_names)]
-        fn f<S: Scalar, V: Vector<S>>(x: &V, p: &Data) -> V::DVectorT<S> {
-            let a = S::new(p.a);
-            let b = S::new(p.b);
-            let c = S::new(p.c);
-            let d = S::new(p.d);
+        fn f<R: RealField, V: Vector<R>>(x: &V, p: &Data) -> V::DVectorT<R> {
+            let a = R::from(p.a);
+            let b = R::from(p.b);
+            let c = R::from(p.c);
+            let d = R::from(p.d);
             V::DVectorT::from_slice(&[a * x[0].powi(2) + b * x[1], c * x[0] + d * x[1].powi(2)])
         }
 

@@ -11,34 +11,101 @@ on:
 
 env:
   CARGO_TERM_COLOR: always  # Color cargo commands and output.
-  RUSTFLAGS: "-Dwarnings"   # Make CI fail on Clippy lint warnings.
+  RUST_BACKTRACE: "1" # Print a stack backstrace when a panic occurs.
+  RUSTFLAGS: "-Dwarnings"   # Fail on `rustc` warnings.
+  RUSTDOCFLAGS: "-Dwarnings" # Fail on `rustdoc` warnings.
 
-jobs:
-        
-  test_lint_docs_publish:
-    name: Test, lint, docs, and publishing dry run
+jobs:        
+  test_lint_format_deps_docs_publish:
+    name: Test, lint, format, deps, docs, and publishing dry run
     # Only run if the pull request is marked as ready.
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout  # Checkout this repo's code.
         uses: actions/checkout@v4
-      - name: Install # Install stable toolchain.
+      - name: Install Rust # Install Rust stable toolchain.
         run: rustup update stable && rustup default stable
-      - name: Test (no features) # Test with no features using dependencies from committed lock file.
-        run: RUSTFLAGS="-D warnings" RUST_BACKTRACE=1 cargo test --locked --verbose
+      - name: Get feature list # Get the set of features defined by this crate.
+        id: features
+        run: |
+          features=$( cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[0].features | keys[]' )
+          {
+            echo "list<<EOF"
+            echo "$features"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Get example list # Get the set of examples defined by this crate.
+        id: examples
+        run: |
+          examples=$( cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[].targets[] | select(.kind[] == "example") | .name' )
+          {
+            echo "list<<EOF"
+            echo "$examples"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - name: Test (all features) # Test with all features using dependencies from committed lock file.
-        run: RUSTFLAGS="-D warnings" RUST_BACKTRACE=1 cargo test --all-features --locked --verbose
-      - name: Lint (no features)  # Lint using Clippy without features.
-        run: cargo clippy --no-deps --all-targets -- -D warnings
+        run: cargo test --workspace --locked --all-features
+      - name: Test (each feature in isolation) # Test with each feature enabled one-by-one.
+        run: |
+          while IFS= read -r feature; do
+            set -x
+            cargo test --workspace --locked --features "$feature"
+            set +x
+          done <<< '${{ steps.features.outputs.list }}'
+      - name: Test (no features) # Test with no features using dependencies from committed lock file.
+        run: cargo test --workspace --locked
       - name: Lint (all features)  # Lint using Clippy with all features.
-        run: cargo clippy --no-deps --all-targets --all-features -- -D warnings
+        run: cargo clippy --workspace --no-deps --all-targets --all-features -- -D warnings  
+      - name: Lint (each feature in isolation) # Lint with each feature enabled one-by-one.
+        run: |
+          while IFS= read -r feature; do
+            set -x
+            cargo clippy --workspace --no-deps --all-targets --features "$feature" -- -D warnings
+            set +x
+          done <<< '${{ steps.features.outputs.list }}'
+      - name: Lint (no features)  # Lint using Clippy without features.
+        run: cargo clippy --workspace --no-deps --all-targets -- -D warnings
+      - name: Examples (all features) # Run examples with all features.
+        if: ${{ steps.examples.outputs.list != '' }}
+        run: |
+          while IFS= read -r example; do
+            set -x
+            cargo run --example "$example" --all-features
+            set +x
+          done <<< '${{ steps.examples.outputs.list }}'
+      - name: Examples (each feature in isolation) # Run examples with each feature enabled one-by-one.
+        if: ${{ steps.examples.outputs.list != '' }}
+        run: |
+          while IFS= read -r feature; do
+            while IFS= read -r example; do
+              set -x
+              cargo run --example "$example" --features "$feature"
+              set +x
+            done <<< '${{ steps.examples.outputs.list }}'
+          done <<< '${{ steps.features.outputs.list }}'
+      - name: Examples (no features) # Run examples with no features.
+        if: ${{ steps.examples.outputs.list != '' }}
+        run: |
+          while IFS= read -r example; do
+            set -x
+            cargo run --example "$example"
+            set +x
+          done <<< '${{ steps.examples.outputs.list }}'
+      - name: Format # Check formatting.
+        run: cargo fmt -- --check
+      - name: Dependency check # Check for unused or missing dependencies.
+        uses: bnjbvr/cargo-machete@v0.9.2
       - name: Docs  # Ensure that docs can be generated for this crate.
-        run: RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
+        run: cargo doc --workspace --no-deps --all-features
       - name: Publishing dry run  # Ensure that this crate can be published.
         run: |
           # Run cargo publish --dry-run and capture output.
+          set +e
           DRY_RUN_OUTPUT=$(cargo publish --dry-run --all-features 2>&1)
+          set -e
 
           # Print out full dry run output.
           echo "$DRY_RUN_OUTPUT"

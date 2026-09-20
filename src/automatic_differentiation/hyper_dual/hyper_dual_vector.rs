@@ -1,11 +1,11 @@
 use crate::HyperDual;
-use linalg_traits::{Scalar, Vector};
+use linalg_traits::{RealField, Vector};
 
 /// Trait to create a vector of hyper-dual numbers.
-pub trait HyperDualVector<S, V>
+pub trait HyperDualVector<R, V>
 where
-    S: Scalar,
-    V: Vector<S>,
+    R: RealField,
+    V: Vector<R>,
 {
     /// Convert this vector of scalars to a vector of hyper-dual numbers.
     ///
@@ -16,15 +16,15 @@ where
     fn to_hyper_dual_vector(self) -> V::VectorT<HyperDual>;
 }
 
-impl<S, V> HyperDualVector<S, V> for V
+impl<R, V> HyperDualVector<R, V> for V
 where
-    S: Scalar,
-    V: Vector<S>,
+    R: RealField,
+    V: Vector<R>,
 {
     fn to_hyper_dual_vector(self) -> V::VectorT<HyperDual> {
         let mut vec_hyper_dual = V::VectorT::new_with_length(self.len());
         for i in 0..self.len() {
-            vec_hyper_dual[i] = HyperDual::new(self[i].to_f64().unwrap(), 0.0, 0.0, 0.0);
+            vec_hyper_dual[i] = HyperDual::new(self[i].into(), 0.0, 0.0, 0.0);
         }
         vec_hyper_dual
     }
@@ -33,7 +33,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "nalgebra")]
     use nalgebra::{SVector, dvector};
+    #[cfg(feature = "ndarray")]
     use ndarray::array;
 
     #[test]
@@ -50,6 +52,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_nalgebra_dvector() {
         let vec = dvector![1.0, 2.0, 3.0];
         assert_eq!(
@@ -63,6 +66,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_nalgebra_svector() {
         let vec = SVector::<f64, 3>::from_row_slice(&[1.0, 2.0, 3.0]);
         assert_eq!(
@@ -76,11 +80,12 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ndarray")]
     fn test_ndarray_array1() {
         let vec = array![1.0, 2.0, 3.0];
         assert_eq!(
             vec.to_hyper_dual_vector(),
-            vec![
+            array![
                 HyperDual::new(1.0, 0.0, 0.0, 0.0),
                 HyperDual::new(2.0, 0.0, 0.0, 0.0),
                 HyperDual::new(3.0, 0.0, 0.0, 0.0)

@@ -521,6 +521,53 @@ mod tests {
 
     #[test]
     #[cfg(feature = "nalgebra")]
+    fn test_jacobian_matrix_matrix_multiplication() {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
+            let a = DMatrix::<R>::from_row_slice(2, 2, &[x[0], R::from(2.0), R::from(3.0), x[1]]);
+            let b = DMatrix::<R>::from_row_slice(
+                2,
+                2,
+                &[R::from(1.0), R::from(4.0), R::from(5.0), R::from(6.0)],
+            );
+            let product = a * b;
+            V::DVectorT::from_slice(product.as_slice())
+        }
+
+        let x0 = dvector![2.0, 4.0];
+        let p = [];
+
+        get_jacobian!(f, jac_autodiff);
+
+        let jac_eval: DMatrix<f64> = jac_autodiff(&x0, &p);
+        let jac_true =
+            DMatrix::<f64>::from_row_slice(4, 2, &[1.0, 0.0, 0.0, 5.0, 4.0, 0.0, 0.0, 6.0]);
+
+        assert_eq!(jac_eval, jac_true);
+    }
+
+    #[test]
+    #[cfg(feature = "nalgebra")]
+    fn test_jacobian_matrix_vector_multiplication() {
+        fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {
+            let a = DMatrix::<R>::from_row_slice(2, 2, &[x[0], R::from(2.0), R::from(3.0), x[1]]);
+            let b = DVector::<R>::from_row_slice(&[x[1], x[0]]);
+            let product = a * b;
+            V::DVectorT::from_slice(product.as_slice())
+        }
+
+        let x0 = dvector![2.0, 4.0];
+        let p = [];
+
+        get_jacobian!(f, jac_autodiff);
+
+        let jac_eval: DMatrix<f64> = jac_autodiff(&x0, &p);
+        let jac_true = DMatrix::<f64>::from_row_slice(2, 2, &[6.0, 2.0, 4.0, 5.0]);
+
+        assert_eq!(jac_eval, jac_true);
+    }
+
+    #[test]
+    #[cfg(feature = "nalgebra")]
     fn test_jacobian_5() {
         // Function to take the Jacobian of.
         fn f<R: RealField, V: Vector<R>>(x: &V, _p: &[f64]) -> V::DVectorT<R> {

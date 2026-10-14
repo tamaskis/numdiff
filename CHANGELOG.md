@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0
+
+1. Updated `linalg-traits` dependency from `0.20.0` to `0.22.0`.
+
 ## 0.11.2
 
 1. Tweaked some crate configurations.
